@@ -20,10 +20,9 @@ TO DO
 
 QUESTIONS
 
+* Is there a value to separating out the constructor to CHI->new, and putting everything else in CHI::Driver, other than that it is vaguely DBI-like?
 * What should set() return? The value? Success flag? Cache::Cache doesn't seem to specify.
 * Should we auto-remove items after a miss, like Cache::Cache? Or is this silly b/c it will probably be followed with a set?
 * Should namespace default to caller package?
 * What happens if a reference is passed as a key? Stringify reference, or reject, or serialize automatically to a key?
 * Should get_namespace() always/sometimes/never report empty namespaces - i.e. namespaces that have been created but not populated, or namespaces that have been cleared?
-
-
