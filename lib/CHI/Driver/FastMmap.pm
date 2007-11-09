@@ -1,0 +1,147 @@
+package CHI::Driver::FastMmap;
+use strict;
+use warnings;
+use Cache::FastMmap;
+use CHI::Util;
+use File::Path qw(mkpath);
+use File::Slurp qw(read_dir);
+use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use base qw(CHI::Driver);
+
+my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-fastmmap" );
+my $Default_Create_Mode = 0775;
+
+__PACKAGE__->mk_ro_accessors(
+    qw(dir_create_mode share_file root_dir));
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+
+    $self->{root_dir}        ||= $Default_Root_Dir;
+    $self->{dir_create_mode} ||= $Default_Create_Mode;
+    mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} ) if !-d $self->{root_dir};
+    $self->{share_file} =
+      catfile( $self->{root_dir}, escape_for_filename( $self->{namespace} ) );
+    my %fm_params = (
+        raw_values => 1,
+        map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
+          qw(init_file share_file cache_size page_size num_pages)
+    );
+    $self->{fm_cache} = Cache::FastMmap->new(%fm_params);
+
+    return $self;
+}
+
+sub fetch {
+    my ( $self, $key ) = @_;
+
+    return $self->{fm_cache}->get($key);
+}
+
+sub store {
+    my ( $self, $key, $data, $options ) = @_;
+
+    $self->{fm_cache}->set( $key, $data );
+}
+
+sub delete {
+    my ( $self, $key ) = @_;
+
+    $self->{fm_cache}->remove($key);
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->{fm_cache}->clear();
+}
+
+sub get_keys {
+    my ($self) = @_;
+
+    return [ $self->{fm_cache}->get_keys(0) ];
+}
+
+sub get_namespaces {
+    my ($self) = @_;
+
+    my @contents = read_dir( $self->root_dir() );
+    my @namespaces =
+      map { unescape_for_filename($_) }
+      grep { -d catdir( $self->root_dir(), $_ ) } @contents;
+    return \@namespaces;
+}
+
+1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed file
+
+=head1 SYNOPSIS
+
+    use CHI;
+
+    my $cache = CHI->new(
+        driver     => 'FastMmap',
+        root_dir   => '/path/to/cache/root',
+        cache_size => '1m'
+    );
+
+=head1 DESCRIPTION
+
+This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is very fast,
+and can be used to share data between processes on a single host, though not between hosts.
+
+To support namespaces, this driver takes a directory parameter rather than a file, and
+creates one Cache::FastMMap file for each namespace. Because CHI handles serialization
+automatically, we pass the C<raw_values> flag.
+
+=head1 CONSTRUCTOR OPTIONS
+
+When using this driver, the following options can be passed to CHI->new() in addition to the
+L<CHI|general constructor options/constructor>.
+    
+=over
+
+=item root_dir
+
+Path to the directory that will contain the share files, one per namespace. Defaults to a
+directory called 'chi-driver-fastmmap' under the OS default temp directory (e.g. '/tmp'
+on UNIX).
+
+=item dir_create_mode
+
+Permissions mode to use when creating directories. Defaults to 0775.
+
+=item cache_size
+=item page_size
+=item num_pages
+=item init_file
+
+These options are passed directly to L<Cache::FastMmap>; see that documentation for information.
+
+=back
+
+=head1 SEE ALSO
+
+Cache::FastMmap
+CHI
+
+=head1 AUTHOR
+
+Jonathan Swartz
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (C) 2007 Jonathan Swartz, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut

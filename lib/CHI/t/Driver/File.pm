@@ -7,23 +7,11 @@ use base qw(CHI::t::Driver);
 
 my $root_dir;
 
-sub choose_root_dir : Test(startup) {
-    $root_dir = tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 0 );
-}
-
-sub testing_driver {
-    return 'File';
-}
-
-sub new_cache {
+sub new_cache_options {
     my $self = shift;
 
-    return CHI->new(
-            driver       => $self->testing_driver(),
-            root_dir     => $root_dir,
-            on_set_error => 'die',
-            @_
-    );
+    $root_dir ||= tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 );
+    return ( $self->SUPER::new_cache_options(), root_dir => $root_dir );
 }
 
 sub test_creation_and_deletion : Test(10) {

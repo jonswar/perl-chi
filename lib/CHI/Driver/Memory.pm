@@ -72,7 +72,7 @@ CHI::Driver::Memory -- In-process memory based cache.
 
 =head1 DESCRIPTION
 
-This cache stores data on a per-process basis.  This is the fastest of the cache
+This cache driver stores data on a per-process basis.  This is the fastest of the cache
 implementations, but data can not be shared between processes.  Data will remain in the
 cache until cleared, expired, or the process dies.
 

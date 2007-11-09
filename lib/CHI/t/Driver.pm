@@ -15,13 +15,24 @@ sub setup : Test(setup) {
 }
 
 sub testing_driver {
-    return 'Memory';
+    my $self  = shift;
+    my $class = ref($self);
+
+    # By default, take the last part of the classname and use it as driver
+    my $driver = ( split( '::', $class ) )[-1];
+    return $driver;
 }
 
 sub new_cache {
     my $self = shift;
 
-    return CHI->new( driver => $self->testing_driver(), @_ );
+    return CHI->new( $self->new_cache_options(), @_ );
+}
+
+sub new_cache_options {
+    my $self = shift;
+
+    return ( driver => $self->testing_driver(), on_set_error => 'die' );
 }
 
 # Some standard keys and values

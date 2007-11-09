@@ -8,7 +8,7 @@ use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
-use File::Slurp qw(read_file write_file read_dir);
+use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use File::Temp qw(tempfile);
 use POSIX qw( :fcntl_h );
@@ -37,7 +37,7 @@ sub new {
     $self->{depth}            ||= $Default_Depth;
     $self->{root_dir}         ||= $Default_Root_Dir;
     $self->{path_to_namespace} =
-      catdir( $self->root_dir, escape_for_filename( $self->namespace ) );
+      catdir( $self->root_dir, escape_for_filename( $self->{namespace} ) );
     return $self;
 }
 
@@ -214,17 +214,17 @@ CHI::Driver::File -- File-based cache using one file per entry.
 
     use CHI;
 
-    my $cache = CHI->new(driver => 'File', root_dir => '/path/to/root', depth => 3);
+    my $cache = CHI->new(driver => 'File', root_dir => '/path/to/cache/root', depth => 3);
 
 =head1 DESCRIPTION
 
-This cache stores data on the filesystem, so that it can be shared between processes on a
-single machine, or even on multiple machines if using NFS.
+This cache driver stores data on the filesystem, so that it can be shared between
+processes on a single machine, or even on multiple machines if using NFS.
 
 Each item is stored in its own file. During a set, a temporary file is created and then
-atomically renamed to the proper file. This eliminates the need for locking (with multiple
-overlapping sets, the last one "wins") and makes this cache usable in environments like NFS
-where locking might normally be unreliable.
+atomically renamed to the proper file. While not the most efficient, it eliminates the
+need for locking (with multiple overlapping sets, the last one "wins") and makes this
+cache usable in environments like NFS where locking might normally be undesirable.
 
 =head1 CONSTRUCTOR OPTIONS
 
