@@ -1,0 +1,21 @@
+#!/usr/bin/perl
+use Cwd qw(realpath);
+use File::Basename;
+use File::Find;
+use IPC::System::Simple qw(run);
+use strict;
+use warnings;
+
+my $cwd = dirname(realpath($0));
+my $root = realpath("$cwd/..");
+
+my @modules;
+find ({wanted => sub { push(@modules, $_) if /\.pm$/ }, no_chdir => 1}, "$root/lib");
+
+# Is there no way to prevent backup files?
+run("perltidy", "-pro=$root/perltidyrc", "-b", @modules);
+foreach my $module (@modules) {
+    unlink("$module.bak");
+}
+
+1;

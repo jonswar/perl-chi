@@ -1,0 +1,9 @@
+Changes
+MANIFEST
+META.yml # Will be created by "make dist"
+Makefile.PL
+README
+lib/CHI.pm
+t/00-load.t
+t/pod-coverage.t
+t/pod.t
