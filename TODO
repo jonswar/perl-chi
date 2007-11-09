@@ -1,6 +1,5 @@
 TO DO
 
-* put in module form
 * Run Rob Mueller's cacheperl.pl against CHI drivers
 * perl critic
 * expires_window
@@ -16,7 +15,6 @@ TO DO
   * default settings for $cache object: expires_at, expires_in
   * multiple writes same key
   * simultaneous writes two procs, read by third proc
-. get and get_object should be generated subroutines, not runtime dispatched
 * Moosify, assuming no major effect on performance
 
 QUESTIONS
