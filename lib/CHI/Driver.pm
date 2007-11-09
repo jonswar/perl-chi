@@ -15,10 +15,6 @@ my $Metadata_Format = "LCCC";
 my $Metadata_Length = 7;
 my $Expire_Never    = 0xffffffff;
 
-# TODO - Log::Any
-my $Is_Debug = 0;
-my $log;
-
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
     no strict 'refs';
@@ -62,7 +58,7 @@ sub new {
     }
 
     # TODO: validate:
-    # on_set_error      => 'log'   ('ignore', 'log', 'warn', 'die', sub { })
+    # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
     return $self;
 }
@@ -73,72 +69,53 @@ sub desc {
     return ref($self) . " cache";
 }
 
-# Generate slightly different subroutines for get() and get_object().
-#
-sub _generate_get_sub {
-    my ($want_object) = @_;
-    return sub {
-        my ( $self, $key ) = @_;
-        return unless defined($key);
+sub get {
+    my ( $self, $key ) = @_;
+    return unless defined($key);
 
-        my $cache_desc;
-        if ($Is_Debug) {
-            $cache_desc = sprintf( "cache get for namespace='%s', key='%s'",
-                $self->get_namespace(), $key );
-        }
+    my $value_with_metadata = $self->fetch($key) or return;
+    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
+    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
+    return if ( $expire_time <= time );
 
-        my $value_plus_metadata = $self->fetch($key);
-        if ( !defined($value_plus_metadata) ) {
-            $log->debug("$cache_desc: MISS (not in cache)") if $Is_Debug;
-            return;
-        }
+    my $value = substr( $value_with_metadata, $Metadata_Length );
+    if ($is_serialized) {
+        $value = $self->_deserialize($value);
+    }
 
-        my $metadata = substr( $value_plus_metadata, -$Metadata_Length );
-        my ( $expire_time, $is_serialized, $checksum ) =
-          unpack( $Metadata_Format, $metadata );
-        if ( ( length($key) & 0xff ) != $checksum ) {
-            die sprintf(
-                "checksum error for key '%s' - low byte of key length (%d) != checksum (%d)",
-                $key, length($key) & 0xff, $checksum );
-        }
-        if ( $expire_time <= time && !$want_object ) {
-            $log->debug("$cache_desc: MISS (expired)") if $Is_Debug;
-            return;
-        }
-
-        $log->debug("$cache_desc: HIT") if $Is_Debug;
-        my $value = substr( $value_plus_metadata, 0, -$Metadata_Length );
-        if ($is_serialized) {
-            $value = $self->_deserialize($value);
-        }
-
-        if ($want_object) {
-            return CHI::CacheObject->new(
-                {
-                    key            => $key,
-                    value          => $value,
-                    expires_at     => $expire_time,
-                    _is_serialized => $is_serialized,
-                }
-            );
-        }
-        else {
-            return $value;
-        }
-    };
+    return $value;
 }
-*get        = _generate_get_sub(0);
-*get_object = _generate_get_sub(1);
+
+sub get_object {
+    my ( $self, $key ) = @_;
+    return unless defined($key);
+
+    my $value_with_metadata = $self->fetch($key) or return;
+    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
+    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
+
+    my $value = substr( $value_with_metadata, $Metadata_Length );
+    if ($is_serialized) {
+        $value = $self->_deserialize($value);
+    }
+
+    return CHI::CacheObject->new(
+        {
+            key            => $key,
+            value          => $value,
+            expires_at     => $expire_time,
+            _is_serialized => $is_serialized,
+        }
+        );
+}
 
 sub get_expires_at {
     my ( $self, $key ) = @_;
 
-    if ( my $object = $self->get_object($key) ) {
-        return $object->expires_at;
-    }
-    else {
-        return;
-    }
+    my $value_with_metadata = $self->fetch($key) or return;
+    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
+    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
+    return $expire_time;
 }
 
 sub is_valid {
@@ -192,21 +169,14 @@ sub set {
     my $checksum = length($key) & 0xff;
     my $metadata =
       pack( $Metadata_Format, $expires_at, $is_serialized, $checksum );
-    my $store_value_plus_metadata = $store_value . $metadata;
+    my $store_value_with_metadata = $metadata . $store_value;
     eval {
-        $self->store( $key, $store_value_plus_metadata, $expires_at, $options );
+        $self->store( $key, $store_value_with_metadata, $expires_at, $options );
     };
     if ( my $error = $@ ) {
         $self->_handle_set_error( $key, $error );
         return;
     }
-
-    $log->debug(
-        sprintf(
-            "cache set for namespace='%s', key='%s'",
-            $self->get_namespace(), $key
-        )
-    ) if $Is_Debug;
 
     return $value;
 }
@@ -236,7 +206,6 @@ sub _handle_set_error {
       sprintf( "error setting key '%s' in %s: %s", $key, $self->desc, $error );
     for ( $self->on_set_error() ) {
         /ignore/ && do { };
-        /log/    && do { $log->warn($msg) };
         /warn/   && do { warn $msg };
         /die/    && do { die $msg };
         ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
