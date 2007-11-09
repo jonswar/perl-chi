@@ -1,16 +1,20 @@
 #!/usr/bin/env perl
 #
-# Rob Mueller's script for benchmarking cache modules
+# Rob Mueller's script for benchmarking cache modules, modified to include CHI
 # From http://cpan.robm.fastmail.fm/cacheperl.pl
 #
-
+use File::Slurp;
+use FindBin::libs;
 use Time::HiRes qw(gettimeofday tv_interval);
 use Storable qw(freeze thaw);
 use Data::Dumper;
 use strict;
 use warnings;
+$| = 1;
 
 #----- Setup stuff
+
+my $pkgspec = $ARGV[0];
 
 use vars qw($DBSpec $DBUser $DBPassword $InnoDB);
 
@@ -23,7 +27,7 @@ use vars qw($DBSpec $DBUser $DBPassword $InnoDB);
 srand(1);
 
 # Number of runs to perform
-my $Runs = 2;
+my $Runs = 1;
 
 # Maximum number of values to generate to store in cache
 my $MaxVals = 1000;
@@ -40,11 +44,23 @@ my $MixReadRatio = 0.85;
 
 # Build data sets of various complexity
 my (@DataComplex, @DataBin);
-for my $Depth (0 .. 2) {
-  my @Structs = map { BuildStruct($Depth, $Depth+5) } 1 .. $MaxVals;
-  push @DataComplex,  \@Structs;
-  my @Frozen = map { freeze($_) } @Structs;
-  push @DataBin, \@Frozen;
+
+if (-f "cpdata.dat") {
+  my $frozen_data = read_file("cpdata.dat");
+  my $data = thaw($frozen_data);
+  @DataComplex = @{$data->[0]};
+  @DataBin     = @{$data->[1]};
+}
+else {
+  for my $Depth (0 .. 2) {
+    my @Structs = map { BuildStruct($Depth, $Depth+5) } 1 .. $MaxVals;
+    push @DataComplex,  \@Structs;
+    my @Frozen = map { freeze($_) } @Structs;
+    push @DataBin, \@Frozen;
+  }
+
+  my $frozen_data = freeze([\@DataComplex, \@DataBin]);
+  write_file("cpdata.dat", $frozen_data);
 }
 
 # Recursive helper call
@@ -102,26 +118,28 @@ sub CheckBin {
 # Packages to run through
 my @Packages = (
   CB0_InProcHash => [ 'bin' ],
-  CB1_CacheMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
-  CB1_CacheMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
+#  CB1_CacheMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
+#  CB1_CacheMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
   CB2_CacheFastMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
   CB2_CacheFastMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
-  CB3_MLDBMSyncSDBM_File => [ 'bin' ],
-  CC3_BerkeleyDB => [ 'bin' ],
-  CB4_IPCMM => [ 'bin' ],
+#  CB3_MLDBMSyncSDBM_File => [ 'bin' ],
+#  CC3_BerkeleyDB => [ 'bin' ],
+#  CB4_IPCMM => [ 'bin' ],
+ CB9_CHIFile => [ 'bin' ],
 
-  CC0_InProcHashStorable => [ 'complex' ],
-  CC1_CacheMmapStorable => [ 'complex', num_pages => 89, page_size => 8192 ],
-  CC2_CacheFastMmapStorable => [ 'complex', num_pages => 89, page_size => 8192 ],
-  CC3_MLDBMSyncSDBM_FileStorable => [ 'complex' ],
-  CC3_BerkeleyDBStorable => [ 'complex' ],
-  CC4_IPCMMStorable => [ 'complex' ],
-  CC5_CacheFileCacheStorable => [ 'complex' ],
+#  CC0_InProcHashStorable => [ 'complex' ],
+#  CC1_CacheMmapStorable => [ 'complex', num_pages => 89, page_size => 8192 ],
+#  CC2_CacheFastMmapStorable => [ 'complex', num_pages => 89, page_size => 8192 ],
+#  CC3_MLDBMSyncSDBM_FileStorable => [ 'complex' ],
+#  CC3_BerkeleyDBStorable => [ 'complex' ],
+#  CC4_IPCMMStorable => [ 'complex' ],
+ CC5_CacheFileCacheStorable => [ 'complex' ],
 #	  CC6_CacheSharedMemoryCacheStorable => [ 'complex' ],
-  ($DBSpec ? (
-    CC7_DBIStorable => [ 'complex' ],
-    CC8_DBIStorableUpdate => [ 'complex' ],
-  ) : ()),
+#  ($DBSpec ? (
+#    CC7_DBIStorable => [ 'complex' ],
+#    CC8_DBIStorableUpdate => [ 'complex' ],
+#  ) : ()),
+ CC9_CHIFileStorable => [ 'complex' ],
 );
 
 #----- Now do runs
@@ -129,6 +147,10 @@ my @Packages = (
 # Repeat each package type
 while (my ($Package, $PackageOpts) = splice @Packages, 0, 2) {
 
+  next if defined($pkgspec) && $Package !~ /$pkgspec/;
+
+  print "$Package\n";
+  
   # Get package options
   my ($DataType, @Params) = @$PackageOpts;
   my ($Check, $Data);
@@ -314,77 +336,6 @@ sub get {
 
 1;
 
-package CB1_CacheMmap;
-use Cache::Mmap;
-
-sub name { return "Cache::Mmap"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-  my %Args = @_;
-
-  my $File = ($Args{vol} || (-e '/tmpfs' ? '/tmpfs' : '/tmp')) . "/cachefile";
-  unlink($File);
-  my $Self = {
-    Cache => Cache::Mmap->new(
-      $File,
-      {
-        ($Args{page_size} ? (bucketsize => $Args{page_size}) : ()),
-        ($Args{num_pages} ? (buckets => $Args{num_pages}) : ()),
-        strings => 1
-      })
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->write($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->read($_[1]);
-}
-
-1;
-package CC1_CacheMmapStorable;
-use Cache::Mmap;
-
-sub name { return "Cache::Mmap Storable"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-  my %Args = @_;
-
-  my $File = ($Args{vol} || (-e '/tmpfs' ? '/tmpfs' : '/tmp')) . "/cachefile";
-  unlink($File);
-  my $Self = {
-    Cache => Cache::Mmap->new(
-      $File,
-      {
-        ($Args{page_size} ? (bucketsize => $Args{page_size}) : ()),
-        ($Args{num_pages} ? (buckets => $Args{num_pages}) : ()),
-        strings => 0
-      })
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->write($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->read($_[1]);
-}
-
-1;
-
 package CB2_CacheFastMmap;
 use Cache::FastMmap;
 
@@ -450,70 +401,6 @@ sub set {
 
 sub get {
   return $_[0]->{Cache}->get($_[1]);
-}
-
-1;
-
-package CB3_MLDBMSyncSDBM_File;
-use MLDBM::Sync qw(MLDBM::Sync::SDBM_File);
-use Fcntl qw(:DEFAULT);
-
-sub name { return "MLDBM::Sync::SDBM_File"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  unlink glob('/tmp/sdbmfile*');
-  my %Cache;
-  my $Obj = tie %Cache, 'MLDBM::Sync::SDBM_File', '/tmp/sdbmfile', O_CREAT|O_RDWR, 0640;
-  my $Self = {
-    Cache => \%Cache,
-    Obj => $Obj
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->{$_[1]} = $_[2];
-}
-
-sub get {
-  return $_[0]->{Cache}->{$_[1]};
-}
-
-1;
-package CC3_MLDBMSyncSDBM_FileStorable;
-use Storable qw(freeze thaw);
-use MLDBM::Sync qw(MLDBM::Sync::SDBM_File);
-use Fcntl qw(:DEFAULT);
-
-sub name { return "MLDBM::Sync::SDBM_File Storable"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  unlink glob('/tmp/sdbmfile*');
-  my %Cache;
-  my $Obj = tie %Cache, 'MLDBM::Sync::SDBM_File', '/tmp/sdbmfile', O_CREAT|O_RDWR, 0640;
-  my $Self = {
-    Cache => \%Cache,
-    Obj => $Obj
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->{$_[1]} = freeze($_[2]);
-}
-
-sub get {
-  return thaw($_[0]->{Cache}->{$_[1]});
 }
 
 1;
@@ -611,94 +498,9 @@ sub get {
 
 1;
 
-package CB4_IPCMM;
-use IPC::MM qw(mm_create mm_make_hash mm_free_hash mm_destroy);
-
-sub name { return "IPC::MM"; }
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  unlink('/tmp/mmlockfile');
-  my $mm = mm_create(256*1024, '/tmp/mmlockfile');
-  my $mmhash = mm_make_hash($mm);
-
-  my %hash;
-  my $obj = tie %hash, 'IPC::MM::Hash', $mmhash;
-
-  my $Self = {
-    MM => $mm,
-    MMHash => $mmhash,
-    Hash => \%hash,
-    Obj => $obj,
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  eval { $_[0]->{Obj}->STORE($_[1], $_[2]); }
-}
-
-sub get {
-  return $_[0]->{Obj}->FETCH($_[1]);
-}
-
-sub DESTROY {
-  undef $_[0]->{Obj};
-  untie %{$_[0]->{Hash}};
-  mm_free_hash($_[0]->{MMHash});
-  mm_destroy($_[0]->{MM});
-}
-
-1;
-package CC4_IPCMMStorable;
-use IPC::MM qw(mm_create mm_make_hash mm_free_hash mm_destroy);
-use Storable qw(freeze thaw);
-
-sub name { return "IPC::MM Storable"; }
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  unlink('/tmp/mmlockfile');
-  my $mm = mm_create(256*1024, '/tmp/mmlockfile');
-  my $mmhash = mm_make_hash($mm);
-
-  my %hash;
-  my $obj = tie %hash, 'IPC::MM::Hash', $mmhash;
-
-  my $Self = {
-    MM => $mm,
-    MMHash => $mmhash,
-    Hash => \%hash,
-    Obj => $obj,
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  eval { $_[0]->{Obj}->STORE($_[1], freeze($_[2])); }
-}
-
-sub get {
-  return thaw($_[0]->{Obj}->FETCH($_[1]));
-}
-
-sub DESTROY {
-  undef $_[0]->{Obj};
-  untie %{$_[0]->{Hash}};
-  mm_free_hash($_[0]->{MMHash});
-  mm_destroy($_[0]->{MM});
-}
-
-1;
-
 package CC5_CacheFileCacheStorable;
 use Cache::FileCache;
+use File::Temp qw(tempdir);
 
 sub name { return "Cache::FileCache Storable"; }
 sub new {
@@ -708,8 +510,39 @@ sub new {
   my $Self = {
     Cache => new Cache::FileCache({
       'namespace' => 'testcache',
-      cache_depth => 2
+      cache_depth => 2,
+      cache_root => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
     })
+  };
+
+  bless ($Self, $Class);
+  return $Self;
+}
+
+sub set {
+  $_[0]->{Cache}->set($_[1], $_[2]);
+}
+
+sub get {
+  return $_[0]->{Cache}->get($_[1]);
+}
+
+package CB9_CHIFile;
+use CHI;
+use File::Temp qw(tempdir);
+
+sub name { return "CHI::Driver::File"; }
+sub new {
+  my $Proto = shift;
+  my $Class = ref($Proto) || $Proto;
+
+  my $Self = {
+    Cache => CHI->new(
+      driver => 'File',
+      'namespace' => 'testcache',
+      cache_depth => 2,
+      root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
+    )
   };
 
   bless ($Self, $Class);
@@ -726,20 +559,23 @@ sub get {
 
 1;
 
-package CC6_CacheSharedMemoryCacheStorable;
-use Cache::SharedMemoryCache;
+package CC9_CHIFileStorable;
+use CHI;
+use File::Temp qw(tempdir);
 
-sub name { return "Cache::SharedMemoryCache Storable"; }
+sub name { return "CHI::Driver::File Storable"; }
 sub new {
   my $Proto = shift;
   my $Class = ref($Proto) || $Proto;
 
   my $Self = {
-    Cache => new Cache::SharedMemoryCache({
-      'namespace' => 'testcache'
-    })
+    Cache => CHI->new(
+      driver => 'File',
+      'namespace' => 'testcache',
+      cache_depth => 2,
+      root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
+    )
   };
-  $Self->{Cache}->Clear();
 
   bless ($Self, $Class);
   return $Self;
@@ -754,100 +590,3 @@ sub get {
 }
 
 1;
-
-package CC7_DBIStorable;
-use DBI;
-use Storable qw(freeze thaw);
-
-sub name { return "DBI with freeze/thaw"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  my $DB = DBI->connect($::DBSpec, $::DBUser, $::DBPassword);
-  $DB->do('drop table CacheTest');
-  my $CT = 'create table CacheTest (CKey varchar(40) PRIMARY KEY, CValue blob)';
-  $CT .= ' Type=InnoDB' if $::InnoDB;
-  $DB->do($CT);
-
-  my $Del = $DB->prepare('delete from CacheTest where CKey=?');
-  my $Add = $DB->prepare('insert into CacheTest (CKey, CValue) values (?,?)');
-  my $Get = $DB->prepare('select CValue from CacheTest where CKey=?');
-
-  my $Self = {
-    DB => $DB,
-    Del => $Del,
-    Add => $Add,
-    Get => $Get
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Del}->execute($_[1]);
-  $_[0]->{Add}->execute($_[1], freeze($_[2]));
-}
-
-sub get {
-  my $Get = $_[0]->{Get};
-  $Get->execute($_[1]);
-  my $Data = $Get->fetchrow_arrayref()->[0];
-  return thaw($Data);
-}
-
-1;
-
-package CC8_DBIStorableUpdate;
-use DBI;
-use Storable qw(freeze thaw);
-
-sub name { return "DBI (use updates with dup) with freeze/thaw"; }
-
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  my $DB = DBI->connect($::DBSpec, $::DBUser, $::DBPassword);
-  $DB->do('drop table CacheTest');
-  my $CT = 'create table CacheTest (CKey varchar(40) PRIMARY KEY, CValue blob)';
-  $CT .= ' Type=InnoDB' if $::InnoDB;
-  $DB->do($CT);
-
-  my $Add = $DB->prepare('insert into CacheTest (CKey, CValue) values (?,?)');
-  my $Upd = $DB->prepare('update CacheTest set CValue=? where CKey=?');
-  my $Cnt = $DB->prepare('select count(*) from CacheTest where CKey=?');
-  my $Get = $DB->prepare('select CValue from CacheTest where CKey=?');
-
-  my $Self = {
-    DB => $DB,
-    Add => $Add,
-    Upd => $Upd,
-    Cnt => $Cnt,
-    Get => $Get
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  my $Cnt = $_[0]->{Cnt};
-  $Cnt->execute($_[1]);
-  my $Data = freeze($_[2]);
-  if ($Cnt->fetchrow_arrayref()->[0]) {
-    $_[0]->{Upd}->execute($Data, $_[1]);
-  } else {
-    $_[0]->{Add}->execute($_[1], $Data);
-  }
-}
-
-sub get {
-  my $Get = $_[0]->{Get};
-  $Get->execute($_[1]);
-  my $Data = $Get->fetchrow_arrayref()->[0];
-  return thaw($Data);
-}
-
