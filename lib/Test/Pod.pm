@@ -1,3 +1,6 @@
+# JS 11/8 - Modified to make error messages look more like Perl errors so that Emacs, etc. will
+# recognize them.  In the process of contributing back to CPAN.
+
 package Test::Pod;
 
 use Cwd qw(realpath);
