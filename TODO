@@ -1,14 +1,13 @@
 TO DO
 
-* Run Rob Mueller's cacheperl.pl against CHI drivers
 * perl critic
 * expires_window
 * expires_next => ['hour', 'day']
 * allow driver to be specified as full class, in addition to abbreviated name (looks for ::)
 * Drivers
-  * BerkeleyDB (w/separate file per namespace, must handle locking)
   * FastMMap
   * memcached
+  * BerkeleyDB (w/separate file per namespace, must handle locking)
   * DBI or at least mysql
 * Test:
   * set errors
@@ -16,7 +15,6 @@ TO DO
   * default settings for $cache object: expires_at, expires_in
   * multiple writes same key
   * simultaneous writes two procs, read by third proc
-* Moosify, assuming no major effect on performance
 
 QUESTIONS
 

@@ -46,7 +46,7 @@ sub test_cache
 }
 
 rmtree("$cwd/caches");
-my $chi_cache = CHI->new({driver => 'File', root_dir => "$cwd/caches/chi_cache"});
+my $chi_cache = CHI->new(driver => 'File', root_dir => "$cwd/caches/chi_cache");
 my $cache_cache;
 $cache_cache = Cache::FileCache->new({cache_root => "$cwd/caches/cache_cache"}) unless $only_chi;
 unless ($test_writes) {
@@ -62,7 +62,7 @@ unless ($test_writes) {
 
 sub bench
 {
-    my $iter = $test_writes ? 40 : 100;
+    my $iter = $test_writes ? 20 : 100;
     timethese($iter, {
         'CHI::Driver::File' => sub { test_cache($chi_cache) },
         ($only_chi ? () : ('Cache::FileCache'  => sub { test_cache($cache_cache) })),
