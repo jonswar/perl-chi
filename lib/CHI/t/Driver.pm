@@ -21,7 +21,7 @@ sub testing_driver {
 sub new_cache {
     my $self = shift;
 
-    return CHI->new( { driver => $self->testing_driver(), @_ } );
+    return CHI->new( driver => $self->testing_driver(), @_ );
 }
 
 # Some standard keys and values
@@ -222,7 +222,7 @@ sub test_namespaces : Test(6) {
     my $self = shift;
 
     my $cache0 =
-      do { package Foo::Bar; CHI->new( { driver => $self->testing_driver } ) };
+      do { package Foo::Bar; CHI->new( driver => $self->testing_driver ) };
     is( $cache0->namespace, 'Foo::Bar', 'namespace defaults to package' );
 
     my ( $ns1, $ns2, $ns3 ) = ( 'ns1', 'ns2', 'ns3' );

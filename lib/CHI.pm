@@ -3,15 +3,15 @@ use strict;
 use warnings;
 
 sub new {
-    my ( $class, $params ) = @_;
+    my ( $class, %params ) = @_;
 
-    my $driver = $params->{driver};
+    my $driver = $params{driver};
     die "missing required param 'driver'" unless defined $driver;
     my $driver_class = "CHI::Driver::" . $driver;
     eval "require $driver_class";
     die $@ if $@;
 
-    return $driver_class->new($params);
+    return $driver_class->new(\%params);
 }
 
 1;

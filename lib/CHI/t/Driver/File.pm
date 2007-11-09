@@ -19,12 +19,10 @@ sub new_cache {
     my $self = shift;
 
     return CHI->new(
-        {
             driver       => $self->testing_driver(),
             root_dir     => $root_dir,
             on_set_error => 'die',
             @_
-        }
     );
 }
 
