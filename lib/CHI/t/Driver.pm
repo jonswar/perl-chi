@@ -1,5 +1,6 @@
 package CHI::t::Driver;
 use CHI::Test;
+use String::Random qw(random_string);
 use strict;
 use warnings;
 use base qw(CHI::Test::Class);
@@ -325,6 +326,75 @@ sub test_clear : Test(10) {
     while ( my ( $keyname, $key ) = each(%keys) ) {
         ok( !defined $cache->get($key),
             "key '$keyname' no longer defined after clear" );
+    }
+}
+
+sub test_multiple_procs : Test(1) {
+    my $self = shift;
+    my ( @values, @pids, %valid_values );
+    my $shared_key = 'shared_key';
+
+    local $SIG{CHLD} = 'IGNORE';
+
+    my $child_action = sub {
+        my $p           = shift;
+        my $value       = $values[$p];
+        my $child_cache = $self->new_cache();
+
+        # Let parent catch up
+        sleep(1);
+        for ( my $i = 0 ; $i < 100 ; $i++ ) {
+            $child_cache->set( $shared_key, $value );
+        }
+        $cache->set( "done$p", 1 );
+    };
+
+    foreach my $p ( 0 .. 2 ) {
+        $values[$p] = random_string( scalar( "c" x 5000 ) );
+        $valid_values{ $values[$p] }++;
+        if ( my $pid = fork() ) {
+            $pids[$p] = $pid;
+        }
+        else {
+            $child_action->($p);
+            exit;
+        }
+    }
+
+    my ( $seen_value, $error );
+    my $end_time     = time() + 5;
+    my $parent_cache = $self->new_cache();
+    while (1) {
+        for ( my $i = 0 ; $i < 100 ; $i++ ) {
+            my $value = $cache->get($shared_key);
+            if ( defined($value) ) {
+                if ( $valid_values{$value} ) {
+                    $seen_value = 1;
+                }
+                else {
+                    $error = "got invalid value '$value' from shared key";
+                    last;
+                }
+            }
+        }
+        if ( !grep { !$cache->get("done$_") } ( 0 .. 2 ) ) {
+            last;
+        }
+        if ( time() >= $end_time ) {
+            $error = "did not see all done flags after 10 secs";
+            last;
+        }
+    }
+
+    if ( !$error && !$seen_value ) {
+        $error = "never saw defined value for shared key";
+    }
+
+    if ($error) {
+        ok( 0, $error );
+    }
+    else {
+        ok( 1, "passed" );
     }
 }
 
