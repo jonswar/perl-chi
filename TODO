@@ -5,15 +5,14 @@ TO DO
 * expires_next => ['hour', 'day']
 * allow driver to be specified as full class, in addition to abbreviated name (looks for ::)
 * Drivers
-  * FastMMap
-  * memcached
+  * Memcached
   * BerkeleyDB (w/separate file per namespace, must handle locking)
   * DBI or at least mysql
+  * Multilevel
 * Test:
   * set errors
   * bad driver
   * default settings for $cache object: expires_at, expires_in
-  * multiple writes same key
   * simultaneous writes two procs, read by third proc
 
 QUESTIONS

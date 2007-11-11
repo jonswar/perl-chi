@@ -11,7 +11,7 @@ sub new {
     eval "require $driver_class";
     die $@ if $@;
 
-    return $driver_class->new(\%params);
+    return $driver_class->new( \%params );
 }
 
 1;

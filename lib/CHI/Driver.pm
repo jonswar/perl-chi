@@ -106,7 +106,7 @@ sub get_object {
             expires_at     => $expire_time,
             _is_serialized => $is_serialized,
         }
-        );
+    );
 }
 
 sub get_expires_at {

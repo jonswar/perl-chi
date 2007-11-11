@@ -8,11 +8,10 @@ use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use base qw(CHI::Driver);
 
-my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-fastmmap" );
+my $Default_Root_Dir = catdir( tmpdir(), "chi-driver-fastmmap" );
 my $Default_Create_Mode = 0775;
 
-__PACKAGE__->mk_ro_accessors(
-    qw(dir_create_mode share_file root_dir));
+__PACKAGE__->mk_ro_accessors(qw(dir_create_mode share_file root_dir));
 
 sub new {
     my $class = shift;
@@ -20,7 +19,8 @@ sub new {
 
     $self->{root_dir}        ||= $Default_Root_Dir;
     $self->{dir_create_mode} ||= $Default_Create_Mode;
-    mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} ) if !-d $self->{root_dir};
+    mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
+      if !-d $self->{root_dir};
     $self->{share_file} =
       catfile( $self->{root_dir}, escape_for_filename( $self->{namespace} ) );
     my %fm_params = (

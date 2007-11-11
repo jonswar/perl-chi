@@ -25,7 +25,8 @@ sub _dump_value_with_caller {
       Data::Dumper->new( [$value] )->Indent(1)->Sortkeys(1)->Quotekeys(0)
       ->Terse(1)->Dump();
     my @caller = caller(1);
-    return sprintf( "[%s line %d] [%d] %s\n", $caller[1], $caller[2], $$, $dump );
+    return
+      sprintf( "[%s line %d] [%d] %s\n", $caller[1], $caller[2], $$, $dump );
 }
 
 sub dp {
@@ -40,6 +41,7 @@ sub dump_one_line {
 }
 
 {
+
     # Adapted from Sys::UniqueID
     my $idnum = 0;
     my $netaddr = sprintf( '%02X%02X%02X%02X', split( /\./, Sys::HostIP->ip ) );
