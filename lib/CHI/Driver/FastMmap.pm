@@ -6,12 +6,12 @@ use CHI::Util;
 use File::Path qw(mkpath);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use base qw(CHI::Driver);
+use base qw(CHI::Driver::Base::CacheContainer);
 
 my $Default_Root_Dir = catdir( tmpdir(), "chi-driver-fastmmap" );
 my $Default_Create_Mode = 0775;
 
-__PACKAGE__->mk_ro_accessors(qw(dir_create_mode share_file root_dir));
+__PACKAGE__->mk_ro_accessors(qw(dir_create_mode fm_cache share_file root_dir));
 
 sub new {
     my $class = shift;
@@ -28,39 +28,10 @@ sub new {
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
           qw(init_file share_file cache_size page_size num_pages)
     );
-    $self->{fm_cache} = Cache::FastMmap->new(%fm_params);
+    $self->{_contained_cache} = $self->{fm_cache} =
+      Cache::FastMmap->new(%fm_params);
 
     return $self;
-}
-
-sub fetch {
-    my ( $self, $key ) = @_;
-
-    return $self->{fm_cache}->get($key);
-}
-
-sub store {
-    my ( $self, $key, $data, $options ) = @_;
-
-    $self->{fm_cache}->set( $key, $data );
-}
-
-sub delete {
-    my ( $self, $key ) = @_;
-
-    $self->{fm_cache}->remove($key);
-}
-
-sub clear {
-    my ($self) = @_;
-
-    $self->{fm_cache}->clear();
-}
-
-sub get_keys {
-    my ($self) = @_;
-
-    return [ $self->{fm_cache}->get_keys(0) ];
 }
 
 sub get_namespaces {
@@ -81,7 +52,7 @@ __END__
 
 =head1 NAME
 
-CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed file
+CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed files
 
 =head1 SYNOPSIS
 
@@ -124,7 +95,7 @@ Permissions mode to use when creating directories. Defaults to 0775.
 =item num_pages
 =item init_file
 
-These options are passed directly to L<Cache::FastMmap>; see that documentation for information.
+These options are passed directly to L<Cache::FastMmap>.
 
 =back
 
