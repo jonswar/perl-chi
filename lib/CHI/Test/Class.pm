@@ -1,5 +1,6 @@
 package CHI::Test::Class;
 use CHI::Util;
+use Getopt::Long;
 use Module::Find qw(findallmod);
 use strict;
 use warnings;
@@ -32,6 +33,11 @@ sub load_tests {
 
 sub runtests {
     my ($class) = @_;
+
+    # Handle -m flag in case test script is being run directly.
+    #
+    GetOptions( 'm|method=s' => sub { $ENV{TEST_METHOD} = ".*" . $_[1] . ".*" },
+    );
 
     # Only run tests directly in $class.
     #

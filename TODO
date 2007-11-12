@@ -3,9 +3,8 @@ TO DO
 * perl critic
 * expires_window
 * expires_next => ['hour', 'day']
-* allow driver to be specified as full class, in addition to abbreviated name (looks for ::)
+* consider supporting key escaping for any drivers that need it, e.g. memcached
 * Drivers
-  * Memcached
   * BerkeleyDB (w/separate file per namespace, must handle locking)
   * DBI or at least mysql
   * Multilevel

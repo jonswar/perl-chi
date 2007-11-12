@@ -71,12 +71,12 @@ sub desc {
 
 sub get {
     my ( $self, $key ) = @_;
-    return unless defined($key);
+    return undef unless defined($key);
 
-    my $value_with_metadata = $self->fetch($key) or return;
+    my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
     my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
-    return if ( $expire_time <= time );
+    return undef if ( $expire_time <= time );
 
     my $value = substr( $value_with_metadata, $Metadata_Length );
     if ($is_serialized) {

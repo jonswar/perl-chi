@@ -5,13 +5,30 @@ use strict;
 use warnings;
 use base qw(CHI::Test::Class);
 
-my ( $cache, $cache_class );
+my ( $cache, $cache_class, %keys, %values, @keynames );
+
+# Flags indicating what each test driver supports
+sub supports_clear    { 1 }
+sub supports_get_keys { 1 }
+
+sub standard_keys_and_values : Test(startup) {
+    my ($self) = @_;
+
+    my ( $keys_ref, $values_ref ) = $self->set_standard_keys_and_values();
+    %keys     = %$keys_ref;
+    %values   = %$values_ref;
+    @keynames = keys(%keys);
+}
+
+sub kvpair {
+    return ( $keys{medium}, $values{medium} );
+}
 
 sub setup : Test(setup) {
     my $self = shift;
 
     $cache = $self->new_cache();
-    $cache->clear();
+    $cache->clear() if $self->supports_clear();
     $cache_class = ref($cache);
 }
 
@@ -36,40 +53,39 @@ sub new_cache_options {
     return ( driver => $self->testing_driver(), on_set_error => 'die' );
 }
 
-# Some standard keys and values
-my @mixed_chars = ( 32 .. 48, 57 .. 65, 90 .. 97, 122 .. 126 );
-my %keys = (
-    'space'    => ' ',
-    'char'     => 'a',
-    'zero'     => 0,
-    'one'      => 1,
-    'medium'   => 'medium',
-    'mixed'    => join( "", map { chr($_) } @mixed_chars ),
-    'large'    => scalar( 'ab' x 256 ),
-    'arrayref' => 'arrayref',
-    'hashref'  => 'hashref',
+sub set_standard_keys_and_values {
+    my ( %keys, %values );
 
-    # These generate 'Wide character in print' warnings when logging about the gets/sets...
-    # not sure how to handle this...
-    #     'utf8_partial' => "abc\x{263A}def",
-    #     'utf8_all'     => "\x{263A}\x{263B}\x{263C}",
+    my @mixed_chars = ( 32 .. 48, 57 .. 65, 90 .. 97, 122 .. 126 );
+    %keys = (
+        'space'    => ' ',
+        'char'     => 'a',
+        'zero'     => 0,
+        'one'      => 1,
+        'medium'   => 'medium',
+        'mixed'    => join( "", map { chr($_) } @mixed_chars ),
+        'large'    => scalar( 'ab' x 256 ),
+        'arrayref' => 'arrayref',
+        'hashref'  => 'hashref',
 
-    # What should be done for empty key?
-    #     'empty'        => '',
+        # These generate 'Wide character in print' warnings when logging about the gets/sets...
+        # not sure how to handle this...
+        #     'utf8_partial' => "abc\x{263A}def",
+        #     'utf8_all'     => "\x{263A}\x{263B}\x{263C}",
 
-    # TODO: We should test passing an actual arrayref or hashref as a key - not sure what
-    # expected behavior is
-);
+        # What should be done for empty key?
+        #     'empty'        => '',
 
-my @keynames = keys(%keys);
-my %values = map { $_, scalar( reverse( $keys{$_} ) ) } @keynames;
-$values{arrayref} = [ 1, 2 ];
-$values{hashref} = { foo => 'bar' };
+        # TODO: We should test passing an actual arrayref or hashref as a key - not sure what
+        # expected behavior is
+    );
 
-# my $onlykey = 'mixed';
-# %keys = ($onlykey => $keys{$onlykey});
-# %values = ($onlykey => $values{$onlykey});
-# @keynames = keys(%keys);
+    %values = map { $_, scalar( reverse( $keys{$_} ) ) } keys(%keys);
+    $values{arrayref} = [ 1, 2 ];
+    $values{hashref} = { foo => 'bar' };
+
+    return ( \%keys, \%values );
+}
 
 sub set_some_keys {
     my ($c) = @_;
@@ -82,12 +98,11 @@ sub set_some_keys {
 sub test_simple : Test(1) {
     my $self = shift;
 
-    # A comment.
     $cache->set( $keys{medium}, $values{medium} );
     is( $cache->get( $keys{medium} ), $values{medium} );
 }
 
-sub test_key_types : Test(64) {
+sub test_key_types : Test(55) {
     my $self = shift;
 
     my @keys_set;
@@ -113,8 +128,6 @@ sub test_key_types : Test(64) {
         ok( !defined $cache->get($key),
             "miss after remove for key '$keyname'" );
         pop(@keys_set);
-        cmp_set( $cache->get_keys, \@keys_set,
-            "get_keys = " . join( ", ", @keys_set ) );
         $check_keys_set->("after removal of key '$keyname'");
     }
 }
@@ -143,7 +156,7 @@ sub test_expire : Test(50) {
     # Expires immediately
     my $test_expires_immediately = sub {
         my ($set_option) = @_;
-        my ( $key, $value ) = kvpair();
+        my ( $key, $value ) = $self->kvpair();
         my $desc = dump_one_line($set_option);
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is_between(
@@ -165,7 +178,7 @@ sub test_expire : Test(50) {
     # Expires shortly
     my $test_expires_shortly = sub {
         my ($set_option) = @_;
-        my ( $key, $value ) = kvpair();
+        my ( $key, $value ) = $self->kvpair();
         my $desc = "set_option = " . dump_one_line($set_option);
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is( $cache->get($key), $value, "hit ($desc)" );
@@ -186,7 +199,7 @@ sub test_expire : Test(50) {
     # Expires later
     my $test_expires_later = sub {
         my ($set_option) = @_;
-        my ( $key, $value ) = kvpair();
+        my ( $key, $value ) = $self->kvpair();
         my $desc = "set_option = " . dump_one_line($set_option);
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is( $cache->get($key), $value, "hit ($desc)" );
@@ -202,7 +215,7 @@ sub test_expire : Test(50) {
     $test_expires_later->( { expires_at => time + 3600 } );
 
     # Expires never (will fail in 2037)
-    my ( $key, $value ) = kvpair();
+    my ( $key, $value ) = $self->kvpair();
     $cache->set( $key, $value );
     ok(
         $cache->get_expires_at($key) >
@@ -251,8 +264,13 @@ sub test_namespaces : Test(6) {
         $cache1a->dump_as_hash(),
         'cache1 and cache1a are same cache'
     );
-    ok( !( @{ $cache2->get_keys() } ),
-        'cache2 empty after setting keys in cache1' );
+    ok(
+        !(
+            grep { defined $_ }
+            @{ $cache2->get_multi_arrayref( [ values(%keys) ] ) }
+        ),
+        'cache2 empty after setting keys in cache1'
+    );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
@@ -278,9 +296,9 @@ sub test_persist : Test(1) {
 sub test_multi : Test(8) {
     my $self = shift;
 
-    my @ordered_keys       = sort keys %keys;
-    my %ordered_key_values = map { ( $_, $values{$_} ) } @ordered_keys;
-    my @ordered_values     = map { $ordered_key_values{$_} } @ordered_keys;
+    my @ordered_keys       = map { $keys{$_} } @keynames;
+    my @ordered_values     = map { $values{$_} } @keynames;
+    my %ordered_key_values = map { ( $keys{$_}, $values{$_} ) } @keynames;
 
     cmp_deeply( $cache->get_multi_arrayref( ['foo'] ),
         [undef], "get_multi_arrayref before set" );
@@ -297,6 +315,7 @@ sub test_multi : Test(8) {
     cmp_deeply( $cache->get_multi_hashref( \@ordered_keys ),
         \%ordered_key_values, "get_multi_hashref" );
     cmp_set( $cache->get_keys, \@ordered_keys, "get_keys after set_multi" );
+
     $cache->remove_multi( \@ordered_keys );
     cmp_deeply(
         $cache->get_multi_arrayref( \@ordered_keys ),
@@ -320,6 +339,7 @@ sub test_multi_no_keys : Test(4) {
 sub test_clear : Test(10) {
     my $self = shift;
 
+    return "$cache_class does not support clear()" if !$self->supports_clear();
     set_some_keys($cache);
     $cache->clear();
     cmp_deeply( $cache->get_keys, [], "get_keys after clear" );
@@ -332,7 +352,7 @@ sub test_clear : Test(10) {
 sub test_multiple_procs : Test(1) {
     my $self = shift;
     my ( @values, @pids, %valid_values );
-    my $shared_key = 'shared_key';
+    my $shared_key = $keys{medium};
 
     local $SIG{CHLD} = 'IGNORE';
 

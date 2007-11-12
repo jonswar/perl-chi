@@ -20,7 +20,7 @@ sub test_creation_and_deletion : Test(10) {
     my $cache = $self->new_cache();
     is( $cache->depth, 2 );
 
-    my ( $key, $value ) = kvpair();
+    my ( $key, $value ) = $self->kvpair();
     my ($cache_file) = $cache->path_to_key($key);
     my $namespace_dir = $cache->path_to_namespace();
     ok( !-f $cache_file, "cache file '$cache_file' does not exist before set" );

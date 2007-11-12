@@ -4,7 +4,7 @@ use warnings;
 use Test::Builder;
 use base qw(Exporter);
 
-our @EXPORT = qw(is_between kvpair);
+our @EXPORT = qw(is_between);
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;
@@ -17,12 +17,6 @@ sub is_between {
         $tb->diag("$value is not between $min and $max");
         $tb->ok( undef, $desc );
     }
-}
-
-sub kvpair {
-
-    # Just an arbitrary key/value pair
-    return ( 'key123', 'value456' );
 }
 
 1;
