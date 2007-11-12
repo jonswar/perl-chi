@@ -73,11 +73,10 @@ compatibility concerns.  In particular:
 
 =item Performance
 
-Cache::Cache was not architected for speed, and some of its subclasses
-(e.g. Cache::FileCache) are particularly slow. CHI has been designed from the ground up
-with performance in mind, both in terms of general overhead and in the built-in driver
-classes.  Method calls are kept to a minimum, data is only serialized when necessary, and
-metadata such as expiration time is stored in packed binary format alongside the data.
+CHI has been designed from the ground up with performance in mind, both in terms of
+general overhead and in the built-in driver classes.  Method calls are kept to a minimum,
+data is only serialized when necessary, and metadata such as expiration time is stored in
+packed binary format alongside the data.
 
 =item Ease of subclassing
 
