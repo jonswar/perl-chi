@@ -7,7 +7,8 @@ sub new {
 
     my $driver = $params{driver};
     die "missing required param 'driver'" unless defined $driver;
-    my $driver_class = "CHI::Driver::" . $driver;
+    my $driver_class =
+      ( $driver =~ /::/ ) ? $driver : "CHI::Driver::" . $driver;
     eval "require $driver_class";
     die $@ if $@;
 
