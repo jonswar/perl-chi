@@ -82,6 +82,9 @@ This cache driver uses Cache::Memcached to store data in the specified memcached
 
 =head1 CONSTRUCTOR OPTIONS
 
+When using this driver, the following options can be passed to CHI->new() in addition to the
+L<CHI|general constructor options/constructor>.
+    
 =over
 
 =item cache_size
@@ -90,6 +93,20 @@ This cache driver uses Cache::Memcached to store data in the specified memcached
 =item init_file
 
 These options are passed directly to L<Cache::Memcached>.
+
+=back
+
+=head1 METHODS
+
+=over
+
+=item memd
+
+Returns a handle to the underlying Cache::Memcached object. You can use this to call memcached-specific methods that
+are not supported by the general API, e.g.
+
+    $self->memd->incr("key");
+    my $stats = $self->memd->stats();
 
 =back
 

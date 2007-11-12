@@ -64,10 +64,10 @@ available to Perl, such as memory, plain files, memory mapped files, memcached, 
 
 =head1 RELATION TO CACHE::CACHE
 
-CHI is intended as an evolution of DeWitt Clinton's Cache::Cache package. It starts with
-the same basic API (which has proven durable over time) but addresses some implementation
-shortcomings that cannot be fixed in Cache::Cache due to backward compatibility concerns.
-In particular:
+CHI is intended as an evolution of DeWitt Clinton's venerable Cache::Cache package. It
+starts with the same basic API (which has proven durable over time) but addresses some
+implementation shortcomings that cannot be fixed in Cache::Cache due to backward
+compatibility concerns.  In particular:
 
 =over
 
@@ -81,10 +81,10 @@ metadata such as expiration time is stored in packed binary format alongside the
 
 =item Ease of subclassing
 
-New Cache::Cache subclasses are surprisingly tedious to create, due to a lack of code
-refactoring, the use of non-OO package subroutines, and the separation of "cache" and
-"backend" classes. With CHI, the goal is to make the creation of new drivers as easy as
-possible, roughly the same as writing a TIE interface to your data store.  Concerns like
+New Cache::Cache subclasses can be tedious to create, due to a lack of code refactoring,
+the use of non-OO package subroutines, and the separation of "cache" and "backend"
+classes. With CHI, the goal is to make the creation of new drivers as easy as possible,
+roughly the same as writing a TIE interface to your data store.  Concerns like
 serialization and expiration options are handled by the driver base class so that
 individual drivers don't have to worry about them.
 

@@ -99,6 +99,19 @@ These options are passed directly to L<Cache::FastMmap>.
 
 =back
 
+=head1 METHODS
+
+=over
+
+=item fm_cache
+
+Returns a handle to the underlying Cache::FastMmap object. You can use this to call
+FastMmap-specific methods that are not supported by the general API, e.g.
+
+    $self->fm_cache->get_and_set("key", sub { ... });
+
+=back
+
 =head1 SEE ALSO
 
 Cache::FastMmap
