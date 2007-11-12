@@ -31,19 +31,20 @@ CHI -- Unified cache interface
 
     my $cache = CHI->new( driver => 'Memory' );
     my $cache = CHI->new( driver => 'File', cache_root => '/path/to/root' );
-
-    # (These drivers coming soon...)
-    #
-    my $cache = CHI->new( driver => 'DBI', dbh => $dbh, table => 'app_cache' );
+    my $cache = CHI->new(
+        driver     => 'FastMmap',
+        root_dir   => '/path/to/root',
+        cache_size => '1k'
+    );
     my $cache = CHI->new(
         driver  => 'Memcached',
         servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
     );
-    my $cache = CHI->new(
-        driver     => 'FastMmap',
-        share_file => '/path/to/sharefile',
-        cache_size => '1k'
-    );
+
+    # (These drivers coming soon...)
+    #
+    my $cache = CHI->new( driver => 'DBI', dbh => $dbh, table => 'app_cache' );
+    my $cache = CHI->new( driver => 'BerkeleyDB', root_dir => '/path/to/root' );
 
     my $customer = $cache->get($name);
     if ( !defined $customer ) {

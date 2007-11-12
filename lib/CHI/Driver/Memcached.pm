@@ -21,6 +21,31 @@ sub new {
     return $self;
 }
 
+# Memcached supports fast multiple get
+#
+
+sub get_multi_hashref
+{
+    my ($self, $keys) = @_;
+
+    my $keyvals = $self->{memd}->get_multi(@$keys);
+    foreach my $key (keys(%$keyvals)) {
+        $keyvals->{$key} = $self->_process_fetched_value($keyvals->{$key});
+    }
+    return $keyvals;
+}
+
+sub get_multi_arrayref
+{
+    my ($self, $keys) = @_;
+
+    my $keyvals = $self->get_multi_hashref($keys);
+    return [map { $keyvals->{$_} } @$keys];
+}
+
+# Not supported
+#
+
 sub get_keys {
     die "get_keys not supported for this driver";
 }

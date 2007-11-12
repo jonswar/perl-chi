@@ -74,6 +74,13 @@ sub get {
     return undef unless defined($key);
 
     my $value_with_metadata = $self->fetch($key) or return undef;
+    return $self->_process_fetched_value($value_with_metadata);
+}
+
+sub _process_fetched_value
+{
+    my ( $self, $value_with_metadata ) = @_;
+
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
     my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
     return undef if ( $expire_time <= time );
@@ -82,7 +89,6 @@ sub get {
     if ($is_serialized) {
         $value = $self->_deserialize($value);
     }
-
     return $value;
 }
 
