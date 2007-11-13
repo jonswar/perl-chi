@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Rob Mueller's script for benchmarking cache modules, modified to include CHI
+# Rob Mueller's script for benchmarking cache modules, modified to include memcached and CHI
 # From http://cpan.robm.fastmail.fm/cacheperl.pl
 #
 use File::Slurp;
@@ -120,12 +120,15 @@ my @Packages = (
   CB0_InProcHash => [ 'bin' ],
 #  CB1_CacheMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
 #  CB1_CacheMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
-  CB2_CacheFastMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
-  CB2_CacheFastMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
+#  CB2_CacheFastMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
+#  CB2_CacheFastMmap => [ 'bin', num_pages => 89, page_size => 8192 ],
 #  CB3_MLDBMSyncSDBM_File => [ 'bin' ],
 #  CC3_BerkeleyDB => [ 'bin' ],
 #  CB4_IPCMM => [ 'bin' ],
- CB9_CHIFile => [ 'bin' ],
+# CB9_CHIFile => [ 'bin' ],
+ CB10_CacheMemcached => [ 'bin' ],
+# CB11_CHIMemcached => [ 'bin' ],
+# CB12_CHIFastMmap => [ 'bin', num_pages => 11, page_size => 65536 ],
 
 #  CC0_InProcHashStorable => [ 'complex' ],
 #  CC1_CacheMmapStorable => [ 'complex', num_pages => 89, page_size => 8192 ],
@@ -133,13 +136,16 @@ my @Packages = (
 #  CC3_MLDBMSyncSDBM_FileStorable => [ 'complex' ],
 #  CC3_BerkeleyDBStorable => [ 'complex' ],
 #  CC4_IPCMMStorable => [ 'complex' ],
- CC5_CacheFileCacheStorable => [ 'complex' ],
+# CC5_CacheFileCacheStorable => [ 'complex' ],
 #	  CC6_CacheSharedMemoryCacheStorable => [ 'complex' ],
 #  ($DBSpec ? (
 #    CC7_DBIStorable => [ 'complex' ],
 #    CC8_DBIStorableUpdate => [ 'complex' ],
 #  ) : ()),
- CC9_CHIFileStorable => [ 'complex' ],
+# CC9_CHIFileStorable => [ 'complex' ],
+# CC10_CacheMemcachedStorable => [ 'complex' ],
+# CC11_CHIMemcachedStorable => [ 'complex' ],
+# CC12_CHIFastMmapStorable => [ 'complex', num_pages => 11, page_size => 65536 ],
 );
 
 #----- Now do runs
@@ -164,7 +170,7 @@ while (my ($Package, $PackageOpts) = splice @Packages, 0, 2) {
     $Data = \@DataComplex;
   }
 
-  my $Name = $Package->name();
+  my $Name = $Package;
   print "Package: $Name\nData type: $DataType\nParams: @Params\n";
 
   printf(" %5s | %6s | %6s | %6s | %5s | %5s\n", qw(Cmplx Set/S Get/S Mix/S GHitR MHitR));
@@ -290,9 +296,45 @@ while (my ($Package, $PackageOpts) = splice @Packages, 0, 2) {
 
 exit(0);
 
-package CB0_InProcHash;
+package CBase;
+use File::Spec::Functions qw(tmpdir);
+use File::Temp qw(tempfile tempdir);
 
-sub name { return "In process hash"; }
+sub new {
+  my $Proto = shift;
+  my $Class = ref($Proto) || $Proto;
+
+  my $Self = {
+    Cache => $Class->new_cache(@_),
+  };
+
+  bless ($Self, $Class);
+  return $Self;
+}
+
+sub get {
+  return $_[0]->{Cache}->get($_[1]);
+}
+
+sub set {
+  $_[0]->{Cache}->set($_[1], $_[2]);
+}
+
+sub temp_file
+{
+  return tempfile('cacheperl-XXXX', DIR => tmpdir, UNLINK => 1);
+}
+
+sub temp_dir
+{
+  return tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1);
+}
+
+
+
+
+package CB0_InProcHash;
+use base qw(CBase);
 
 sub new {
   my $Proto = shift;
@@ -311,11 +353,11 @@ sub set {
 sub get {
   return $_[0]->{$_[1]};
 }
-1;
+
 package CC0_InProcHashStorable;
 use Storable qw(freeze thaw);
+use base qw(CBase);
 
-sub name { return "Storable freeze/thaw"; }
 sub new {
   my $Proto = shift;
   my $Class = ref($Proto) || $Proto;
@@ -334,83 +376,94 @@ sub get {
   return thaw($_[0]->{$_[1]});
 }
 
-1;
 
 package CB2_CacheFastMmap;
 use Cache::FastMmap;
+use base qw(CBase);
 
-sub name { return "Cache::FastMmap"; }
 
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-  my %Args = @_;
-
-  my $File = ($Args{vol} || (-e '/tmpfs' ? '/tmpfs' : '/tmp')) . "/fcachefile";
-  my $Self = {
-    Cache => Cache::FastMmap->new(
-      share_file => $File,
+sub new_cache {
+    my $class = shift;
+    my %Args = @_;
+    return Cache::FastMmap->new(
+      share_file => $class->temp_file,
       init_file => 1,
       ($Args{page_size} ? (page_size => $Args{page_size}) : ()),
       ($Args{num_pages} ? (num_pages => $Args{num_pages}) : ()),
       raw_values => 1
-    )
-  };
-
-  bless ($Self, $Class);
-  return $Self;
+    );
 }
 
-sub set {
-  $_[0]->{Cache}->set($_[1], $_[2]);
+package CB9_CHIFile;
+use CHI;
+use File::Temp qw(tempdir);
+use base qw(CBase);
+
+sub new_cache {
+    return CHI->new(
+      driver => 'File',
+      'namespace' => 'testcache',
+      cache_depth => 2,
+      root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
+        );
 }
 
-sub get {
-  return $_[0]->{Cache}->get($_[1]);
+package CB10_CacheMemcached;
+use Cache::Memcached;
+use base qw(CBase);
+
+sub new_cache {
+    return Cache::Memcached->new(
+        servers => ["127.0.0.1:11211"],
+        );
 }
 
-1;
+package CB11_CHIMemcached;
+use CHI;
+use base qw(CBase);
+
+sub new_cache {
+    return CHI->new(
+        driver  => 'Memcached',
+        servers => ["127.0.0.1:11211"],
+        );
+}
+
+package CB12_CHIFastMmap;
+use CHI;
+use File::Temp qw(tempdir);
+use base qw(CBase);
+
+sub new_cache {
+    return CHI->new(
+        driver  => 'FastMmap',
+        root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
+        );
+}
+
 package CC2_CacheFastMmapStorable;
 use Cache::FastMmap;
+use base qw(CBase);
 
-sub name { return "Cache::FastMmap Storable"; }
 
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-  my %Args = @_;
-
-  my $File = ($Args{vol} || (-e '/tmpfs' ? '/tmpfs' : '/tmp')) . "/fcachefile";
-  my $Self = {
-    Cache => Cache::FastMmap->new(
-      share_file => $File,
+sub new_cache {
+    my $class = shift;
+    my %Args = @_;
+    return Cache::FastMmap->new(
+      share_file => $class->temp_file,
       init_file => 1,
       ($Args{page_size} ? (page_size => $Args{page_size}) : ()),
       ($Args{num_pages} ? (num_pages => $Args{num_pages}) : ()),
       raw_values => 0
     )
-  };
-
-  bless ($Self, $Class);
-  return $Self;
 }
-
-sub set {
-  $_[0]->{Cache}->set($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->get($_[1]);
-}
-
-1;
 
 package CC3_BerkeleyDBStorable;
 use Storable qw(freeze thaw);
 use BerkeleyDB;
 use Fcntl qw(:DEFAULT);
+use base qw(CBase);
 
-sub name { return "BerkeleyDB Storable"; }
 
 sub new {
   my $Proto = shift;
@@ -450,13 +503,12 @@ sub get {
   return thaw( $value );
 }
 
-1;
 
 package CC3_BerkeleyDB;
 use BerkeleyDB;
 use Fcntl qw(:DEFAULT);
+use base qw(CBase);
 
-sub name { return "BerkeleyDB"; }
 
 sub new {
   my $Proto = shift;
@@ -496,97 +548,28 @@ sub get {
   return $value;
 }
 
-1;
 
 package CC5_CacheFileCacheStorable;
 use Cache::FileCache;
 use File::Temp qw(tempdir);
+use base qw(CBase);
 
-sub name { return "Cache::FileCache Storable"; }
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  my $Self = {
-    Cache => new Cache::FileCache({
+sub new_cache {
+    return Cache::FileCache->new({
       'namespace' => 'testcache',
       cache_depth => 2,
       cache_root => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
-    })
-  };
-
-  bless ($Self, $Class);
-  return $Self;
+    });
 }
-
-sub set {
-  $_[0]->{Cache}->set($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->get($_[1]);
-}
-
-package CB9_CHIFile;
-use CHI;
-use File::Temp qw(tempdir);
-
-sub name { return "CHI::Driver::File"; }
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
-
-  my $Self = {
-    Cache => CHI->new(
-      driver => 'File',
-      'namespace' => 'testcache',
-      cache_depth => 2,
-      root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
-    )
-  };
-
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->set($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->get($_[1]);
-}
-
-1;
 
 package CC9_CHIFileStorable;
-use CHI;
-use File::Temp qw(tempdir);
+use base qw(CB9_CHIFile);
 
-sub name { return "CHI::Driver::File Storable"; }
-sub new {
-  my $Proto = shift;
-  my $Class = ref($Proto) || $Proto;
+package CC10_CacheMemcachedStorable;
+use base qw(CB10_CacheMemcached);
 
-  my $Self = {
-    Cache => CHI->new(
-      driver => 'File',
-      'namespace' => 'testcache',
-      cache_depth => 2,
-      root_dir => tempdir('cacheperl-XXXX', TMPDIR => 1, CLEANUP => 1)
-    )
-  };
+package CC11_CHIMemcachedStorable;
+use base qw(CB11_CHIMemcached);
 
-  bless ($Self, $Class);
-  return $Self;
-}
-
-sub set {
-  $_[0]->{Cache}->set($_[1], $_[2]);
-}
-
-sub get {
-  return $_[0]->{Cache}->get($_[1]);
-}
-
-1;
+package CC12_CHIFastMmapStorable;
+use base qw(CB12_CHIFastMmap);
