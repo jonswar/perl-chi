@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors(qw(key value expires_at early_expires_at _is_serialized));
+__PACKAGE__->mk_ro_accessors(
+    qw(key value expires_at early_expires_at _is_serialized));
 
 sub is_expired {
     my ($self) = @_;

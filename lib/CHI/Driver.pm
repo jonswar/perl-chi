@@ -66,7 +66,7 @@ sub new {
     $self->{default_set_options}->{expires_in}       = $self->{expires_in};
     $self->{default_set_options}->{expires_variance} = $self->{expires_variance}
       || 0.0;
-    
+
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
@@ -107,9 +107,11 @@ sub _process_fetched_value {
                       ( $expires_at - $early_expires_at )
                 )
             )
-        )) {
-            return undef;
-        }
+        )
+      )
+    {
+        return undef;
+    }
 
     # Deserialize if necessary
     #

@@ -50,7 +50,11 @@ sub new_cache {
 sub new_cache_options {
     my $self = shift;
 
-    return ( driver => $self->testing_driver(), expires_variance => 0, on_set_error => 'die' );
+    return (
+        driver           => $self->testing_driver(),
+        expires_variance => 0,
+        on_set_error     => 'die'
+    );
 }
 
 sub set_standard_keys_and_values {
@@ -232,34 +236,40 @@ sub test_expire : Test(62) {
     );
 }
 
-sub test_expires_variance : Test(10)
-{
+sub test_expires_variance : Test(10) {
     my $self = shift;
-    
+
     my $start_time = time();
     my $expires_at = $start_time + 10;
     my ( $key, $value ) = $self->kvpair();
-    $cache->set($key, $value, { expires_at => $expires_at, expires_variance => 0.5 });
-    is($cache->get_object($key)->expires_at(), $expires_at, "expires_at = $start_time");
-    is($cache->get_object($key)->early_expires_at(), $start_time + 5, "early_expires_at = $start_time + 5");
+    $cache->set( $key, $value,
+        { expires_at => $expires_at, expires_variance => 0.5 } );
+    is( $cache->get_object($key)->expires_at(),
+        $expires_at, "expires_at = $start_time" );
+    is(
+        $cache->get_object($key)->early_expires_at(),
+        $start_time + 5,
+        "early_expires_at = $start_time + 5"
+    );
 
     my %expire_count;
-    for (my $time = $start_time + 3; $time <= $expires_at + 1; $time++) {
+    for ( my $time = $start_time + 3 ; $time <= $expires_at + 1 ; $time++ ) {
         local $CHI::Driver::Test_Time = $time;
-        for (my $i = 0; $i < 100; $i++) {
-            if (!defined $cache->get($key)) {
+        for ( my $i = 0 ; $i < 100 ; $i++ ) {
+            if ( !defined $cache->get($key) ) {
                 $expire_count{$time}++;
             }
         }
     }
-    for (my $time = $start_time + 3; $time <= $start_time + 5; $time++) {
-        ok(!$expire_count{$time}, "got no expires at $time");
+    for ( my $time = $start_time + 3 ; $time <= $start_time + 5 ; $time++ ) {
+        ok( !$expire_count{$time}, "got no expires at $time" );
     }
-    for (my $time = $start_time + 7; $time <= $start_time + 8; $time++) {
-        ok($expire_count{$time} > 0 && $expire_count{$time} < 100, "got some expires at $time");
+    for ( my $time = $start_time + 7 ; $time <= $start_time + 8 ; $time++ ) {
+        ok( $expire_count{$time} > 0 && $expire_count{$time} < 100,
+            "got some expires at $time" );
     }
-    for (my $time = $expires_at; $time <= $expires_at + 1; $time++) {
-        ok($expire_count{$time} == 100, "got all expires at $time");
+    for ( my $time = $expires_at ; $time <= $expires_at + 1 ; $time++ ) {
+        ok( $expire_count{$time} == 100, "got all expires at $time" );
     }
 }
 
