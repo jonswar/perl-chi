@@ -50,7 +50,7 @@ sub new_cache {
 sub new_cache_options {
     my $self = shift;
 
-    return ( driver => $self->testing_driver(), on_set_error => 'die' );
+    return ( driver => $self->testing_driver(), expires_variance => 0, on_set_error => 'die' );
 }
 
 sub set_standard_keys_and_values {
@@ -150,7 +150,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expire : Test(50) {
+sub test_expire : Test(62) {
     my $self = shift;
 
     # Expires immediately
@@ -175,17 +175,18 @@ sub test_expire : Test(50) {
     $test_expires_immediately->( { expires_in => "0 seconds" } );
     $test_expires_immediately->( { expires_at => time - 1 } );
 
-    # Expires shortly
+    # Expires shortly (real time)
     my $test_expires_shortly = sub {
         my ($set_option) = @_;
         my ( $key, $value ) = $self->kvpair();
         my $desc = "set_option = " . dump_one_line($set_option);
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is( $cache->get($key), $value, "hit ($desc)" );
+        my $start_time = time();
         is_between(
             $cache->get_expires_at($key),
-            time() + 1,
-            time() + 3,
+            $start_time + 1,
+            $start_time + 3,
             "expires_at ($desc)"
         );
         ok( $cache->is_valid($key), "valid ($desc)" );
@@ -196,19 +197,26 @@ sub test_expire : Test(50) {
     $test_expires_shortly->("2 seconds");
     $test_expires_shortly->( { expires_at => time + 2 } );
 
-    # Expires later
+    # Expires later (test time)
     my $test_expires_later = sub {
         my ($set_option) = @_;
         my ( $key, $value ) = $self->kvpair();
         my $desc = "set_option = " . dump_one_line($set_option);
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is( $cache->get($key), $value, "hit ($desc)" );
+        my $start_time = time();
         is_between(
             $cache->get_expires_at($key),
-            time() + 3599,
-            time() + 3601,
+            $start_time + 3599,
+            $start_time + 3601,
             "expires_at ($desc)"
         );
+        ok( $cache->is_valid($key), "valid ($desc)" );
+        local $CHI::Driver::Test_Time = $start_time + 3598;
+        ok( $cache->is_valid($key), "valid ($desc)" );
+        local $CHI::Driver::Test_Time = $start_time + 3602;
+        ok( !defined $cache->get($key), "miss after 1 hour ($desc)" );
+        ok( !$cache->is_valid($key), "invalid ($desc)" );
     };
     $test_expires_later->(3600);
     $test_expires_later->("1 hour");
@@ -222,6 +230,37 @@ sub test_expire : Test(50) {
           time + Time::Duration::Parse::parse_duration('1 year'),
         "expires never"
     );
+}
+
+sub test_expires_variance : Test(10)
+{
+    my $self = shift;
+    
+    my $start_time = time();
+    my $expires_at = $start_time + 10;
+    my ( $key, $value ) = $self->kvpair();
+    $cache->set($key, $value, { expires_at => $expires_at, expires_variance => 0.5 });
+    is($cache->get_object($key)->expires_at(), $expires_at, "expires_at = $start_time");
+    is($cache->get_object($key)->early_expires_at(), $start_time + 5, "early_expires_at = $start_time + 5");
+
+    my %expire_count;
+    for (my $time = $start_time + 3; $time <= $expires_at + 1; $time++) {
+        local $CHI::Driver::Test_Time = $time;
+        for (my $i = 0; $i < 100; $i++) {
+            if (!defined $cache->get($key)) {
+                $expire_count{$time}++;
+            }
+        }
+    }
+    for (my $time = $start_time + 3; $time <= $start_time + 5; $time++) {
+        ok(!$expire_count{$time}, "got no expires at $time");
+    }
+    for (my $time = $start_time + 7; $time <= $start_time + 8; $time++) {
+        ok($expire_count{$time} > 0 && $expire_count{$time} < 100, "got some expires at $time");
+    }
+    for (my $time = $expires_at; $time <= $expires_at + 1; $time++) {
+        ok($expire_count{$time} == 100, "got all expires at $time");
+    }
 }
 
 sub test_not_in_cache : Test(3) {

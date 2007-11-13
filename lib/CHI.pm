@@ -118,9 +118,9 @@ Defaults to the package from which new() was called, which means that each packa
 automatically have its own cache. If you want multiple packages to share the same cache,
 just decide a common namespace like 'main'.
 
-=item default_expires_in [DURATION]
-=item default_expires_at [NUM]
-=item default_expires_window [DURATION]
+=item expires_in [DURATION]
+=item expires_at [NUM]
+=item expires_variance [FLOAT]
 
 Provide default values for the corresponding set() options - see set().
 
@@ -183,26 +183,38 @@ forms this can take.
 
 =item expires_at [NUM]
 
-An exact epoch time when the data expires.
+The epoch time at which the data expires.
 
-=item expires_window [DURATION]
+=item expires_variance [FLOAT]
 
-(NOT YET IMPLEMENTED)
+Controls the variable expiration feature, which allows items to expire a little earlier
+than the stated expiration time to help prevent cache miss stampedes.
 
-A window of time before the official expiration when the item might be expired.  The
-probability of expiration increases as a function of how far along we are in the window,
-with the probability being near 0 at the beginning of the window and approaching 1 at the
-end.
+Value is between 0.0 and 1.0, with 0.0 meaning that items expire exactly when specified
+(feature is disabled), and 1.0 meaning that items might expire anytime from now til the
+stated expiration time. The default is 0.0.
 
-expires_window may either be specified as a duration (see L</DURATION EXPRESSIONS>) or as
-a percentage of I<expires_in> ending in a "%".
+The probability of expiration increases as a function of how far along we are in the
+potential expiration window, with the probability being near 0 at the beginning of the
+window and approaching 1 at the end.
 
-For example, both of the following will expire sometime between 15 and 20 minutes:
+For example, all of the following will expire sometime between 15 and 20 minutes, with
+about a 20% chance at 16 minutes, a 40% chance at 17 minutes, and a 100% chance at 20
+minutes.
 
-    $cache->set($key, $value, { expires_in => '20 min', expires_window => '5 min' });
+    my $cache = CHI->new ( ..., expires_variance => 0.25, ... );
+    $cache->set($key, $value, '20 min');
+    $cache->set($key, $value, { expires_at => time() + 20*60 });
 
-    my $cache = CHI->new ( ..., expires_window => '25%', ... );
-    $cache->set($key, $value, { expires_in => '20 min' });
+    my $cache = CHI->new ( ... );
+    $cache->set($key, $value, { expires_in => '20 min', expires_variance => 0.25 });
+
+By "expire", we simply mean that get() returns undef, as if the specified expiration time
+had been reached. The "dice are rolled" on every get(), so you can get situations like
+this with two consecutive gets:
+
+    my $value = $cache->get($key);        # returns undef (indicating expired)
+    my $value = $cache->get($key);        # returns valid value this time!
 
 =back
 

@@ -8,12 +8,16 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors(
-    qw(default_expires_at default_expires_in default_expires_window namespace on_set_error)
+    qw(default_set_options expires_at expires_in expires_variance namespace on_set_error)
 );
 
-my $Metadata_Format = "LCCC";
-my $Metadata_Length = 7;
-my $Expire_Never    = 0xffffffff;
+my $Metadata_Format = "LLCC";
+my $Metadata_Length = 10;
+my $Expires_Never   = 0xffffffff;
+my $Cache_Version   = 1;
+
+# To override time() for testing
+our $Test_Time;
 
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
@@ -57,6 +61,12 @@ sub new {
         }
     }
 
+    $self->{default_set_options}->{expires_at} = $self->{expires_at}
+      || $Expires_Never;
+    $self->{default_set_options}->{expires_in}       = $self->{expires_in};
+    $self->{default_set_options}->{expires_variance} = $self->{expires_variance}
+      || 0.0;
+    
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
@@ -77,18 +87,37 @@ sub get {
     return $self->_process_fetched_value($value_with_metadata);
 }
 
-sub _process_fetched_value
-{
+sub _process_fetched_value {
     my ( $self, $value_with_metadata ) = @_;
 
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
-    return undef if ( $expire_time <= time );
+    my ( $early_expires_at, $expires_at, $is_serialized ) =
+      unpack( $Metadata_Format, $metadata );
 
+    # Determine whether item has expired, probabilistically if between early_expires_at and expires_at.
+    #
+    my $time = $Test_Time || time();
+    if (
+        $time >= $early_expires_at
+        && (
+            $time >= $expires_at
+            || (
+                rand() < (
+                    ( $time - $early_expires_at ) /
+                      ( $expires_at - $early_expires_at )
+                )
+            )
+        )) {
+            return undef;
+        }
+
+    # Deserialize if necessary
+    #
     my $value = substr( $value_with_metadata, $Metadata_Length );
     if ($is_serialized) {
         $value = $self->_deserialize($value);
     }
+
     return $value;
 }
 
@@ -96,9 +125,10 @@ sub get_object {
     my ( $self, $key ) = @_;
     return unless defined($key);
 
-    my $value_with_metadata = $self->fetch($key) or return;
+    my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
+    my ( $early_expires_at, $expires_at, $is_serialized ) =
+      unpack( $Metadata_Format, $metadata );
 
     my $value = substr( $value_with_metadata, $Metadata_Length );
     if ($is_serialized) {
@@ -107,10 +137,11 @@ sub get_object {
 
     return CHI::CacheObject->new(
         {
-            key            => $key,
-            value          => $value,
-            expires_at     => $expire_time,
-            _is_serialized => $is_serialized,
+            key              => $key,
+            value            => $value,
+            early_expires_at => $early_expires_at,
+            expires_at       => $expires_at,
+            _is_serialized   => $is_serialized,
         }
     );
 }
@@ -118,10 +149,12 @@ sub get_object {
 sub get_expires_at {
     my ( $self, $key ) = @_;
 
-    my $value_with_metadata = $self->fetch($key) or return;
+    my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $expire_time, $is_serialized ) = unpack( $Metadata_Format, $metadata );
-    return $expire_time;
+    my ( $early_expires_at, $expires_at, $is_serialized ) =
+      unpack( $Metadata_Format, $metadata );
+
+    return $expires_at;
 }
 
 sub is_valid {
@@ -139,32 +172,33 @@ sub set {
     my ( $self, $key, $value, $options ) = @_;
     return unless defined($key) && defined($value);
 
+    # Fill in $options if not passed, copy if passed, and apply defaults.
+    #
     if ( !defined($options) ) {
-        $options = {};
+        $options = $self->default_set_options;
     }
     elsif ( !ref($options) ) {
-        $options = { expires_in => $options };
+        $options = { %{ $self->default_set_options }, expires_in => $options };
+    }
+    else {
+        $options = { %{ $self->default_set_options }, %$options };
     }
 
-    # Parse expiration options. This tedious series of conditionals is necessary because
-    # (1) We have to account for both passed options and default values in $cache
-    # (2) We have to be careful to check for undefined'ness, not falsity
-    # (3) We don't have // yet. :)
+    # Determine early and final expiration times
     #
-    my ( $expires_at, $expires_in );
-    if ( !defined( $expires_at = delete( $options->{expires_at} ) ) ) {
-        $expires_at = $self->{default_expires_at};
-    }
-    if ( !defined( $expires_in = delete( $options->{expires_in} ) ) ) {
-        $expires_in = $self->{default_expires_in};
-    }
-    if ( defined $expires_in ) {
-        $expires_at = time + parse_duration($expires_in);
-    }
-    if ( !defined($expires_at) ) {
-        $expires_at = $Expire_Never;
-    }
+    my $time = $Test_Time || time();
+    my $expires_at =
+      ( defined( $options->{expires_in} ) )
+      ? $time + parse_duration( $options->{expires_in} )
+      : $options->{expires_at};
+    my $early_expires_at =
+      ( $expires_at == $Expires_Never )
+      ? $Expires_Never
+      : $expires_at -
+      ( ( $expires_at - $time ) * $options->{expires_variance} );
 
+    # Serialize if necessary
+    #
     my $is_serialized = 0;
     my $store_value   = $value;
     if ( ref($store_value) ) {
@@ -172,9 +206,8 @@ sub set {
         $is_serialized = 1;
     }
 
-    my $checksum = length($key) & 0xff;
-    my $metadata =
-      pack( $Metadata_Format, $expires_at, $is_serialized, $checksum );
+    my $metadata = pack( $Metadata_Format,
+        $early_expires_at, $expires_at, $is_serialized, $Cache_Version );
     my $store_value_with_metadata = $metadata . $store_value;
     eval {
         $self->store( $key, $store_value_with_metadata, $expires_at, $options );

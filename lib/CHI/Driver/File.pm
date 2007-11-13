@@ -80,7 +80,7 @@ sub store {
     my ( $self, $key, $data, $options ) = @_;
 
     my ( $file, $dir ) = $self->path_to_key($key);
-    my $temp_file = $file . "." . unique_id();
+    my $temp_file = tmpdir() . "/chi-driver-file." . unique_id();
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed

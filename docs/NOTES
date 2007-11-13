@@ -1,0 +1,89 @@
+EXPIRES VARIANCE
+
+For now, expires_variance must be specified as a floating point percentage. Can make more
+flexible later, e.g. accept expires_variance a duration and/or percentage string, or
+accept a two-element range for expires_in, accept an actual early_expires_in time.
+
+System wide default expires_variance is 0.1.
+
+After expires_at has been determined, compute early_expires_at. Store both in metadata.
+
+On get, if time is between early_expires_at and expires_at, expire with probability
+(time - early_expires_at) / (expires_at - early_expires_at).
+
+SIMPLIFYING METADATA, SERIALIZE
+
+To simplify the initial implementation I'm going to assume the default for use_metadata,
+serialize and serializer. Not sure yet if any other settings would be useful.
+
+METADATA
+
+When use_metadata is true (by default), a small block of binary data is added to the end
+of the value (after serialization, if any). We add to the end to reduce the effect on readability,
+if this becomes a problem we can change it.
+
+Currently it contains
+* serialize type (4 bits)
+* cache version (1 byte)
+* expire time (4 bytes)
+* length of metadata (1 byte) - must be last byte if metadata is at end
+
+If use_metadata is false, no metadata is added, and we lose the following features:
+* ability to get expire_time, and thus to use expires_window, for some backends (e.g. memcached)
+
+SCALARS VERSUS STORABLE
+
+serialize can be set to 'when-needed', 'always' or 'never'.
+
+When set to 'when-needed' (the default), we serialize a value on set IF:
+1) It is a reference, AND
+2) The cache backend does not already auto-serialize (e.g. Cache::Cache)
+
+On a get, we look at the metadata to determine whether to deserialize.
+
+If use_metadata is false, then serialize will have to be set to 'always' or 'never'.
+
+THE CHI API
+
+use CHI;
+
+my $cache = CHI->new(<driver>, { <options> });
+
+Common options:
+namespace           => undef
+expires_in          => undef
+expires_at          => undef
+expires_window      => undef       ("1 minute", "20%")
+max_items           => undef
+on_set_error        => 'ignore'   ('ignore', 'warn', 'die', sub { })
+serializer          => 'Storable' ('Storable', 'Data::Dumper', 'YAML::Syck')
+should_serialize    => 'when-needed'  ('always', 'when-needed', 'never')
+use_metadata        => 1
+
+Set options:
+expires_in     => undef
+expires_at     => undef
+
+my $cache = CHI->new({driver => 'Null'});
+my $cache = CHI->new({driver => 'Memory' });
+my $cache = CHI->new({driver => 'File', ..., cache_root => '/path/to/root' });
+my $cache = CHI->new({driver => 'DBI', ..., dbh => $dbh or connect_options => [$data_source, $username, $auth, \%attr] });
+my $cache = CHI->new({driver => 'CacheCache', ..., cache_class => 'File::Cache', cache_options => { ... } });
+my $cache = CHI->new({driver => 'Memcached', ..., servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ], compress_threshold => 10_000});
+my $cache = CHI->new({driver => 'FastMmap', ..., share_file => '/path/to/sharefile', cache_size => '1k' });
+
+$cache->get($key);
+$cache->set($key, $value, $expire_time | { options });
+$cache->compute($key, sub { ... }, $expire_time | { options });
+$cache->clear($key);
+$cache->get_multi_arrayref([$key1, $key2, ...]);
+$cache->get_multi_hashref([$key1, $key2, ...]);
+$cache->set_multi({$key1 => $value1, $key2 => $value2, ...}, $expire_time | { options });
+$cache->clear_multi([$key1, $key2, ...]);
+
+my $meta = $cache->get_meta($key);
+$meta->key();
+$meta->expires_at();
+$meta->serializer();
+$meta->is_serialized();
+$meta->cache_version();

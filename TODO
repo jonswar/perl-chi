@@ -1,8 +1,8 @@
 TO DO
 
 * perl critic
-* expires_window
 * expires_next => ['hour', 'day']
+* class data for defaults, subclassing CHI
 * consider supporting key escaping for any drivers that need it, e.g. memcached
 * Drivers
   * BerkeleyDB (w/separate file per namespace, must handle locking)
@@ -12,7 +12,8 @@ TO DO
   * set errors
   * bad driver
   * default settings for $cache object: expires_at, expires_in
-  * simultaneous writes two procs, read by third proc
+* Add logging back
+* Put cache version into metadata and check on get
 
 QUESTIONS
 
