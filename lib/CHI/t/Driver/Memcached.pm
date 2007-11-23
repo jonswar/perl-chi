@@ -1,6 +1,5 @@
 package CHI::t::Driver::Memcached;
 use CHI::Test;
-use File::Temp qw(tempdir);
 use IO::Socket::INET;
 use strict;
 use warnings;

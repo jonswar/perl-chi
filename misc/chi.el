@@ -8,10 +8,12 @@
   )
 
 (defun test-pattern-for-module (module)
-  (replace-regexp-in-string
-   "::" "-"
-   (replace-regexp-in-string "CHI::t::" "" module))
-  )
+  (concat
+   (replace-regexp-in-string
+    "::" "-"
+    (replace-regexp-in-string "CHI::t::" "" module))
+   ".t"
+  ))
 
 (defun chic ()
   "Run bin/chitest for the current test class in a compile buffer; use C-x C-n to cycle through errors"

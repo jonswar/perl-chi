@@ -108,8 +108,10 @@ sub store {
         } while ( $size_left > 0 );
     }
 
-    rename( $temp_file, $file )
-      or die "could not rename '$temp_file' to '$file': $!";
+    if ( !rename( $temp_file, $file ) ) {
+        dp( [ $!, -f $temp_file, -d dirname($file) ] );
+        die "could not rename '$temp_file' to '$file': $!";
+    }
 }
 
 sub delete {

@@ -7,9 +7,30 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors(
-    qw(default_set_options expires_at expires_in expires_variance namespace on_set_error)
-);
+__PACKAGE__->mk_ro_accessors(qw(default_set_options namespace));
+__PACKAGE__->mk_accessors(qw(on_set_error));
+
+# When these are set, call _compute_default_set_options again.
+foreach my $field qw(expires_at expires_in expires_variance) {
+    no strict 'refs';
+    *{ __PACKAGE__ . "::$field" } = sub {
+        my $self = shift;
+        if (@_) {
+            $self->{$field} = $_[0];
+            $self->_compute_default_set_options();
+        }
+        else {
+            return $self->{$field};
+        }
+    };
+}
+
+# These methods must be implemented by subclass
+foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
+    no strict 'refs';
+    *{ __PACKAGE__ . "::$method" } =
+      sub { die "method '$method' must be implemented by subclass" };
+}
 
 my $Metadata_Format = "LLCC";
 my $Metadata_Length = 10;
@@ -18,13 +39,6 @@ my $Cache_Version   = 1;
 
 # To override time() for testing
 our $Test_Time;
-
-# These methods must be implemented by subclass
-foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
-    no strict 'refs';
-    *{ __PACKAGE__ . "::$method" } =
-      sub { die "method '$method' must be implemented by subclass" };
-}
 
 sub new {
     my $class = shift;
@@ -61,16 +75,25 @@ sub new {
         }
     }
 
-    $self->{default_set_options}->{expires_at} = $self->{expires_at}
-      || $Expires_Never;
-    $self->{default_set_options}->{expires_in}       = $self->{expires_in};
-    $self->{default_set_options}->{expires_variance} = $self->{expires_variance}
-      || 0.0;
+    $self->_compute_default_set_options();
 
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
     return $self;
+}
+
+sub _compute_default_set_options {
+    my ($self) = @_;
+
+    $self->{default_set_options}->{expires_at} = $self->{expires_at}
+      || $Expires_Never;
+    $self->{default_set_options}->{expires_in} =
+      defined( $self->{expires_in} )
+      ? parse_duration( $self->{expires_in} )
+      : undef;
+    $self->{default_set_options}->{expires_variance} = $self->{expires_variance}
+      || 0.0;
 }
 
 sub desc {
@@ -208,6 +231,8 @@ sub set {
         $is_serialized = 1;
     }
 
+    # Prepend value with metadata, and store
+    #
     my $metadata = pack( $Metadata_Format,
         $early_expires_at, $expires_at, $is_serialized, $Cache_Version );
     my $store_value_with_metadata = $metadata . $store_value;
@@ -315,6 +340,12 @@ sub dump_as_hash {
 
     return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
           @{ $self->get_keys() } };
+}
+
+sub is_empty {
+    my ($self) = @_;
+
+    return !@{ $self->get_keys() };
 }
 
 1;

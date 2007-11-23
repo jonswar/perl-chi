@@ -40,6 +40,16 @@ CHI -- Unified cache interface
         driver  => 'Memcached',
         servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
     );
+    my $cache = CHI->new(
+        driver => 'Multilevel',
+        subcaches => [
+            { driver => 'Memory' },
+            {
+                driver  => 'Memcached',
+                servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
+            }
+        ],
+    );
 
     # (These drivers coming soon...)
     #
@@ -229,6 +239,10 @@ Remove all entries from the namespace associated with this cache instance.
 =item get_keys( )
 
 Returns a list of keys in the cache. This may include expired keys that have not yet been purged.
+
+=item is_empty( )
+
+Returns a boolean indicating whether the cache is empty, based on get_keys().
 
 =item purge( )
 

@@ -1,0 +1,210 @@
+package CHI::Driver::Multilevel;
+use Carp;
+use CHI::Util;
+use Hash::MoreUtils qw(slice_exists);
+use List::MoreUtils qw(uniq);
+use strict;
+use warnings;
+use base qw(CHI::Driver);
+
+__PACKAGE__->mk_ro_accessors(qw(subcaches));
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+
+    my $subcaches = $self->{subcaches}
+      or croak "missing required parameter 'subcaches'";
+    my %subparams = slice_exists( $_[0], 'namespace' );
+    foreach my $subcache (@$subcaches) {
+        if ( ref($subcache) eq 'HASH' ) {
+            my $subcache_options = $subcache;
+            my $chi_class = caller();    # should be CHI or a subclass
+            $subcache = $chi_class->new( %subparams, %$subcache_options );
+            if (my ($option) = grep { defined($subcache_options->{$_}) } qw(expires_at expires_in expires_variance)) {
+                croak "expiration option '$option' not supported in subcache";
+            }
+        }
+    }
+
+    return $self;
+}
+
+sub get {
+    my ( $self, $key ) = @_;
+
+    my ( $value, @subcaches_to_populate );
+    foreach my $subcache ( @{ $self->{subcaches} } ) {
+        if ( defined( $value = $subcache->get($key) ) ) {
+            foreach my $subcache (@subcaches_to_populate) {
+                $subcache->set( $key, $value );
+            }
+            return $value;
+        }
+        else {
+            push( @subcaches_to_populate, $subcache );
+        }
+    }
+    return undef;
+}
+
+sub get_object {
+    my ( $self, $key ) = @_;
+
+    return $self->return_first_defined( sub { $_[0]->get_object($key) } );
+}
+
+sub get_expires_at {
+    my ( $self, $key ) = @_;
+
+    return $self->return_first_defined( sub { $_[0]->get_expires_at($key) } );
+}
+
+sub store {
+    my ( $self, $key, $data, $options ) = @_;
+
+    $self->do_for_each_subcache( sub { $_[0]->store( $key, $data, $options ) }
+    );
+}
+
+sub delete {
+    my ( $self, $key ) = @_;
+
+    $self->do_for_each_subcache( sub { $_[0]->delete($key) } );
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->do_for_each_subcache( sub { $_[0]->clear() } );
+}
+
+sub get_keys {
+    my ($self) = @_;
+
+    my @keys;
+    $self->do_for_each_subcache( sub { push( @keys, @{ $_[0]->get_keys() } ) }
+    );
+    return [ uniq(@keys) ];
+}
+
+sub get_namespaces {
+    my ($self) = @_;
+
+    my @namespaces;
+    $self->do_for_each_subcache(
+        sub { push( @namespaces, @{ $_[0]->get_namespaces() } ) } );
+    return [ uniq(@namespaces) ];
+}
+
+sub do_for_each_subcache {
+    my ( $self, $code ) = @_;
+
+    foreach my $subcache ( @{ $self->{subcaches} } ) {
+        $code->($subcache);
+    }
+}
+
+sub return_first_defined {
+    my ( $self, $code ) = @_;
+
+    foreach my $subcache ( @{ $self->{subcaches} } ) {
+        if ( defined( my $retval = $code->($subcache) ) ) {
+            return $retval;
+        }
+    }
+    return undef;
+}
+
+1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+CHI::Driver::Multilevel -- Use several caches chained together
+
+=head1 SYNOPSIS
+
+    use CHI;
+
+    my $cache = CHI->new(
+        driver => 'Multilevel',
+        subcaches => [
+            { driver => 'Memory' },
+            {
+                driver  => 'Memcached',
+                servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
+            }
+        ],
+    );
+
+=head1 DESCRIPTION
+
+This cache driver allows you to use two or more CHI caches together, for example, a
+memcached cache bolstered by a local memory cache.
+
+=head1 CONSTRUCTOR OPTIONS
+
+When using this driver, the following options can be passed to CHI->new() in addition to the
+L<CHI|general constructor options/constructor>.
+    
+=over
+
+=item subcaches [ARRAYREF]
+
+Required - an array reference of CHI caches that will power this cache, in order from most
+to least local. Each element of the array is either a hash reference to be passed to CHI->new(),
+or an actual driver handle.
+
+The accessor of the same name will return an array reference of driver handles.
+
+=back
+
+=head1 OPERATION
+
+This section describes how the standard CHI methods are interpreted for multilevel caches.
+
+=over
+
+=item get
+
+Do a get from each subcache in turn, returning the first defined and unexpired value found. In addition, set the value in any more-local subcaches that initially missed, using the subcache's default set options.
+
+For example, in our memory-memcached example, a hit from the memcached cache would cause the value to be written into the memory cache, but a hit from the memory cache would not result in a write to the memcached cache.
+
+=item get_object
+=item get_expires_at
+
+Calls the method on each subcache in turn, returning the first defined value found. These methods are not very well suited to multilevel caches; you might be better off calling these methods manually on the individual subcache handles.
+
+=item set
+
+Set the value in all subcaches (write-through). Expiration options are taken from the set() method, then from the default options for the parent cache. Subcaches may not have their own default expiration options (this may change in the future).
+
+=item remove
+=item clear
+
+Calls the method on each subcache.
+
+=item get_keys
+=item get_namespaces
+
+Calls the method on all subcaches and returns the union of the results.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (C) 2007 Jonathan Swartz, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut

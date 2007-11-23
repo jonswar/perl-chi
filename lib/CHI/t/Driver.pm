@@ -92,7 +92,7 @@ sub set_standard_keys_and_values {
 }
 
 sub set_some_keys {
-    my ($c) = @_;
+    my ( $self, $c ) = @_;
 
     foreach my $keyname (@keynames) {
         $c->set( $keys{$keyname}, $values{$keyname} );
@@ -139,7 +139,7 @@ sub test_key_types : Test(55) {
 sub test_deep_copy : Test(8) {
     my $self = shift;
 
-    set_some_keys($cache);
+    $self->set_some_keys($cache);
     foreach my $keyname qw(arrayref hashref) {
         my $key   = $keys{$keyname};
         my $value = $values{$keyname};
@@ -154,7 +154,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expire : Test(62) {
+sub test_expire : Test(64) {
     my $self = shift;
 
     # Expires immediately
@@ -194,10 +194,15 @@ sub test_expire : Test(62) {
             "expires_at ($desc)"
         );
         ok( $cache->is_valid($key), "valid ($desc)" );
-        sleep(2);
-        ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
-        ok( !$cache->is_valid($key), "invalid ($desc)" );
+
+        # Only bother sleeping and expiring for one of the variants
+        if ( $set_option eq "2 seconds" ) {
+            sleep(2);
+            ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
+            ok( !$cache->is_valid($key), "invalid ($desc)" );
+        }
     };
+    $test_expires_shortly->(2);
     $test_expires_shortly->("2 seconds");
     $test_expires_shortly->( { expires_at => time + 2 } );
 
@@ -282,7 +287,7 @@ sub test_not_in_cache : Test(3) {
 sub test_serialize : Test(9) {
     my $self = shift;
 
-    set_some_keys($cache);
+    $self->set_some_keys($cache);
     foreach my $keyname (@keynames) {
         my $expect_serialized =
           ( $keyname eq 'arrayref' || $keyname eq 'hashref' ) ? 1 : 0;
@@ -295,8 +300,7 @@ sub test_serialize : Test(9) {
 sub test_namespaces : Test(6) {
     my $self = shift;
 
-    my $cache0 =
-      do { package Foo::Bar; CHI->new( driver => $self->testing_driver ) };
+    my $cache0 = do { package Foo::Bar; $self->new_cache() };
     is( $cache0->namespace, 'Foo::Bar', 'namespace defaults to package' );
 
     my ( $ns1, $ns2, $ns3 ) = ( 'ns1', 'ns2', 'ns3' );
@@ -307,19 +311,14 @@ sub test_namespaces : Test(6) {
         [ $ns1, $ns1, $ns2, $ns3 ],
         'cache->namespace()'
     );
-    set_some_keys($cache1);
+    $self->set_some_keys($cache1);
     cmp_deeply(
         $cache1->dump_as_hash(),
         $cache1a->dump_as_hash(),
         'cache1 and cache1a are same cache'
     );
-    ok(
-        !(
-            grep { defined $_ }
-            @{ $cache2->get_multi_arrayref( [ values(%keys) ] ) }
-        ),
-        'cache2 empty after setting keys in cache1'
-    );
+    ok( !@{ $cache2->get_keys() },
+        'cache2 empty after setting keys in cache1' );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
@@ -334,7 +333,7 @@ sub test_persist : Test(1) {
     my $hash;
     {
         my $cache1 = $self->new_cache();
-        set_some_keys($cache1);
+        $self->set_some_keys($cache1);
         $hash = $cache1->dump_as_hash();
     }
     my $cache2 = $self->new_cache();
@@ -389,7 +388,7 @@ sub test_clear : Test(10) {
     my $self = shift;
 
     return "$cache_class does not support clear()" if !$self->supports_clear();
-    set_some_keys($cache);
+    $self->set_some_keys($cache);
     $cache->clear();
     cmp_deeply( $cache->get_keys, [], "get_keys after clear" );
     while ( my ( $keyname, $key ) = each(%keys) ) {
@@ -415,7 +414,7 @@ sub test_multiple_procs : Test(1) {
         for ( my $i = 0 ; $i < 100 ; $i++ ) {
             $child_cache->set( $shared_key, $value );
         }
-        $cache->set( "done$p", 1 );
+        $child_cache->set( "done$p", 1 );
     };
 
     foreach my $p ( 0 .. 2 ) {
@@ -435,7 +434,7 @@ sub test_multiple_procs : Test(1) {
     my $parent_cache = $self->new_cache();
     while (1) {
         for ( my $i = 0 ; $i < 100 ; $i++ ) {
-            my $value = $cache->get($shared_key);
+            my $value = $parent_cache->get($shared_key);
             if ( defined($value) ) {
                 if ( $valid_values{$value} ) {
                     $seen_value = 1;
@@ -446,7 +445,7 @@ sub test_multiple_procs : Test(1) {
                 }
             }
         }
-        if ( !grep { !$cache->get("done$_") } ( 0 .. 2 ) ) {
+        if ( !grep { !$parent_cache->get("done$_") } ( 0 .. 2 ) ) {
             last;
         }
         if ( time() >= $end_time ) {

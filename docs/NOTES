@@ -1,3 +1,28 @@
+MULTILEVEL DRIVER
+
+Actually multilevel is a bad name because of potential confusion with get_multi_*, set_multi, etc.
+
+Other possible names: Composite, Chained
+
+    my $cache = CHI->new(
+        driver => 'Multilevel',
+        subcaches => [
+            { driver => 'Memory' },
+            {
+                driver  => 'Memcached',
+                servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
+            }
+        ],
+    );
+
+get: do a get from each subcache in turn. on a hit from subcache N, write the value into the subcache 0..N-1 (using the subcache's default set options). Then return the value. Note that this means a set may occur into subcaches 0..N-1 with a later expire time than subcache N.
+
+get_object, get_expires_at: ugh...return the first one, I guess, and don't do any writing.
+
+store: do a store to each cache (write-through).
+
+delete, clear, get_keys, get_namespaces: do for each cache.
+
 EXPIRES VARIANCE
 
 For now, expires_variance must be specified as a floating point percentage. Can make more
