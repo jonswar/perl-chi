@@ -50,12 +50,7 @@ CHI::Driver::CacheCache -- CHI wrapper for Cache::Cache
 
 =head1 DESCRIPTION
 
-This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is very fast,
-and can be used to share data between processes on a single host, though not between hosts.
-
-To support namespaces, this driver takes a directory parameter rather than a file, and
-creates one Cache::FastMMap file for each namespace. Because CHI handles serialization
-automatically, we pass the C<raw_values> flag.
+This driver wraps any Cache::Cache cache.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -64,41 +59,19 @@ L<CHI|general constructor options/constructor>.
     
 =over
 
-=item root_dir
+=item cc_class
 
-Path to the directory that will contain the share files, one per namespace. Defaults to a
-directory called 'chi-driver-fastmmap' under the OS default temp directory (e.g. '/tmp'
-on UNIX).
+Name of Cache::Cache class to create, e.g. Cache::FileCache. Required.
 
-=item dir_create_mode
+=item cc_options
 
-Permissions mode to use when creating directories. Defaults to 0775.
-
-=item cache_size
-=item page_size
-=item num_pages
-=item init_file
-
-These options are passed directly to L<Cache::FastMmap>.
-
-=back
-
-=head1 METHODS
-
-=over
-
-=item fm_cache
-
-Returns a handle to the underlying Cache::FastMmap object. You can use this to call
-FastMmap-specific methods that are not supported by the general API, e.g.
-
-    $self->fm_cache->get_and_set("key", sub { ... });
+Hashref of options to pass to Cache::Cache constructor. Required.
 
 =back
 
 =head1 SEE ALSO
 
-Cache::FastMmap
+Cache::Cache
 CHI
 
 =head1 AUTHOR
