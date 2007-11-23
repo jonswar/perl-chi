@@ -1,53 +1,31 @@
-package CHI::Driver::FastMmap;
+package CHI::Driver::CacheCache;
 use strict;
 use warnings;
-use Cache::FastMmap;
+use Cache::Cache;
+use Carp;
 use CHI::Util;
-use File::Path qw(mkpath);
-use File::Slurp qw(read_dir);
-use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use Hash::MoreUtils qw(slice_exists);
 use base qw(CHI::Driver::Base::CacheContainer);
 
-my $Default_Root_Dir = catdir( tmpdir(), "chi-driver-fastmmap" );
-my $Default_Create_Mode = 0775;
-
-__PACKAGE__->mk_ro_accessors(qw(dir_create_mode fm_cache share_file root_dir));
+__PACKAGE__->mk_ro_accessors(qw(cc_class cc_options));
 
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
 
-    $self->{root_dir}        ||= $Default_Root_Dir;
-    $self->{dir_create_mode} ||= $Default_Create_Mode;
-    mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
-      if !-d $self->{root_dir};
-    $self->{share_file} =
-      catfile( $self->{root_dir}, escape_for_filename( $self->{namespace} ) );
-    my %fm_params = (
-        raw_values => 1,
-        map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
-          qw(init_file share_file cache_size page_size num_pages)
-    );
-    $self->{_contained_cache} = $self->{fm_cache} =
-      Cache::FastMmap->new(%fm_params);
+    my $cc_class = $self->{cc_class}
+      or croak "missing required parameter 'cc_class'";
+    my $cc_options = $self->{cc_options}
+      or croak "missing required parameter 'cc_options'";
+    my %subparams = slice_exists( $_[0], 'namespace' );
+
+    eval "require $cc_class";
+    die $@ if $@;
+
+    $self->{_contained_cache} = $self->{cc_cache} =
+      $cc_class->new( { %subparams, %{$cc_options} } );
 
     return $self;
-}
-
-sub get_keys {
-    my ($self) = @_;
-
-    return [ $self->{_contained_cache}->get_keys(0) ];
-}
-
-sub get_namespaces {
-    my ($self) = @_;
-
-    my @contents = read_dir( $self->root_dir() );
-    my @namespaces =
-      map { unescape_for_filename($_) }
-      grep { -d catdir( $self->root_dir(), $_ ) } @contents;
-    return \@namespaces;
 }
 
 1;
@@ -58,16 +36,16 @@ __END__
 
 =head1 NAME
 
-CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed files
+CHI::Driver::CacheCache -- CHI wrapper for Cache::Cache
 
 =head1 SYNOPSIS
 
     use CHI;
 
     my $cache = CHI->new(
-        driver     => 'FastMmap',
-        root_dir   => '/path/to/cache/root',
-        cache_size => '1m'
+        driver     => 'CacheCache',
+        cc_class   => 'Cache::FileCache',
+        cc_options => { cache_root => '/path/to/cache/root' },
     );
 
 =head1 DESCRIPTION

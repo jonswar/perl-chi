@@ -1,6 +1,7 @@
 TO DO
 
-* Investigate test failures with multiple_procs and file backend (does it happen with File::Cache?)
+* Investigate test failures with multiple_procs and file backend (does it happen with File::Cache? on linux?)
+  . It does happen with FileCache
 * Run benchmarks on linux for memcached, others
 * perl critic
 * expires_next => ['hour', 'day']
