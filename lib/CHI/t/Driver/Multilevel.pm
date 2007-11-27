@@ -170,7 +170,9 @@ sub test_expiration_options : Test(7) {
     my $cache;
 
     my $test_expires_in = sub {
-        my ( $desc, $parent_new_flags, $subcache_new_flags, $set_flags, $expected_expires_in ) = @_;
+        my ( $desc, $parent_new_flags, $subcache_new_flags, $set_flags,
+            $expected_expires_in )
+          = @_;
         my $subcache_spec = {
             subcaches => [
                 { driver => 'Memory',   %$subcache_new_flags },
@@ -188,17 +190,27 @@ sub test_expiration_options : Test(7) {
         );
     };
 
-    $test_expires_in->( 'parent option only', { expires_in => '5 sec' }, {}, [],
-        5 );
+    $test_expires_in->(
+        'parent option only',
+        { expires_in => '5 sec' },
+        {}, [], 5
+    );
     $test_expires_in->(
         'parent and set option',
-        { expires_in => '5 sec' }, {}, 
-        ['15 sec'], 15
+        { expires_in => '5 sec' },
+        {}, ['15 sec'], 15
     );
     $test_expires_in->( 'set option only', {}, {}, ['15 sec'], 15 );
 
-    throws_ok(sub { $test_expires_in->( 'subcache option', {}, { expires_in => '10 sec' }, 0) },
-              qr/expiration option 'expires_in' not supported in subcache/);
+    throws_ok(
+        sub {
+            $test_expires_in->(
+                'subcache option',
+                {}, { expires_in => '10 sec' }, 0
+            );
+        },
+        qr/expiration option 'expires_in' not supported in subcache/
+    );
 
 }
 

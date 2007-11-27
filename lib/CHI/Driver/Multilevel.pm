@@ -19,12 +19,16 @@ sub new {
     foreach my $subcache (@$subcaches) {
         if ( ref($subcache) eq 'HASH' ) {
             my $subcache_options = $subcache;
-            my $chi_class = caller();    # should be CHI or a subclass
+            my $chi_class        = caller();    # should be CHI or a subclass
             $subcache = $chi_class->new( %subparams, %$subcache_options );
-            if (my ($option) = grep { defined($subcache_options->{$_}) } qw(expires_at expires_in expires_variance)) {
+            if ( my ($option) =
+                grep { defined( $subcache_options->{$_} ) }
+                qw(expires_at expires_in expires_variance) )
+            {
                 croak "expiration option '$option' not supported in subcache";
             }
         }
+        $subcache->is_subcache(1);
     }
 
     return $self;
@@ -33,18 +37,21 @@ sub new {
 sub get {
     my ( $self, $key ) = @_;
 
+    my $log = CHI->logger();
     my ( $value, @subcaches_to_populate );
     foreach my $subcache ( @{ $self->{subcaches} } ) {
         if ( defined( $value = $subcache->get($key) ) ) {
             foreach my $subcache (@subcaches_to_populate) {
                 $subcache->set( $key, $value );
             }
+            $self->_log_get_result( $log, $key, "HIT" );
             return $value;
         }
         else {
             push( @subcaches_to_populate, $subcache );
         }
     }
+    $self->_log_get_result( $log, $key, "MISS" );
     return undef;
 }
 

@@ -1,18 +1,30 @@
 package CHI;
+use CHI::NullLogger;
 use strict;
 use warnings;
+
+our $Logger = CHI::NullLogger->new();
+
+sub logger {
+    my $self = shift;
+    if (@_) {
+        $Logger = shift;
+    }
+    return $Logger;
+}
 
 sub new {
     my ( $class, %params ) = @_;
 
     my $driver_class;
-    if (my $driver = delete($params{driver})) {
+    if ( my $driver = delete( $params{driver} ) ) {
         $driver_class = "CHI::Driver::$driver";
     }
     else {
-        $driver_class = delete($params{driver_class});
+        $driver_class = delete( $params{driver_class} );
     }
-    die "missing required param 'driver' or 'driver_class'" unless defined $driver_class;
+    die "missing required param 'driver' or 'driver_class'"
+      unless defined $driver_class;
     eval "require $driver_class";
     die $@ if $@;
 

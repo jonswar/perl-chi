@@ -30,8 +30,9 @@ sub new_cache_options {
     # CHI::Test::Memcached::Driver defines get_keys for testing purposes
     return (
         $self->SUPER::new_cache_options(),
-        driver  => 'CHI::Test::Memcached::Driver',
-        servers => [$testaddr]
+        driver       => undef,
+        driver_class => 'CHI::Test::Memcached::Driver',
+        servers      => [$testaddr]
     );
 }
 

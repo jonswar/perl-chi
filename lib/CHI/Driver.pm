@@ -7,8 +7,9 @@ use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors(qw(default_set_options namespace));
-__PACKAGE__->mk_accessors(qw(on_set_error));
+__PACKAGE__->mk_ro_accessors(
+    qw(default_set_options driver_short_name namespace));
+__PACKAGE__->mk_accessors(qw(is_subcache on_set_error));
 
 # When these are set, call _compute_default_set_options again.
 foreach my $field qw(expires_at expires_in expires_variance) {
@@ -80,6 +81,8 @@ sub new {
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
+    ( $self->{driver_short_name} = ref($self) ) =~ s/^CHI::Driver:://;
+
     return $self;
 }
 
@@ -106,13 +109,20 @@ sub get {
     my ( $self, $key ) = @_;
     return undef unless defined($key);
 
-    my $value_with_metadata = $self->fetch($key) or return undef;
-    return $self->_process_fetched_value($value_with_metadata);
+    my $value_with_metadata = $self->fetch($key);
+    if ( !defined $value_with_metadata ) {
+        my $log = CHI->logger();
+        $self->_log_get_result( $log, $key, "MISS (not in cache)" )
+          if $log->is_debug;
+        return undef;
+    }
+    return $self->_process_fetched_value( $key, $value_with_metadata );
 }
 
 sub _process_fetched_value {
-    my ( $self, $value_with_metadata ) = @_;
+    my ( $self, $key, $value_with_metadata ) = @_;
 
+    my $log = CHI->logger();
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
     my ( $early_expires_at, $expires_at, $is_serialized ) =
       unpack( $Metadata_Format, $metadata );
@@ -133,11 +143,14 @@ sub _process_fetched_value {
         )
       )
     {
+        $self->_log_get_result( $log, $key, "MISS (expired)" )
+          if $log->is_debug;
         return undef;
     }
 
     # Deserialize if necessary
     #
+    $self->_log_get_result( $log, $key, "HIT" ) if $log->is_debug;
     my $value = substr( $value_with_metadata, $Metadata_Length );
     if ($is_serialized) {
         $value = $self->_deserialize($value);
@@ -244,6 +257,9 @@ sub set {
         return;
     }
 
+    my $log = CHI->logger();
+    $self->_log_set_result( $log, $key ) if $log->is_debug;
+
     return $value;
 }
 
@@ -263,6 +279,34 @@ sub _deserialize {
     my ( $self, $value ) = @_;
 
     return Storable::thaw($value);
+}
+
+sub _log_get_result {
+    my ( $self, $log, $key, $msg ) = @_;
+
+    # if $log->is_debug - done in caller
+    if ( !$self->is_subcache ) {
+        $log->debug(
+            sprintf(
+                "cache get for namespace='%s', key='%s', driver='%s': %s",
+                $self->{namespace}, $key, $self->{driver_short_name}, $msg
+            )
+        );
+    }
+}
+
+sub _log_set_result {
+    my ( $self, $log, $key ) = @_;
+
+    # if $log->is_debug - done in caller
+    if ( !$self->is_subcache ) {
+        $log->debug(
+            sprintf(
+                "cache set for namespace='%s', key='%s', driver='%s'",
+                $self->{namespace}, $key, $self->{driver_short_name}
+            )
+        );
+    }
 }
 
 sub _handle_set_error {

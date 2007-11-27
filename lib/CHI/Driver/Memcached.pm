@@ -29,7 +29,8 @@ sub get_multi_hashref {
 
     my $keyvals = $self->{memd}->get_multi(@$keys);
     foreach my $key ( keys(%$keyvals) ) {
-        $keyvals->{$key} = $self->_process_fetched_value( $keyvals->{$key} );
+        $keyvals->{$key} =
+          $self->_process_fetched_value( $key, $keyvals->{$key} );
     }
     return $keyvals;
 }
