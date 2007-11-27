@@ -5,10 +5,14 @@ use warnings;
 sub new {
     my ( $class, %params ) = @_;
 
-    my $driver = $params{driver};
-    die "missing required param 'driver'" unless defined $driver;
-    my $driver_class =
-      ( $driver =~ /::/ ) ? $driver : "CHI::Driver::" . $driver;
+    my $driver_class;
+    if (my $driver = delete($params{driver})) {
+        $driver_class = "CHI::Driver::$driver";
+    }
+    else {
+        $driver_class = delete($params{driver_class});
+    }
+    die "missing required param 'driver' or 'driver_class'" unless defined $driver_class;
     eval "require $driver_class";
     die $@ if $@;
 
@@ -50,6 +54,8 @@ CHI -- Unified cache interface
             }
         ],
     );
+
+    my $cache = CHI->new( driver_class => 'My::Special::Driver' );
 
     # (These drivers coming soon...)
     #
@@ -109,15 +115,18 @@ overhead and minimum of glue code required.
 
 =head1 CONSTRUCTOR
 
-To create a new cache handle, call CHI->new. It takes the following common options:
+To create a new cache handle, call CHI->new. It takes the following common options.
 
 =over
 
 =item driver [STRING]
 
-A string specifying the CHI::Driver subclass to drive the cache, for example "Memory" or
-"File".  CHI will first prefix the string with "CHI::Driver::" and look for that class; it
-will then look for the plain string as a class, and finally fail.
+The name of a standard driver to drive the cache, for example "Memory" or "File".  CHI
+will prefix the string with "CHI::Driver::".
+
+=item driver_class [STRING]
+
+The exact CHI::Driver subclass to drive the cache, for example "My::Memory::Driver".
 
 =item namespace [STRING]
 
