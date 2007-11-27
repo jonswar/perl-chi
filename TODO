@@ -1,17 +1,4 @@
-TO DO FOR HEARST
-
-* Add logging back - have driver take a log object for now
-* Test:
-  * logging
-  * set errors
-* Create HM::CHI subclass with our defaults
-  * Replace busy_lock with expires_variance
-* Integrate with Hearst Mason
-  * Don't worry about back compatibility for now
-  * Add option chi_root_class and override with HM::CHI
-  * Pass default_cache_options and namespace=>$comp->title to chi_root_class->new
-
-TO DO FOR CPAN
+TO DO
 
 * Run benchmarks on linux for memcached, others (waiting for Peter)
 * perl critic
