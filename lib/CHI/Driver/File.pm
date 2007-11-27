@@ -108,9 +108,15 @@ sub store {
         } while ( $size_left > 0 );
     }
 
-    if ( !rename( $temp_file, $file ) ) {
-        dp( [ $!, -f $temp_file, -d dirname($file) ] );
-        die "could not rename '$temp_file' to '$file': $!";
+    # Rename can fail in rare race conditions...try multiple times
+    #
+    for ( my $try = 0 ; $try < 10 ; $try++ ) {
+        last if ( rename( $temp_file, $file ) );
+    }
+    if ( -f $temp_file ) {
+        my $error = $!;
+        unlink($temp_file);
+        die "could not rename '$temp_file' to '$file': $error";
     }
 }
 
