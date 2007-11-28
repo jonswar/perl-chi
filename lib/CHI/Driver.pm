@@ -33,8 +33,8 @@ foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
       sub { die "method '$method' must be implemented by subclass" };
 }
 
-my $Metadata_Format = "LLCC";
-my $Metadata_Length = 10;
+my $Metadata_Format = "LLLCC";
+my $Metadata_Length = 14;
 my $Expires_Never   = 0xffffffff;
 my $Cache_Version   = 1;
 
@@ -128,7 +128,7 @@ sub _process_fetched_value {
 
     my $log = CHI->logger();
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $early_expires_at, $expires_at, $is_serialized ) =
+    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
       unpack( $Metadata_Format, $metadata );
 
     # Determine whether item has expired, probabilistically if between early_expires_at and expires_at.
@@ -169,7 +169,7 @@ sub get_object {
 
     my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $early_expires_at, $expires_at, $is_serialized ) =
+    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
       unpack( $Metadata_Format, $metadata );
 
     my $value = substr( $value_with_metadata, $Metadata_Length );
@@ -182,6 +182,7 @@ sub get_object {
             key              => $key,
             value            => $value,
             early_expires_at => $early_expires_at,
+            created_at       => $created_at,
             expires_at       => $expires_at,
             _is_serialized   => $is_serialized,
         }
@@ -193,7 +194,7 @@ sub get_expires_at {
 
     my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $early_expires_at, $expires_at, $is_serialized ) =
+    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
       unpack( $Metadata_Format, $metadata );
 
     return $expires_at;
@@ -229,6 +230,7 @@ sub set {
     # Determine early and final expiration times
     #
     my $time = $Test_Time || time();
+    my $created_at = $time;
     my $expires_at =
       ( defined( $options->{expires_in} ) )
       ? $time + parse_duration( $options->{expires_in} )
@@ -251,7 +253,7 @@ sub set {
     # Prepend value with metadata, and store
     #
     my $metadata = pack( $Metadata_Format,
-        $early_expires_at, $expires_at, $is_serialized, $Cache_Version );
+        $created_at, $early_expires_at, $expires_at, $is_serialized, $Cache_Version );
     my $store_value_with_metadata = $metadata . $store_value;
     eval {
         $self->store( $key, $store_value_with_metadata, $expires_at, $options );

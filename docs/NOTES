@@ -1,3 +1,16 @@
+MASON INTEGRATION
+
+Ideally we would incorporate the extra features from Mason's BaseCache such that we could eliminate
+BaseCache and have $m->cache return a vanilla CHI handle.
+
+Feature gap:
+* expire method
+* expire_if method (operating on metadata)
+* get parameters, passed as hash after key
+  * busy_lock - if object expires, set new expire time before returning undef
+  * expire_if (NOT expires_if) - for efficiency, do inline rather than calling expire_if and getting object again
+* cache object supports get_expires_at (NOT expires_at) as well as get_created_at
+
 MULTILEVEL DRIVER
 
 Actually multilevel is a bad name because of potential confusion with get_multi_*, set_multi, etc.

@@ -11,6 +11,7 @@ TO DO
 * support key escaping for any drivers that need it, e.g. memcached (via parameter, default on)
 * background compute
 * Put cache version into metadata and check on get
+* Think about different name for multilevel driver (potential confusion with get_multi_*, set_multi, etc.)
 
 QUESTIONS
 

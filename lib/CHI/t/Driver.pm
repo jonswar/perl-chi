@@ -418,7 +418,7 @@ sub test_logging : Test(6) {
     $log->contains_ok(
         qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
     );
-    $cache->set( $key, $values{medium}, 20 );
+    $cache->set( $key, $value, 20 );
     $log->contains_ok(qr/cache set for .* key='$key', driver='$driver'/);
     $cache->get( $key );
     $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
@@ -432,6 +432,19 @@ sub test_logging : Test(6) {
         qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
     );
     $log->empty_ok();
+}
+
+sub test_created_at : Test(2)
+{
+    my $self = shift;
+    my ( $key, $value ) = $self->kvpair();
+    my $start_time = time();
+    $cache->set( $key, $value );
+    is_between($cache->get_object($key)->created_at, $start_time, $start_time + 2);
+
+    local $CHI::Driver::Test_Time = $start_time + 50;
+    $cache->set( $key, $value );
+    is_between($cache->get_object($key)->created_at, $start_time + 50, $start_time + 52);
 }
 
 sub test_multiple_procs : Test(1) {

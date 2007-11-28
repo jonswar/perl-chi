@@ -4,7 +4,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors(
-    qw(key value expires_at early_expires_at _is_serialized));
+    qw(key value created_at expires_at early_expires_at _is_serialized));
 
 sub is_expired {
     my ($self) = @_;
@@ -30,6 +30,7 @@ CHI::CacheObject -- Contains information about cache entries.
     my $key        = $object->key();
     my $value      = $object->value();
     my $expires_at = $object->expires_at();
+    my $created_at = $object->created_at();
 
 =head1 DESCRIPTION
 
