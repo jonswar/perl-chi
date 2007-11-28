@@ -49,6 +49,8 @@ All methods are read-only.
 
 =item expires_at
 
+=item created_at
+
 =back
 
 =head1 SEE ALSO
