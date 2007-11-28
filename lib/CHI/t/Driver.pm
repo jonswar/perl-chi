@@ -155,7 +155,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expire : Test(64) {
+sub test_expires_immediately : Test(28) {
     my $self = shift;
 
     # Expires immediately
@@ -179,6 +179,10 @@ sub test_expire : Test(64) {
     $test_expires_immediately->("-1 seconds");
     $test_expires_immediately->( { expires_in => "0 seconds" } );
     $test_expires_immediately->( { expires_at => time - 1 } );
+}
+
+sub test_expires_shortly : Test(14) {
+    my $self = shift;
 
     # Expires shortly (real time)
     my $test_expires_shortly = sub {
@@ -206,6 +210,10 @@ sub test_expire : Test(64) {
     $test_expires_shortly->(2);
     $test_expires_shortly->("2 seconds");
     $test_expires_shortly->( { expires_at => time + 2 } );
+}
+
+sub test_expires_later : Test(21) {
+    my $self = shift;
 
     # Expires later (test time)
     my $test_expires_later = sub {
@@ -231,6 +239,10 @@ sub test_expire : Test(64) {
     $test_expires_later->(3600);
     $test_expires_later->("1 hour");
     $test_expires_later->( { expires_at => time + 3600 } );
+}
+
+sub test_expires_never : Test(1) {
+    my $self = shift;
 
     # Expires never (will fail in 2037)
     my ( $key, $value ) = $self->kvpair();
@@ -242,7 +254,69 @@ sub test_expire : Test(64) {
     );
 }
 
-sub test_expires_variance : Test(10) {
+sub test_expires_manually : Test(3) {
+    my $self = shift;
+
+    my ( $key, $value ) = $self->kvpair();
+    my $desc = "expires manually";
+    $cache->set( $key, $value );
+    is( $cache->get($key), $value, "hit ($desc)" );
+    $cache->expire($key);
+    ok( !defined $cache->get($key), "miss after expire ($desc)" );
+    ok( !$cache->is_valid($key), "invalid after expire ($desc)" );
+}
+
+sub test_expires_conditionally : Test(40) {
+    my $self = shift;
+
+    # Expires conditionally
+    my $test_expires_conditionally = sub {
+        my ( $code, $cond_desc, $expect_expire ) = @_;
+        foreach my $separate_call ( 0, 1 ) {
+            my ( $key, $value ) = $self->kvpair();
+            my $desc =
+              "expires conditionally ($cond_desc, separate_call=$separate_call)";
+            $cache->set( $key, $value );
+            if ($separate_call) {
+                is( $cache->get($key), $value, "hit ($desc)" );
+                cmp_bool(
+                    $cache->expire_if( $key, $code ),
+                    $expect_expire ? 1 : 0,
+                    "expire_if ($desc)"
+                );
+            }
+            else {
+                is(
+                    $cache->get( $key, expire_if => $code ),
+                    $expect_expire ? undef : $value,
+                    "get result ($desc)"
+                );
+            }
+            if ($expect_expire) {
+                ok( !defined $cache->get($key),
+                    "miss after expire_if ($desc)" );
+                ok( !$cache->is_valid($key),
+                    "invalid after expire_if ($desc)" );
+            }
+            else {
+                is( $cache->get($key), $value, "hit after expire_if ($desc)" );
+            }
+        }
+    };
+    my $time = time();
+    $test_expires_conditionally->( sub { 1 }, 'true',  1 );
+    $test_expires_conditionally->( sub { 0 }, 'false', 0 );
+    $test_expires_conditionally->(
+        sub { $_[0]->created_at >= $time },
+        'created_at >= now', 1
+    );
+    $test_expires_conditionally->(
+        sub { $_[0]->created_at < $time },
+        'created_at < now', 0
+    );
+}
+
+sub test_expires_variance : Test(9) {
     my $self = shift;
 
     my $start_time = time();
@@ -404,7 +478,7 @@ sub test_logging : Test(6) {
     my $log = CHI::Test::Logger->new();
     CHI->logger($log);
     my ( $key, $value ) = $self->kvpair();
-    
+
     my $driver = $cache->short_driver_name;
 
     # Multilevel cache logs less details about misses
@@ -414,37 +488,48 @@ sub test_logging : Test(6) {
       ( $driver eq 'Multilevel' ? 'MISS' : 'MISS \(expired\)' );
 
     my $start_time = time();
-    $cache->get( $key );
+    $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
-    );
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/ );
     $cache->set( $key, $value, 20 );
     $log->contains_ok(qr/cache set for .* key='$key', driver='$driver'/);
-    $cache->get( $key );
+    $cache->get($key);
     $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
     local $CHI::Driver::Test_Time = $start_time + 40;
-    $cache->get( $key );
+    $cache->get($key);
     $log->contains_ok(
         qr/cache get for .* key='$key', driver='$driver': $miss_expired/);
-    $cache->remove( $key );
-    $cache->get( $key );
+    $cache->remove($key);
+    $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
-    );
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/ );
     $log->empty_ok();
 }
 
-sub test_created_at : Test(2)
-{
+sub test_cache_object : Test(6) {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
     my $start_time = time();
-    $cache->set( $key, $value );
-    is_between($cache->get_object($key)->created_at, $start_time, $start_time + 2);
+    $cache->set( $key, $value, { expires_at => $start_time + 10 } );
+    is_between( $cache->get_object($key)->created_at,
+        $start_time, $start_time + 2 );
+    is_between( $cache->get_object($key)->get_created_at,
+        $start_time, $start_time + 2 );
+    is( $cache->get_object($key)->expires_at,     $start_time + 10 );
+    is( $cache->get_object($key)->get_expires_at, $start_time + 10 );
 
     local $CHI::Driver::Test_Time = $start_time + 50;
     $cache->set( $key, $value );
-    is_between($cache->get_object($key)->created_at, $start_time + 50, $start_time + 52);
+    is_between(
+        $cache->get_object($key)->created_at,
+        $start_time + 50,
+        $start_time + 52
+    );
+    is_between(
+        $cache->get_object($key)->get_created_at,
+        $start_time + 50,
+        $start_time + 52
+    );
 }
 
 sub test_multiple_procs : Test(1) {

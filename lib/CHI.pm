@@ -191,10 +191,24 @@ The following methods can be called on any cache handle returned from CHI->new()
 
 =over
 
-=item get( $key )
+=item get( $key, [option => value, ...] )
 
 Returns the data associated with I<$key>. If I<$key> does not exist or has expired, returns undef.
 Expired items are not automatically removed and may be examined with L</get_object> or L</get_expires_at>.
+
+I<$key> may be followed by one or more name/value parameters:
+
+=over
+
+=item expire_if => $code
+
+If I<$key> exists and has not expired, call code reference I<$code> with the
+L<CHI::CacheObject> as a single parameter. If I<$code> returns a true value, expire the
+data. e.g.
+
+    $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
+
+=back
 
 =item set( $key, $data, [$expires_in | options] )
 
@@ -252,6 +266,17 @@ this with two consecutive gets:
 =item remove( $key )
 
 Delete the data associated with the I<$key> from the cache.
+
+=item expire( $key )
+
+If I<$key> exists, expire it by setting its expiration time into the past.
+
+=item expire_if ( $key, $code )
+
+If I<$key> exists, call code reference I<$code> with the L<CHI::CacheObject> as a single
+parameter. If I<$code> returns a true value, expire the data. e.g.
+
+    $cache->expire_if('foo', sub { $_[0]->created_at < (stat($file))[9] });
 
 =item clear( )
 

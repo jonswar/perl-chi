@@ -13,6 +13,11 @@ sub is_expired {
     return $time >= $self->expires_at;
 }
 
+# get_* aliases for backward compatibility with Cache::Cache
+#
+*get_created_at = \&created_at;
+*get_expires_at = \&expires_at;
+
 1;
 
 __END__
@@ -32,6 +37,8 @@ CHI::CacheObject -- Contains information about cache entries.
     my $expires_at = $object->expires_at();
     my $created_at = $object->created_at();
 
+    if ($object->is_expired()) { ... }
+
 =head1 DESCRIPTION
 
 The L<CHI|get_object> method returns this object if the key exists.  The object will be
@@ -39,17 +46,32 @@ returned even if the entry has expired, as long as it has not been removed.
 
 =head1 METHODS
 
-All methods are read-only.
+All methods are read-only. The get_* methods are provided for backward compatibility
+with Cache::Cache's Cache::Object.
 
 =over
 
 =item key
 
+The key.
+
 =item value
 
+The value.
+
 =item expires_at
+=item get_expires_at
+
+Epoch time at which item expires.
 
 =item created_at
+=item get_created_at
+
+Epoch time at which item was last written to.
+
+=item is_expired
+
+Returns boolean indicating whether item has expired.
 
 =back
 

@@ -110,8 +110,15 @@ sub desc {
 }
 
 sub get {
-    my ( $self, $key ) = @_;
+    my ( $self, $key, %params ) = @_;
     return undef unless defined($key);
+
+    if ( my $code = $params{expire_if} ) {
+
+        # TODO: Implement more efficiently, e.g. without refetching object
+        #
+        $self->expire_if( $key, $code );
+    }
 
     my $value_with_metadata = $self->fetch($key);
     if ( !defined $value_with_metadata ) {
@@ -120,6 +127,7 @@ sub get {
           if $log->is_debug;
         return undef;
     }
+
     return $self->_process_fetched_value( $key, $value_with_metadata );
 }
 
@@ -191,6 +199,7 @@ sub get_object {
 
 sub get_expires_at {
     my ( $self, $key ) = @_;
+    die "must specify key" unless defined($key);
 
     my $value_with_metadata = $self->fetch($key) or return undef;
     my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
@@ -213,7 +222,8 @@ sub is_valid {
 
 sub set {
     my ( $self, $key, $value, $options ) = @_;
-    return unless defined($key) && defined($value);
+    die "must specify key" unless defined($key);
+    return                 unless defined($value);
 
     # Fill in $options if not passed, copy if passed, and apply defaults.
     #
@@ -253,7 +263,8 @@ sub set {
     # Prepend value with metadata, and store
     #
     my $metadata = pack( $Metadata_Format,
-        $created_at, $early_expires_at, $expires_at, $is_serialized, $Cache_Version );
+        $created_at,    $early_expires_at, $expires_at,
+        $is_serialized, $Cache_Version );
     my $store_value_with_metadata = $metadata . $store_value;
     eval {
         $self->store( $key, $store_value_with_metadata, $expires_at, $options );
@@ -267,6 +278,29 @@ sub set {
     $self->_log_set_result( $log, $key ) if $log->is_debug;
 
     return $value;
+}
+
+sub expire {
+    my ( $self, $key ) = @_;
+
+    # TODO: Implement more efficiently
+    #
+    $self->set( $key, $self->get($key), -1 );
+}
+
+sub expire_if {
+    my ( $self, $key, $code ) = @_;
+
+    if ( my $obj = $self->get_object($key) ) {
+        my $retval = $code->($obj);
+        if ($retval) {
+            $self->expire($key);
+        }
+        return $retval;
+    }
+    else {
+        return 1;
+    }
 }
 
 sub remove {

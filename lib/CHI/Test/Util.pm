@@ -4,7 +4,7 @@ use warnings;
 use Test::Builder;
 use base qw(Exporter);
 
-our @EXPORT = qw(is_between);
+our @EXPORT = qw(is_between cmp_bool);
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;
@@ -16,6 +16,21 @@ sub is_between {
     else {
         $tb->diag("$value is not between $min and $max");
         $tb->ok( undef, $desc );
+    }
+}
+
+sub cmp_bool {
+    my ( $bool1, $bool2, $desc ) = @_;
+
+    my $tb = Test::Builder->new();
+    if ( $bool1 && !$bool2 ) {
+        $tb->diag("bool1 is true, bool2 is false");
+    }
+    elsif ( !$bool1 && $bool2 ) {
+        $tb->diag("bool1 is false, bool2 is true");
+    }
+    else {
+        $tb->ok( 1, $desc );
     }
 }
 

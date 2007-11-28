@@ -37,12 +37,13 @@ sub new {
 }
 
 sub get {
-    my ( $self, $key ) = @_;
+    my $self = shift;
+    my $key  = shift;
 
     my $log = CHI->logger();
     my ( $value, @subcaches_to_populate );
     foreach my $subcache ( @{ $self->{subcaches} } ) {
-        if ( defined( $value = $subcache->get($key) ) ) {
+        if ( defined( $value = $subcache->get( $key, @_ ) ) ) {
             foreach my $subcache (@subcaches_to_populate) {
                 $subcache->set( $key, $value );
             }
