@@ -21,9 +21,11 @@ sub new {
             my $subcache_options = $subcache;
             my $chi_class        = caller();    # should be CHI or a subclass
             $subcache = $chi_class->new( %subparams, %$subcache_options );
-            if ( my ($option) =
+            if (
+                my ($option) =
                 grep { defined( $subcache_options->{$_} ) }
-                qw(expires_at expires_in expires_variance) )
+                qw(expires_at expires_in expires_variance)
+              )
             {
                 croak "expiration option '$option' not supported in subcache";
             }

@@ -404,7 +404,7 @@ sub test_logging : Test(6) {
     my $log = CHI::Test::Logger->new();
     CHI->logger($log);
 
-    my $driver = $cache->driver_short_name;
+    my $driver = $cache->short_driver_name;
 
     # Multilevel cache logs less details about misses
     my $miss_not_in_cache =

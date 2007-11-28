@@ -31,6 +31,12 @@ sub contains_ok {
     }
 }
 
+sub clear {
+    my ($self) = @_;
+
+    $self->{msgs} = [];
+}
+
 sub empty_ok {
     my ($self) = @_;
 

@@ -3,6 +3,7 @@
 package CHI::Test;
 use CHI;
 use CHI::Driver::Memory;
+use CHI::Test::Logger;
 use strict;
 use warnings;
 

@@ -8,7 +8,7 @@ use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors(
-    qw(default_set_options driver_short_name namespace));
+    qw(default_set_options short_driver_name namespace));
 __PACKAGE__->mk_accessors(qw(is_subcache on_set_error));
 
 # When these are set, call _compute_default_set_options again.
@@ -81,7 +81,7 @@ sub new {
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
-    ( $self->{driver_short_name} = ref($self) ) =~ s/^CHI::Driver:://;
+    ( $self->{short_driver_name} = ref($self) ) =~ s/^CHI::Driver:://;
 
     return $self;
 }
@@ -102,7 +102,11 @@ sub _compute_default_set_options {
 sub desc {
     my $self = shift;
 
-    return ref($self) . " cache";
+    return sprintf(
+        "CHI cache (driver=%s, namespace=%s)",
+        $self->{short_driver_name},
+        $self->{namespace}
+    );
 }
 
 sub get {
@@ -289,7 +293,7 @@ sub _log_get_result {
         $log->debug(
             sprintf(
                 "cache get for namespace='%s', key='%s', driver='%s': %s",
-                $self->{namespace}, $key, $self->{driver_short_name}, $msg
+                $self->{namespace}, $key, $self->{short_driver_name}, $msg
             )
         );
     }
@@ -303,7 +307,7 @@ sub _log_set_result {
         $log->debug(
             sprintf(
                 "cache set for namespace='%s', key='%s', driver='%s'",
-                $self->{namespace}, $key, $self->{driver_short_name}
+                $self->{namespace}, $key, $self->{short_driver_name}
             )
         );
     }
@@ -317,7 +321,9 @@ sub _handle_set_error {
     for ( $self->on_set_error() ) {
         /ignore/ && do { };
         /warn/   && do { warn $msg };
-        /die/    && do { die $msg };
+        /log/
+          && do { my $log = CHI->logger; $log->debug($msg) if $log->is_debug };
+        /die/ && do { die $msg };
         ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
     }
 }
