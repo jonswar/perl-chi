@@ -403,7 +403,8 @@ sub test_logging : Test(6) {
 
     my $log = CHI::Test::Logger->new();
     CHI->logger($log);
-
+    my ( $key, $value ) = $self->kvpair();
+    
     my $driver = $cache->short_driver_name;
 
     # Multilevel cache logs less details about misses
@@ -413,22 +414,22 @@ sub test_logging : Test(6) {
       ( $driver eq 'Multilevel' ? 'MISS' : 'MISS \(expired\)' );
 
     my $start_time = time();
-    $cache->get( $keys{medium} );
+    $cache->get( $key );
     $log->contains_ok(
-        qr/cache get for .* key='medium', driver='$driver': $miss_not_in_cache/
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
     );
-    $cache->set( $keys{medium}, $values{medium}, 20 );
-    $log->contains_ok(qr/cache set for .* key='medium', driver='$driver'/);
-    $cache->get( $keys{medium} );
-    $log->contains_ok(qr/cache get for .* key='medium', driver='$driver': HIT/);
+    $cache->set( $key, $values{medium}, 20 );
+    $log->contains_ok(qr/cache set for .* key='$key', driver='$driver'/);
+    $cache->get( $key );
+    $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
     local $CHI::Driver::Test_Time = $start_time + 40;
-    $cache->get( $keys{medium} );
+    $cache->get( $key );
     $log->contains_ok(
-        qr/cache get for .* key='medium', driver='$driver': $miss_expired/);
-    $cache->remove( $keys{medium} );
-    $cache->get( $keys{medium} );
+        qr/cache get for .* key='$key', driver='$driver': $miss_expired/);
+    $cache->remove( $key );
+    $cache->get( $key );
     $log->contains_ok(
-        qr/cache get for .* key='medium', driver='$driver': $miss_not_in_cache/
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/
     );
     $log->empty_ok();
 }
