@@ -490,7 +490,7 @@ sub test_logging : Test(6) {
     my $start_time = time();
     $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/ );
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
     $cache->set( $key, $value, 20 );
     $log->contains_ok(qr/cache set for .* key='$key', driver='$driver'/);
     $cache->get($key);
@@ -502,7 +502,7 @@ sub test_logging : Test(6) {
     $cache->remove($key);
     $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/ );
+        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
     $log->empty_ok();
 }
 

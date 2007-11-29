@@ -29,8 +29,9 @@ sub get_multi_hashref {
 
     my $keyvals = $self->{memd}->get_multi(@$keys);
     foreach my $key ( keys(%$keyvals) ) {
-        $keyvals->{$key} =
-          $self->_process_fetched_value( $key, $keyvals->{$key} );
+        if ( defined $keyvals->{$key} ) {
+            $keyvals->{$key} = $self->get( $key, data => $keyvals->{$key} );
+        }
     }
     return $keyvals;
 }

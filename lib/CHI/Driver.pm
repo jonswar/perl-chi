@@ -2,7 +2,6 @@ package CHI::Driver;
 use CHI::CacheObject;
 use CHI::Util;
 use List::MoreUtils qw(pairwise);
-use Storable;
 use strict;
 use warnings;
 use base qw(Class::Accessor::Fast);
@@ -33,10 +32,7 @@ foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
       sub { die "method '$method' must be implemented by subclass" };
 }
 
-my $Metadata_Format = "LLLCC";
-my $Metadata_Length = 14;
-my $Expires_Never   = 0xffffffff;
-my $Cache_Version   = 1;
+my $Expires_Never = 0xffffffff;
 
 # To override time() for testing
 our $Test_Time;
@@ -113,107 +109,69 @@ sub get {
     my ( $self, $key, %params ) = @_;
     return undef unless defined($key);
 
-    if ( my $code = $params{expire_if} ) {
+    my $log = CHI->logger();
 
-        # TODO: Implement more efficiently, e.g. without refetching object
-        #
-        $self->expire_if( $key, $code );
-    }
-
-    my $value_with_metadata = $self->fetch($key);
-    if ( !defined $value_with_metadata ) {
-        my $log = CHI->logger();
+    # Fetch cache object
+    #
+    my $data = $params{data} || $self->fetch($key);
+    if ( !defined $data ) {
         $self->_log_get_result( $log, $key, "MISS (not in cache)" )
           if $log->is_debug;
         return undef;
     }
+    my $obj = CHI::CacheObject->unpack_from_data( $key, $data );
 
-    return $self->_process_fetched_value( $key, $value_with_metadata );
-}
-
-sub _process_fetched_value {
-    my ( $self, $key, $value_with_metadata ) = @_;
-
-    my $log = CHI->logger();
-    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
-      unpack( $Metadata_Format, $metadata );
-
-    # Determine whether item has expired, probabilistically if between early_expires_at and expires_at.
+    # Handle expire_if
     #
-    my $time = $Test_Time || time();
-    if (
-        $time >= $early_expires_at
-        && (
-            $time >= $expires_at
-            || (
-                rand() < (
-                    ( $time - $early_expires_at ) /
-                      ( $expires_at - $early_expires_at )
-                )
-            )
-        )
-      )
-    {
+    if ( my $code = $params{expire_if} ) {
+        my $retval = $code->($obj);
+        if ($retval) {
+            $self->expire($key);
+            return undef;
+        }
+    }
+
+    # Determine if expired
+    #
+    if ( $obj->is_expired() ) {
         $self->_log_get_result( $log, $key, "MISS (expired)" )
           if $log->is_debug;
         return undef;
     }
 
-    # Deserialize if necessary
+    # Success
     #
     $self->_log_get_result( $log, $key, "HIT" ) if $log->is_debug;
-    my $value = substr( $value_with_metadata, $Metadata_Length );
-    if ($is_serialized) {
-        $value = $self->_deserialize($value);
-    }
-
-    return $value;
+    return $obj->value;
 }
 
 sub get_object {
     my ( $self, $key ) = @_;
-    return unless defined($key);
+    die "must specify key" unless defined($key);
 
-    my $value_with_metadata = $self->fetch($key) or return undef;
-    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
-      unpack( $Metadata_Format, $metadata );
-
-    my $value = substr( $value_with_metadata, $Metadata_Length );
-    if ($is_serialized) {
-        $value = $self->_deserialize($value);
-    }
-
-    return CHI::CacheObject->new(
-        {
-            key              => $key,
-            value            => $value,
-            early_expires_at => $early_expires_at,
-            created_at       => $created_at,
-            expires_at       => $expires_at,
-            _is_serialized   => $is_serialized,
-        }
-    );
+    my $data = $self->fetch($key) or return undef;
+    my $obj = CHI::CacheObject->unpack_from_data( $key, $data );
+    return $obj;
 }
 
 sub get_expires_at {
     my ( $self, $key ) = @_;
     die "must specify key" unless defined($key);
 
-    my $value_with_metadata = $self->fetch($key) or return undef;
-    my $metadata = substr( $value_with_metadata, 0, $Metadata_Length );
-    my ( $created_at, $early_expires_at, $expires_at, $is_serialized ) =
-      unpack( $Metadata_Format, $metadata );
-
-    return $expires_at;
+    if ( my $obj = $self->get_object($key) ) {
+        return $obj->expires_at;
+    }
+    else {
+        return;
+    }
 }
 
 sub is_valid {
     my ( $self, $key ) = @_;
+    die "must specify key" unless defined($key);
 
-    if ( my $object = $self->get_object($key) ) {
-        return !$object->is_expired;
+    if ( my $obj = $self->get_object($key) ) {
+        return !$obj->is_expired;
     }
     else {
         return;
@@ -251,24 +209,12 @@ sub set {
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 
-    # Serialize if necessary
+    # Pack into data, and store
     #
-    my $is_serialized = 0;
-    my $store_value   = $value;
-    if ( ref($store_value) ) {
-        $store_value   = $self->_serialize($store_value);
-        $is_serialized = 1;
-    }
-
-    # Prepend value with metadata, and store
-    #
-    my $metadata = pack( $Metadata_Format,
-        $created_at,    $early_expires_at, $expires_at,
-        $is_serialized, $Cache_Version );
-    my $store_value_with_metadata = $metadata . $store_value;
-    eval {
-        $self->store( $key, $store_value_with_metadata, $expires_at, $options );
-    };
+    my $obj =
+      CHI::CacheObject->new( $key, $value, $created_at, $early_expires_at,
+        $expires_at );
+    eval { $self->_set_object( $key, $obj ) };
     if ( my $error = $@ ) {
         $self->_handle_set_error( $key, $error );
         return;
@@ -280,12 +226,32 @@ sub set {
     return $value;
 }
 
+sub _set_object {
+    my ( $self, $key, $obj ) = @_;
+    die "must specify key and obj" unless defined($obj);
+
+    my $data = $obj->pack_to_data();
+    $self->store( $key, $data );
+}
+
+sub _set_expires_at {
+    my ( $self, $key, $expires_at ) = @_;
+    die "must specify key and expires_at"
+      unless defined($key)
+          and defined($expires_at);
+
+    if ( defined( my $obj = $self->get_object($key) ) ) {
+        $obj->set_early_expires_at($expires_at);
+        $obj->set_expires_at($expires_at);
+        $self->_set_object( $key, $obj );
+    }
+}
+
 sub expire {
     my ( $self, $key ) = @_;
 
-    # TODO: Implement more efficiently
-    #
-    $self->set( $key, $self->get($key), -1 );
+    my $time = $Test_Time || time();
+    $self->_set_expires_at( $key, $time - 1 );
 }
 
 sub expire_if {
@@ -307,18 +273,6 @@ sub remove {
     my ( $self, $key ) = @_;
 
     $self->delete($key);
-}
-
-sub _serialize {
-    my ( $self, $value ) = @_;
-
-    return Storable::freeze($value);
-}
-
-sub _deserialize {
-    my ( $self, $value ) = @_;
-
-    return Storable::thaw($value);
 }
 
 sub _log_get_result {

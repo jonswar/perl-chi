@@ -11,7 +11,7 @@ sub fetch {
 }
 
 sub store {
-    my ( $self, $key, $data, $options ) = @_;
+    my ( $self, $key, $data ) = @_;
 
     $self->{_contained_cache}->set( $key, $data );
 }

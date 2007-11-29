@@ -4,7 +4,7 @@ use warnings;
 use base qw(CHI::Driver::Memory);
 
 sub store {
-    my ( $self, $key, $data, $options ) = @_;
+    my ( $self, $key, $data ) = @_;
 
     die "read-only cache";
 }

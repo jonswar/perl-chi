@@ -21,7 +21,7 @@ sub fetch {
 }
 
 sub store {
-    my ( $self, $key, $data, $options ) = @_;
+    my ( $self, $key, $data ) = @_;
 
     $self->{datastore_for_namespace}->{$key} = $data;
 }

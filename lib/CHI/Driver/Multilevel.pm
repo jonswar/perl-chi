@@ -71,10 +71,9 @@ sub get_expires_at {
 }
 
 sub store {
-    my ( $self, $key, $data, $options ) = @_;
+    my ( $self, $key, $data ) = @_;
 
-    $self->do_for_each_subcache( sub { $_[0]->store( $key, $data, $options ) }
-    );
+    $self->do_for_each_subcache( sub { $_[0]->store( $key, $data ) } );
 }
 
 sub delete {

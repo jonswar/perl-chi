@@ -77,7 +77,7 @@ sub fetch {
 }
 
 sub store {
-    my ( $self, $key, $data, $options ) = @_;
+    my ( $self, $key, $data ) = @_;
 
     my ( $file, $dir ) = $self->path_to_key($key);
     my $temp_file = tmpdir() . "/chi-driver-file." . unique_id();
