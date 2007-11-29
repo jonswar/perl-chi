@@ -123,7 +123,7 @@ sub get {
 
     # Handle expire_if
     #
-    if ( my $code = $params{expire_if} ) {
+    if ( defined( my $code = $params{expire_if} ) ) {
         my $retval = $code->($obj);
         if ($retval) {
             $self->expire($key);
@@ -131,11 +131,23 @@ sub get {
         }
     }
 
-    # Determine if expired
+    # Check if expired
     #
     if ( $obj->is_expired() ) {
         $self->_log_get_result( $log, $key, "MISS (expired)" )
           if $log->is_debug;
+
+        # If busy_lock value provided, set a new "temporary" expiration time that many
+        # seconds forward before returning undef
+        #
+        if ( defined( my $busy_lock = $params{busy_lock} ) ) {
+            my $time = $Test_Time || time();
+            my $busy_lock_time = $time + parse_duration($busy_lock);
+            $obj->set_early_expires_at($busy_lock_time);
+            $obj->set_expires_at($busy_lock_time);
+            $self->_set_object( $key, $obj );
+        }
+
         return undef;
     }
 
@@ -234,24 +246,16 @@ sub _set_object {
     $self->store( $key, $data );
 }
 
-sub _set_expires_at {
-    my ( $self, $key, $expires_at ) = @_;
-    die "must specify key and expires_at"
-      unless defined($key)
-          and defined($expires_at);
-
-    if ( defined( my $obj = $self->get_object($key) ) ) {
-        $obj->set_early_expires_at($expires_at);
-        $obj->set_expires_at($expires_at);
-        $self->_set_object( $key, $obj );
-    }
-}
-
 sub expire {
     my ( $self, $key ) = @_;
 
     my $time = $Test_Time || time();
-    $self->_set_expires_at( $key, $time - 1 );
+    if ( defined( my $obj = $self->get_object($key) ) ) {
+        my $expires_at = $time - 1;
+        $obj->set_early_expires_at($expires_at);
+        $obj->set_expires_at($expires_at);
+        $self->_set_object( $key, $obj );
+    }
 }
 
 sub expire_if {

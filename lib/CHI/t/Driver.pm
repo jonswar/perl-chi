@@ -532,6 +532,32 @@ sub test_cache_object : Test(6) {
     );
 }
 
+sub test_busy_lock : Test(5) {
+    my $self = shift;
+
+    my ( $key, $value ) = $self->kvpair();
+    my @bl = ( busy_lock => '30 sec' );
+    my $start_time = time();
+
+    local $CHI::Driver::Test_Time = $start_time;
+    $cache->set( $key, $value, 100 );
+    local $CHI::Driver::Test_Time = $start_time + 90;
+    is( $cache->get( $key, @bl ), $value, "hit before expiration" );
+    is(
+        $cache->get_expires_at($key),
+        $start_time + 100,
+        "expires_at before expiration"
+    );
+    local $CHI::Driver::Test_Time = $start_time + 110;
+    ok( !defined( $cache->get( $key, @bl ) ), "miss after expiration" );
+    is(
+        $cache->get_expires_at($key),
+        $start_time + 140,
+        "expires_at after busy lock"
+    );
+    is( $cache->get( $key, @bl ), $value, "hit after busy lock" );
+}
+
 sub test_multiple_procs : Test(1) {
     my $self = shift;
     my ( @values, @pids, %valid_values );

@@ -208,6 +208,13 @@ data. e.g.
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
+=item busy_lock => $duration
+
+If the value has expired, set its expiration time to the current time plus I<$duration>
+before returning undef.  This is used to prevent multiple processes from recomputing the
+same expensive value simultaneously. I<$duration> may be any valid
+L<duration expression|/DURATION EXPRESSIONS>.
+
 =back
 
 =item set( $key, $data, [$expires_in | options] )
