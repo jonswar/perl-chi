@@ -34,7 +34,7 @@ sub new {
     $self->{dir_create_mode}  ||= $Default_Create_Mode;
     $self->{file_create_mode} ||= $self->{dir_create_mode} & 0666;
     $self->{depth}            ||= $Default_Depth;
-    $self->{root_dir}         ||= $Default_Root_Dir;
+    $self->{root_dir}         ||= (delete($self->{cache_root}) || $Default_Root_Dir);
     $self->{path_to_namespace} =
       catdir( $self->root_dir, escape_for_filename( $self->{namespace} ) );
     return $self;
@@ -139,7 +139,7 @@ sub get_keys {
     my ($self) = @_;
 
     my $namespace_dir = $self->{path_to_namespace};
-    return [] if !-d $namespace_dir;
+    return () if !-d $namespace_dir;
 
     my @files;
     my $wanted = sub { push( @files, $_ ) if -f && /\.dat$/ };
@@ -152,7 +152,7 @@ sub get_keys {
         $key = unescape_for_filename( join( "", splitdir($key) ) );
         push( @keys, $key );
     }
-    return \@keys;
+    return @keys;
 }
 
 sub get_namespaces {
@@ -162,7 +162,7 @@ sub get_namespaces {
     my @namespaces =
       map { unescape_for_filename($_) }
       grep { -d catdir( $self->root_dir(), $_ ) } @contents;
-    return \@namespaces;
+    return @namespaces;
 }
 
 my %hex_strings = map { ( $_, sprintf( "%x", $_ ) ) } ( 0x0 .. 0xf );
@@ -245,6 +245,8 @@ L<CHI|general constructor options/constructor>.
 The location in the filesystem that will hold the root of the cache.  Defaults to a
 directory called 'chi-driver-file' under the OS default temp directory (e.g. '/tmp'
 on UNIX).
+
+For backward compatibility with Cache::FileCache, this can also be specified as C<cache_root>.
 
 =item dir_create_mode
 

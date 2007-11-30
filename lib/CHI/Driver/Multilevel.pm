@@ -92,9 +92,9 @@ sub get_keys {
     my ($self) = @_;
 
     my @keys;
-    $self->do_for_each_subcache( sub { push( @keys, @{ $_[0]->get_keys() } ) }
+    $self->do_for_each_subcache( sub { push( @keys, $_[0]->get_keys() ) }
     );
-    return [ uniq(@keys) ];
+    return uniq(@keys);
 }
 
 sub get_namespaces {
@@ -102,8 +102,8 @@ sub get_namespaces {
 
     my @namespaces;
     $self->do_for_each_subcache(
-        sub { push( @namespaces, @{ $_[0]->get_namespaces() } ) } );
-    return [ uniq(@namespaces) ];
+        sub { push( @namespaces, $_[0]->get_namespaces() ) } );
+    return uniq(@namespaces);
 }
 
 sub do_for_each_subcache {

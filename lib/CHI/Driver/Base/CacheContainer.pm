@@ -31,13 +31,13 @@ sub clear {
 sub get_keys {
     my ($self) = @_;
 
-    return [ $self->{_contained_cache}->get_keys() ];
+    return $self->{_contained_cache}->get_keys();
 }
 
 sub get_namespaces {
     my ($self) = @_;
 
-    return [ $self->{_contained_cache}->get_namespaces() ];
+    return $self->{_contained_cache}->get_namespaces();
 }
 
 1;

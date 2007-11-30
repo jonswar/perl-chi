@@ -15,6 +15,6 @@ my @all_test_keys = (
 sub get_keys {
     my $self = shift;
 
-    return [ map { defined $self->get($_) ? ($_) : () } @all_test_keys ];
+    return map { defined $self->get($_) ? ($_) : () } @all_test_keys;
 }
 

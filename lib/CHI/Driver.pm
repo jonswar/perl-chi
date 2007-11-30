@@ -366,13 +366,13 @@ sub remove_multi {
 sub clear {
     my ($self) = @_;
 
-    $self->remove_multi( $self->get_keys() );
+    $self->remove_multi( [$self->get_keys()] );
 }
 
 sub purge {
     my ($self) = @_;
 
-    foreach my $key ( @{ $self->get_keys() } ) {
+    foreach my $key ( $self->get_keys() ) {
         if ( $self->get_object($key)->is_expired() ) {
             $self->remove($key);
         }
@@ -383,13 +383,13 @@ sub dump_as_hash {
     my ($self) = @_;
 
     return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
-          @{ $self->get_keys() } };
+          $self->get_keys()};
 }
 
 sub is_empty {
     my ($self) = @_;
 
-    return !@{ $self->get_keys() };
+    return !$self->get_keys();
 }
 
 1;

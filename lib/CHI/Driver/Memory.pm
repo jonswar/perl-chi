@@ -42,13 +42,13 @@ sub clear {
 sub get_keys {
     my ($self) = @_;
 
-    return [ keys( %{ $self->{datastore_for_namespace} } ) ];
+    return keys( %{ $self->{datastore_for_namespace} } );
 }
 
 sub get_namespaces {
     my ($self) = @_;
 
-    return [ keys( %{ $self->{datastore} } ) ];
+    return keys( %{ $self->{datastore} } );
 }
 
 1;

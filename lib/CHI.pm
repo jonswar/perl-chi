@@ -293,6 +293,10 @@ Remove all entries from the namespace associated with this cache instance.
 
 Returns a list of keys in the cache. This may include expired keys that have not yet been purged.
 
+=item get_namespaces( )
+
+Returns a list of namespaces associated with the cache. This may or may not include empty namespaces.
+
 =item is_empty( )
 
 Returns a boolean indicating whether the cache is empty, based on get_keys().
@@ -472,7 +476,7 @@ Return all keys in the namespace. It is acceptable to return expired keys as wel
 
 =item get_namespaces ( $self )
 
-Return all namespaces associated with the cache.
+Return namespaces associated with the cache.
 
 =back
 

@@ -113,7 +113,7 @@ sub test_key_types : Test(55) {
     my @keys_set;
     my $check_keys_set = sub {
         my $desc = shift;
-        cmp_set( $cache->get_keys, \@keys_set, "checking keys $desc" );
+        cmp_set( [$cache->get_keys], \@keys_set, "checking keys $desc" );
     };
 
     $check_keys_set->("before sets");
@@ -392,14 +392,14 @@ sub test_namespaces : Test(6) {
         $cache1a->dump_as_hash(),
         'cache1 and cache1a are same cache'
     );
-    ok( !@{ $cache2->get_keys() },
+    ok( !$cache2->get_keys(),
         'cache2 empty after setting keys in cache1' );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
 
     # Have to figure out proper behavior of get_namespaces - whether it automatically includes new or now-empty namespaces
-    # cmp_set($cache1->get_namespaces(), [$cache->namespace(), $ns1, $ns2, $ns3], "get_namespaces");
+    # cmp_set([$cache1->get_namespaces()], [$cache->namespace(), $ns1, $ns2, $ns3], "get_namespaces");
 }
 
 sub test_persist : Test(1) {
@@ -437,7 +437,7 @@ sub test_multi : Test(8) {
     );
     cmp_deeply( $cache->get_multi_hashref( \@ordered_keys ),
         \%ordered_key_values, "get_multi_hashref" );
-    cmp_set( $cache->get_keys, \@ordered_keys, "get_keys after set_multi" );
+    cmp_set( [$cache->get_keys], \@ordered_keys, "get_keys after set_multi" );
 
     $cache->remove_multi( \@ordered_keys );
     cmp_deeply(
@@ -445,7 +445,7 @@ sub test_multi : Test(8) {
         [ (undef) x scalar(@ordered_values) ],
         "get_multi_arrayref after remove_multi"
     );
-    cmp_set( $cache->get_keys, [], "get_keys after remove_multi" );
+    cmp_set( [$cache->get_keys], [], "get_keys after remove_multi" );
 }
 
 sub test_multi_no_keys : Test(4) {
@@ -465,7 +465,7 @@ sub test_clear : Test(10) {
     return "$cache_class does not support clear()" if !$self->supports_clear();
     $self->set_some_keys($cache);
     $cache->clear();
-    cmp_deeply( $cache->get_keys, [], "get_keys after clear" );
+    cmp_deeply( [$cache->get_keys], [], "get_keys after clear" );
     while ( my ( $keyname, $key ) = each(%keys) ) {
         ok( !defined $cache->get($key),
             "key '$keyname' no longer defined after clear" );

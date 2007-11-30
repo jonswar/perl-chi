@@ -37,7 +37,7 @@ sub new {
 sub get_keys {
     my ($self) = @_;
 
-    return [ $self->{_contained_cache}->get_keys(0) ];
+    return $self->{_contained_cache}->get_keys(0);
 }
 
 sub get_namespaces {
@@ -47,7 +47,7 @@ sub get_namespaces {
     my @namespaces =
       map { unescape_for_filename($_) }
       grep { -d catdir( $self->root_dir(), $_ ) } @contents;
-    return \@namespaces;
+    return @namespaces;
 }
 
 1;
