@@ -6,10 +6,21 @@ BaseCache and have $m->cache return a vanilla CHI handle.
 Feature gap:
 . expire method
 . expire_if method (operating on metadata) (though this was never documented)
-* get parameters, passed as hash after key
-  * busy_lock - if object expires, set new expire time before returning undef
+. get parameters, passed as hash after key
+  . busy_lock - if object expires, set new expire time before returning undef
   . expire_if (NOT expires_if)
 . cache object supports get_expires_at (NOT expires_at) as well as get_created_at
+
+Some backward incompatibilities remain. People will have to change their
+data_cache_defaults, as these will no longer make sense for CHI.  And any code that calls
+obscure Cache::Cache methods on the result of $m->cache will fail.
+
+Perhaps we use the old standby data_cache_api, which can now be one of '1.0',
+'1.1', or 'chi'. In most cases '1.1' and 'chi' will be compatible.
+
+In cache(), if data_cache_api = 'chi', then we use data_cache_defaults to create
+and return a CHI handle. data_cache_defaults{'chi_root_class'} is used instead of
+'CHI' if present; everything else is passed to CHI->new().
 
 MULTILEVEL DRIVER
 

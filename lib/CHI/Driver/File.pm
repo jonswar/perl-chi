@@ -11,7 +11,6 @@ use File::Path qw(mkpath rmtree);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use File::Temp qw(tempfile);
-use POSIX qw( :fcntl_h );
 use URI::Escape;
 use strict;
 use warnings;
