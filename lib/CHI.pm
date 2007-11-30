@@ -217,14 +217,15 @@ L<duration expression|/DURATION EXPRESSIONS>.
 
 =back
 
-=item set( $key, $data, [$expires_in | options] )
+=item set( $key, $data, [$expires_in | "now" | "never" | options] )
 
 Associates I<$data> with I<$key> in the cache, overwriting any existing entry.
 
 The third argument to set() is optional, and may be either a scalar or a hash reference.
-If it is a scalar, it is treated as an I<expires_in> value described below. If it is a
-hash reference, it may contain one or more of the following options. Most of these options
-can be provided with defaults in the cache constructor.
+If it is a scalar, it may be the string "now", the string "never", or else a duration
+treated as an I<expires_in> value described below. If it is a hash reference, it may
+contain one or more of the following options. Most of these options can be provided with
+defaults in the cache constructor.
 
 =over
 

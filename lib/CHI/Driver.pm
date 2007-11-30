@@ -32,7 +32,7 @@ foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
       sub { die "method '$method' must be implemented by subclass" };
 }
 
-my $Expires_Never = 0xffffffff;
+our $Max_Time = 0xffffffff;
 
 # To override time() for testing
 our $Test_Time;
@@ -86,7 +86,7 @@ sub _compute_default_set_options {
     my ($self) = @_;
 
     $self->{default_set_options}->{expires_at} = $self->{expires_at}
-      || $Expires_Never;
+      || $Max_Time;
     $self->{default_set_options}->{expires_in} =
       defined( $self->{expires_in} )
       ? parse_duration( $self->{expires_in} )
@@ -200,10 +200,18 @@ sub set {
     if ( !defined($options) ) {
         $options = $self->default_set_options;
     }
-    elsif ( !ref($options) ) {
-        $options = { %{ $self->default_set_options }, expires_in => $options };
-    }
     else {
+        if ( !ref($options) ) {
+            if ($options eq 'never') {
+                $options = { expires_at => $Max_Time };
+            }
+            elsif ($options eq 'now') {
+                $options = { expires_in => 0 };
+            }
+            else {
+                $options = { expires_in => $options };
+            }
+        }
         $options = { %{ $self->default_set_options }, %$options };
     }
 
@@ -216,8 +224,8 @@ sub set {
       ? $time + parse_duration( $options->{expires_in} )
       : $options->{expires_at};
     my $early_expires_at =
-      ( $expires_at == $Expires_Never )
-      ? $Expires_Never
+      ( $expires_at == $Max_Time )
+      ? $Max_Time
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 

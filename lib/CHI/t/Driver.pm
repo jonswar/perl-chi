@@ -155,7 +155,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expires_immediately : Test(28) {
+sub test_expires_immediately : Test(32) {
     my $self = shift;
 
     # Expires immediately
@@ -179,6 +179,7 @@ sub test_expires_immediately : Test(28) {
     $test_expires_immediately->("-1 seconds");
     $test_expires_immediately->( { expires_in => "0 seconds" } );
     $test_expires_immediately->( { expires_at => time - 1 } );
+    $test_expires_immediately->("now");
 }
 
 sub test_expires_shortly : Test(14) {
@@ -241,17 +242,22 @@ sub test_expires_later : Test(21) {
     $test_expires_later->( { expires_at => time + 3600 } );
 }
 
-sub test_expires_never : Test(1) {
+sub test_expires_never : Test(2) {
     my $self = shift;
 
     # Expires never (will fail in 2037)
     my ( $key, $value ) = $self->kvpair();
-    $cache->set( $key, $value );
-    ok(
-        $cache->get_expires_at($key) >
-          time + Time::Duration::Parse::parse_duration('1 year'),
-        "expires never"
-    );
+    my $test_expires_never = sub {
+        my (@set_options) = @_;
+        $cache->set( $key, $value, @set_options );
+        ok(
+            $cache->get_expires_at($key) >
+            time + Time::Duration::Parse::parse_duration('1 year'),
+            "expires never"
+            );
+    };
+    $test_expires_never->();
+    $test_expires_never->('never');
 }
 
 sub test_expires_manually : Test(3) {
@@ -266,7 +272,7 @@ sub test_expires_manually : Test(3) {
     ok( !$cache->is_valid($key), "invalid after expire ($desc)" );
 }
 
-sub test_expires_conditionally : Test(40) {
+sub test_expires_conditionally : Test(24) {
     my $self = shift;
 
     # Expires conditionally
