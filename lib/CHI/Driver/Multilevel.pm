@@ -1,10 +1,10 @@
 package CHI::Driver::Multilevel;
+use strict;
+use warnings;
 use Carp;
 use CHI::Util;
 use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(uniq);
-use strict;
-use warnings;
 use base qw(CHI::Driver);
 
 __PACKAGE__->mk_ro_accessors(qw(subcaches));

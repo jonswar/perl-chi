@@ -1,7 +1,7 @@
 package CHI::t::SetError;
-use CHI::Test;
 use strict;
 use warnings;
+use CHI::Test;
 use base qw(CHI::Test::Class);
 
 sub readonly_cache {

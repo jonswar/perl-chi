@@ -1,7 +1,7 @@
 package CHI::t::Driver::Multilevel::Single;
-use CHI::Test;
 use strict;
 use warnings;
+use CHI::Test;
 use base qw(CHI::t::Driver);
 
 # Test multilevel driver with a single subcache.

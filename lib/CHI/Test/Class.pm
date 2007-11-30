@@ -1,9 +1,9 @@
 package CHI::Test::Class;
+use strict;
+use warnings;
 use CHI::Util;
 use Getopt::Long;
 use Module::Find qw(findallmod);
-use strict;
-use warnings;
 use base qw(Test::Class);
 
 sub load_tests {

@@ -1,12 +1,12 @@
 package CHI::Util;
+use strict;
+use warnings;
 use Carp;
 use Data::Dumper;
 use File::Spec;
 use Regexp::Common qw(number);
 use Sys::HostIP;
 use Time::Duration::Parse;
-use strict;
-use warnings;
 use base qw(Exporter);
 
 our @EXPORT = qw(

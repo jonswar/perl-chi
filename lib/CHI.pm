@@ -1,7 +1,7 @@
 package CHI;
-use CHI::NullLogger;
 use strict;
 use warnings;
+use CHI::NullLogger;
 
 our $Logger = CHI::NullLogger->new();
 

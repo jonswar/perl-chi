@@ -1,8 +1,8 @@
 package CHI::t::Driver::Memcached;
-use CHI::Test;
-use IO::Socket::INET;
 use strict;
 use warnings;
+use CHI::Test;
+use IO::Socket::INET;
 use base qw(CHI::t::Driver);
 
 my $testaddr = "127.0.0.1:11211";

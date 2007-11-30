@@ -1,7 +1,7 @@
 package CHI::t::Driver::Memory;
-use CHI::Test;
 use strict;
 use warnings;
+use CHI::Test;
 use base qw(CHI::t::Driver);
 
 # Skip multiple process test

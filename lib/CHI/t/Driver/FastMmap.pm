@@ -1,8 +1,8 @@
 package CHI::t::Driver::FastMmap;
-use CHI::Test;
-use File::Temp qw(tempdir);
 use strict;
 use warnings;
+use CHI::Test;
+use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 
 my $root_dir;

@@ -1,9 +1,9 @@
 package CHI::t::Driver;
+use strict;
+use warnings;
 use CHI::Test;
 use CHI::Test::Logger;
 use String::Random qw(random_string);
-use strict;
-use warnings;
 use base qw(CHI::Test::Class);
 
 my ( $cache, $cache_class, %keys, %values, @keynames );

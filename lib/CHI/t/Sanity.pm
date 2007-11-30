@@ -1,7 +1,7 @@
 package CHI::t::Sanity;
-use CHI::Test;
 use strict;
 use warnings;
+use CHI::Test;
 use base qw(CHI::Test::Class);
 
 sub test_ok : Test(1) {
