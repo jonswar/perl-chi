@@ -2,6 +2,7 @@ package CHI::t::Driver::File;
 use strict;
 use warnings;
 use CHI::Test;
+use File::Basename;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 
@@ -12,6 +13,36 @@ sub new_cache_options {
 
     $root_dir ||= tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 );
     return ( $self->SUPER::new_cache_options(), root_dir => $root_dir );
+}
+
+sub set_standard_keys_and_values {
+    my ($self) = @_;
+
+    my ( $keys, $values ) = $self->SUPER::set_standard_keys_and_values();
+
+    # keys have max length of 255 or so
+    $keys->{'large'} = scalar( 'ab' x 125 );
+
+    return ( $keys, $values );
+}
+
+sub test_path_to_key : Test(3) {
+    my ($self) = @_;
+
+    my $key;
+    my $cache = $self->new_cache;
+    my $log = CHI::Test::Logger->new();
+    CHI->logger($log);
+
+    $key = "\$20.00 plus 5% = \$25.00";
+    my $file = basename(($cache->path_to_key($key))[0]);
+    is($file, "+2420+2E00+20plus+205+25+20=+20+2425+2E00.dat", "path_to_key for key with mixed chars");
+
+    # Should escape to over 255 chars
+    $log->clear();
+    $key = "!@#" x 100;
+    cmp_deeply([$cache->path_to_key($key)], [], "path_to_key returned empty list for too-long key");
+    $log->contains_ok(qr/key .* > \d+ chars when escaped; cannot cache/);
 }
 
 sub test_creation_and_deletion : Test(10) {

@@ -7,12 +7,14 @@ use Test::Deep qw(cmp_deeply);
 use base qw(Class::Accessor);
 __PACKAGE__->mk_ro_accessors(qw(msgs));
 
-sub is_debug { 1 }
-
-sub debug {
-    my ( $self, $msg ) = @_;
-    $self->{msgs} ||= [];
-    push( @{ $self->{msgs} }, $msg );
+foreach my $level (qw(fatal error warn info debug)) {
+    no strict 'refs';
+    *{ __PACKAGE__ . "::$level" } = sub {
+        my ( $self, $msg ) = @_;
+        $self->{msgs} ||= [];
+        push( @{ $self->{msgs} }, $msg );
+    };
+    *{ __PACKAGE__ . "::is_$level" } = sub { 1 };
 }
 
 sub contains_ok {

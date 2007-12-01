@@ -19,7 +19,7 @@ use base qw(CHI::Driver);
 my $Default_Create_Mode = 0775;
 my $Default_Depth       = 2;
 my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-file" );
-my $Max_File_Length     = 240;
+my $Max_File_Length     = 254;
 
 my $File_Spec_Using_Unix = $File::Spec::ISA[0] eq 'File::Spec::Unix';
 my $Fetch_Flags          = O_RDONLY | O_BINARY;
@@ -49,7 +49,7 @@ sub desc {
 sub fetch {
     my ( $self, $key ) = @_;
 
-    my ($file) = $self->path_to_key($key);
+    my ($file) = $self->path_to_key($key) or return undef;
     return unless -f $file;
 
     # Fast slurp, adapted from File::Slurp::read, with unnecessary options removed
@@ -78,7 +78,8 @@ sub fetch {
 sub store {
     my ( $self, $key, $data ) = @_;
 
-    my ( $file, $dir ) = $self->path_to_key($key);
+    my ( $file, $dir ) = $self->path_to_key($key) or return undef;
+
     my $temp_file = tmpdir() . "/chi-driver-file." . unique_id();
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
 
@@ -122,7 +123,7 @@ sub store {
 sub delete {
     my ( $self, $key ) = @_;
 
-    my ($file) = $self->path_to_key($key);
+    my ($file) = $self->path_to_key($key) or return undef;
     unlink($file);
     die "could not unlink '$file'" if -f $file;
 }
@@ -186,25 +187,23 @@ sub path_to_key {
 
     # Escape key to make safe for filesystem
     #
-    my $escaped_key = escape_for_filename($key);
-
-    # If length of key is greater than max file length, split into multiple path pieces
-    #
-    while ( length($escaped_key) > $Max_File_Length ) {
-        push( @paths, substr( $escaped_key, 0, $Max_File_Length ) );
-        $escaped_key = substr( $escaped_key, $Max_File_Length );
+    my $filename = escape_for_filename($key) . ".dat";
+    if ( length($filename) > $Max_File_Length ) {
+        my $log = CHI->logger();
+        $log->warn("key '$key' > $Max_File_Length chars when escaped; cannot cache");
+        return ();
     }
 
     # Join paths together. Just join with / as special optimization for Unix, as File::Spec
     # utilities do a bunch of unnecessary work in this case.
     #
     my $dir = $File_Spec_Using_Unix ? join( "/", @paths ) : catdir(@paths);
-    my $file =
+    my $filepath =
       $File_Spec_Using_Unix
-      ? "$dir/$escaped_key.dat"
-      : catfile( $dir, "$escaped_key.dat" );
+      ? "$dir/$filename"
+      : catfile( $dir, "$filename" );
 
-    return ( $file, $dir );
+    return ( $filepath, $dir );
 }
 
 1;
@@ -232,6 +231,11 @@ Each item is stored in its own file. During a set, a temporary file is created a
 atomically renamed to the proper file. While not the most efficient, it eliminates the
 need for locking (with multiple overlapping sets, the last one "wins") and makes this
 cache usable in environments like NFS where locking might normally be undesirable.
+
+The base filename is the key itself, with unsafe characters replaced with an escape
+sequence similar to URI escaping. The filename length is capped at 255 characters, which
+is the maximum for most Unix systems, so gets/sets for keys that escape to longer than 255
+characters will fail.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -272,8 +276,9 @@ directories.
 
 =item path_to_key ( $key )
 
-Returns the path to the filename that would contain the entry for $key, whether or not
-that entry exists.
+Returns a two-element list containing the full pathname, and its directory, of the entry
+for $key, whether or not that entry exists. Returns the empty list if a valid path cannot
+be computed, for example if the key is too long.
 
 =back
 
