@@ -34,7 +34,8 @@ sub new {
     $self->{dir_create_mode}  ||= $Default_Create_Mode;
     $self->{file_create_mode} ||= $self->{dir_create_mode} & 0666;
     $self->{depth}            ||= $Default_Depth;
-    $self->{root_dir}         ||= (delete($self->{cache_root}) || $Default_Root_Dir);
+    $self->{root_dir} ||=
+      ( delete( $self->{cache_root} ) || $Default_Root_Dir );
     $self->{path_to_namespace} =
       catdir( $self->root_dir, escape_for_filename( $self->{namespace} ) );
     return $self;
@@ -49,7 +50,7 @@ sub desc {
 sub fetch {
     my ( $self, $key ) = @_;
 
-    my ($file) = $self->path_to_key($key) or return undef;
+    my $file = $self->path_to_key($key) or return undef;
     return unless -f $file;
 
     # Fast slurp, adapted from File::Slurp::read, with unnecessary options removed
@@ -78,7 +79,8 @@ sub fetch {
 sub store {
     my ( $self, $key, $data ) = @_;
 
-    my ( $file, $dir ) = $self->path_to_key($key) or return undef;
+    my $dir;
+    my $file = $self->path_to_key($key, \$dir) or return undef;
 
     my $temp_file = tmpdir() . "/chi-driver-file." . unique_id();
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
@@ -123,7 +125,7 @@ sub store {
 sub delete {
     my ( $self, $key ) = @_;
 
-    my ($file) = $self->path_to_key($key) or return undef;
+    my $file = $self->path_to_key($key) or return undef;
     unlink($file);
     die "could not unlink '$file'" if -f $file;
 }
@@ -139,17 +141,23 @@ sub clear {
 sub get_keys {
     my ($self) = @_;
 
+    my @filepaths;
+    my $wanted = sub { push( @filepaths, $_ ) if -f && /\.dat$/ };
+    return $self->_collect_keys_via_file_find( \@filepaths, $wanted );
+}
+
+sub _collect_keys_via_file_find {
+    my ( $self, $filepaths, $wanted ) = @_;
+
     my $namespace_dir = $self->{path_to_namespace};
     return () if !-d $namespace_dir;
 
-    my @files;
-    my $wanted = sub { push( @files, $_ ) if -f && /\.dat$/ };
     find( { wanted => $wanted, no_chdir => 1 }, $namespace_dir );
 
     my @keys;
     my $key_start = length($namespace_dir) + 1 + $self->depth * 2;
-    foreach my $file (@files) {
-        my $key = substr( $file, $key_start, -4 );
+    foreach my $filepath (@$filepaths) {
+        my $key = substr( $filepath, $key_start, -4 );
         $key = unescape_for_filename( join( "", splitdir($key) ) );
         push( @keys, $key );
     }
@@ -169,7 +177,7 @@ sub get_namespaces {
 my %hex_strings = map { ( $_, sprintf( "%x", $_ ) ) } ( 0x0 .. 0xf );
 
 sub path_to_key {
-    my ( $self, $key ) = @_;
+    my ( $self, $key, $dir_ref ) = @_;
 
     my @paths = ( $self->{path_to_namespace} );
 
@@ -190,7 +198,8 @@ sub path_to_key {
     my $filename = escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
         my $log = CHI->logger();
-        $log->warn("key '$key' > $Max_File_Length chars when escaped; cannot cache");
+        $log->warn(
+            "key '$key' > $Max_File_Length chars when escaped; cannot cache");
         return ();
     }
 
@@ -203,7 +212,11 @@ sub path_to_key {
       ? "$dir/$filename"
       : catfile( $dir, "$filename" );
 
-    return ( $filepath, $dir );
+    if (defined $dir_ref && ref($dir_ref)) {
+        $$dir_ref = $dir;
+    }
+
+    return $filepath;
 }
 
 1;
@@ -276,9 +289,14 @@ directories.
 
 =item path_to_key ( $key )
 
-Returns a two-element list containing the full pathname, and its directory, of the entry
-for $key, whether or not that entry exists. Returns the empty list if a valid path cannot
-be computed, for example if the key is too long.
+Returns the full path to the cache file representing $key, whether or not that entry
+exists. Returns the empty list if a valid path cannot be computed, for example if the key
+is too long.
+
+=item path_to_namespace
+
+Returns the full path to the directory representing this cache's namespace, whether or not
+it has any entries.
 
 =back
 
