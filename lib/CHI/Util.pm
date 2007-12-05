@@ -53,15 +53,15 @@ sub dump_one_line {
 
 {
 
-    # Adapted from URI::Escape, but use '+' for escape character
+    # Adapted from URI::Escape, but use '+' for escape character, like Mason's compress_path
     my %escapes;
     for ( 0 .. 255 ) {
-        $escapes{ chr($_) } = sprintf( "+%02X", $_ );
+        $escapes{ chr($_) } = sprintf( "+%02x", $_ );
     }
 
     sub _fail_hi {
         my $chr = shift;
-        Carp::croak( sprintf "Can't escape \\x{%04X}", ord($chr) );
+        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}", ord($chr) );
     }
 
     sub escape_for_filename {

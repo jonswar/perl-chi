@@ -36,7 +36,7 @@ sub test_path_to_key : Test(3) {
 
     $key = "\$20.00 plus 5% = \$25.00";
     my $file = basename(($cache->path_to_key($key))[0]);
-    is($file, "+2420+2E00+20plus+205+25+20=+20+2425+2E00.dat", "path_to_key for key with mixed chars");
+    is($file, "+2420+2e00+20plus+205+25+20=+20+2425+2e00.dat", "path_to_key for key with mixed chars");
 
     # Should escape to over 255 chars
     $log->clear();
