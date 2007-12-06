@@ -311,6 +311,10 @@ with this cache instance.
 
 Returns the epoch time at which I<$key> expires, or undef if it has no expiration time.
 
+=item is_expired( $key )
+
+Returns a boolean indicating whether I<$key> is in the cache and has expired. Note: returns false if the key is not in the cache.
+
 =item is_valid( $key )
 
 Returns a boolean indicating whether I<$key> is in the cache and has not expired.

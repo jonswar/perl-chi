@@ -178,6 +178,18 @@ sub get_expires_at {
     }
 }
 
+sub is_expired {
+    my ( $self, $key ) = @_;
+    die "must specify key" unless defined($key);
+
+    if ( my $obj = $self->get_object($key) ) {
+        return $obj->is_expired;
+    }
+    else {
+        return;
+    }
+}
+
 sub is_valid {
     my ( $self, $key ) = @_;
     die "must specify key" unless defined($key);

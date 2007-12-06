@@ -155,7 +155,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expires_immediately : Test(32) {
+sub test_expires_immediately : Test(36) {
     my $self = shift;
 
     # Expires immediately
@@ -169,7 +169,7 @@ sub test_expires_immediately : Test(32) {
             time() - 2,
             time(), "expires_at ($desc)"
         );
-        ok( $cache->get_object($key)->is_expired(), "is_expired ($desc)" );
+        ok( $cache->is_expired($key), "is_expired ($desc)" );
         ok( !defined $cache->get($key), "immediate miss ($desc)" );
     };
     $test_expires_immediately->(0);
@@ -182,7 +182,7 @@ sub test_expires_immediately : Test(32) {
     $test_expires_immediately->("now");
 }
 
-sub test_expires_shortly : Test(14) {
+sub test_expires_shortly : Test(18) {
     my $self = shift;
 
     # Expires shortly (real time)
@@ -199,12 +199,14 @@ sub test_expires_shortly : Test(14) {
             $start_time + 3,
             "expires_at ($desc)"
         );
+        ok( !$cache->is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key), "valid ($desc)" );
 
         # Only bother sleeping and expiring for one of the variants
         if ( $set_option eq "2 seconds" ) {
             sleep(2);
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
+            ok( $cache->is_expired($key), "is_expired ($desc)" );
             ok( !$cache->is_valid($key), "invalid ($desc)" );
         }
     };
@@ -213,7 +215,7 @@ sub test_expires_shortly : Test(14) {
     $test_expires_shortly->( { expires_at => time + 2 } );
 }
 
-sub test_expires_later : Test(21) {
+sub test_expires_later : Test(30) {
     my $self = shift;
 
     # Expires later (test time)
@@ -230,11 +232,14 @@ sub test_expires_later : Test(21) {
             $start_time + 3601,
             "expires_at ($desc)"
         );
+        ok( !$cache->is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key), "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3598;
+        ok( !$cache->is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key), "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3602;
         ok( !defined $cache->get($key), "miss after 1 hour ($desc)" );
+        ok( $cache->is_expired($key), "is_expired ($desc)" );
         ok( !$cache->is_valid($key), "invalid ($desc)" );
     };
     $test_expires_later->(3600);
@@ -242,7 +247,7 @@ sub test_expires_later : Test(21) {
     $test_expires_later->( { expires_at => time + 3600 } );
 }
 
-sub test_expires_never : Test(2) {
+sub test_expires_never : Test(6) {
     my $self = shift;
 
     # Expires never (will fail in 2037)
@@ -255,6 +260,8 @@ sub test_expires_never : Test(2) {
             time + Time::Duration::Parse::parse_duration('1 year'),
             "expires never"
             );
+        ok( !$cache->is_expired($key), "not expired" );
+        ok( $cache->is_valid($key), "valid" );
     };
     $test_expires_never->();
     $test_expires_never->('never');
