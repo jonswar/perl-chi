@@ -82,8 +82,8 @@ sub store {
     my $dir;
     my $file = $self->path_to_key($key, \$dir) or return undef;
 
-    my $temp_file = tmpdir() . "/chi-driver-file." . unique_id();
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
+    my $temp_file = catfile($dir, unique_id());
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
     #
@@ -204,7 +204,7 @@ sub path_to_key {
     }
 
     # Join paths together. Just join with / as special optimization for Unix, as File::Spec
-    # utilities do a bunch of unnecessary work in this case.
+    # utilities do a bunch of unnecessary work (e.g. canonicalization) in this case.
     #
     my $dir = $File_Spec_Using_Unix ? join( "/", @paths ) : catdir(@paths);
     my $filepath =
