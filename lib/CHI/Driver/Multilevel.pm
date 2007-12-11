@@ -9,6 +9,9 @@ use base qw(CHI::Driver);
 
 __PACKAGE__->mk_ro_accessors(qw(subcaches));
 
+# TODO: Do a better job determining, and documenting, how constructor and get and set
+# options get passed from parent cache to subcaches
+
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
@@ -171,6 +174,10 @@ or an actual driver handle.
 The accessor of the same name will return an array reference of driver handles.
 
 =back
+
+The I<namespace> option will automatically be passed to subcaches. Right now, expiration
+options are only supported in the parent cache - subcaches currently may not have
+different expiration options.
 
 =head1 OPERATION
 
