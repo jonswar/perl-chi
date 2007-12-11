@@ -79,7 +79,7 @@ CHI -- Unified cache interface
         $customer = get_customer_from_db($name);
         $cache->set( $name, $customer, "10 minutes" );
     }
-    $cache->clear($name);
+    $cache->remove($name);
 
 =head1 DESCRIPTION
 
