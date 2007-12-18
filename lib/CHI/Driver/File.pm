@@ -198,9 +198,10 @@ sub path_to_key {
     my $filename = escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
         my $log = CHI->logger();
+        my $namespace = $self->{namespace};
         $log->warn(
-            "key '$key' > $Max_File_Length chars when escaped; cannot cache");
-        return ();
+            "key '$key' in namespace '$namespace' is over $Max_File_Length chars when escaped; cannot cache");
+        return undef;
     }
 
     # Join paths together. Just join with / as special optimization for Unix, as File::Spec
