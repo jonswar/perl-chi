@@ -485,6 +485,27 @@ Return namespaces associated with the cache.
 
 =back
 
+=item LOGGING
+
+If given a logger object, CHI will log events at various levels - for example, a debug log
+message for every cache get and set. To specify the logger object:
+
+    CHI->logger($logger_object);   # Warning: Temporary API, see below
+
+The object must provide the methods
+
+    debug, info, warning, error, fatal
+
+for logging, and
+
+    is_debug, is_info, is_warning, is_error, is_fatal
+
+for checking whether a message would be logged at that level. This is compatible with Log::Log4perl
+and Catalyst::Log among others.
+
+Warning: CHI->logger is a temporary API. The intention is to replace this with Log::Any
+(http://use.perl.org/~jonswar/journal/34366).
+
 =head1 SEE ALSO
 
 Cache::Cache, Cache::Memcached, Cache::FastMmap
