@@ -54,6 +54,7 @@ sub new_cache_options {
     return (
         driver           => $self->testing_driver(),
         expires_variance => 0,
+        on_get_error     => 'die',
         on_set_error     => 'die'
     );
 }

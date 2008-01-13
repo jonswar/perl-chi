@@ -8,7 +8,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors(
     qw(default_set_options short_driver_name namespace));
-__PACKAGE__->mk_accessors(qw(is_subcache on_set_error));
+__PACKAGE__->mk_accessors(qw(is_subcache on_get_error on_set_error));
 
 # When these are set, call _compute_default_set_options again.
 foreach my $field qw(expires_at expires_in expires_variance) {
@@ -44,6 +44,7 @@ sub new {
 
     my %defaults = (
         driver       => 'Memory',
+        on_get_error => 'log',
         on_set_error => 'log',
     );
     while ( my ( $key, $value ) = each(%defaults) ) {
@@ -76,6 +77,7 @@ sub new {
 
     # TODO: validate:
     # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
+    # on_get_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
 
     ( $self->{short_driver_name} = ref($self) ) =~ s/^CHI::Driver:://;
 
@@ -113,7 +115,12 @@ sub get {
 
     # Fetch cache object
     #
-    my $data = $params{data} || $self->fetch($key);
+    my $data = $params{data} || eval { $self->fetch($key) };
+    if ( my $error = $@ ) {
+        $self->_handle_error( $key, $error, 'getting', $self->on_get_error() );
+        return;
+    }
+
     if ( !defined $data ) {
         $self->_log_get_result( $log, $key, "MISS (not in cache)" )
           if $log->is_debug;
@@ -214,10 +221,10 @@ sub set {
     }
     else {
         if ( !ref($options) ) {
-            if ($options eq 'never') {
+            if ( $options eq 'never' ) {
                 $options = { expires_at => $Max_Time };
             }
-            elsif ($options eq 'now') {
+            elsif ( $options eq 'now' ) {
                 $options = { expires_in => 0 };
             }
             else {
@@ -248,7 +255,7 @@ sub set {
         $expires_at );
     eval { $self->_set_object( $key, $obj ) };
     if ( my $error = $@ ) {
-        $self->_handle_set_error( $key, $error );
+        $self->_handle_error( $key, $error, 'setting', $self->on_set_error() );
         return;
     }
 
@@ -327,18 +334,19 @@ sub _log_set_result {
     }
 }
 
-sub _handle_set_error {
-    my ( $self, $key, $error ) = @_;
+sub _handle_error {
+    my ( $self, $key, $error, $action, $on_error ) = @_;
 
-    my $msg =
-      sprintf( "error setting key '%s' in %s: %s", $key, $self->desc, $error );
-    for ( $self->on_set_error() ) {
-        /ignore/ && do { };
-        /warn/   && do { warn $msg };
-        /log/
-          && do { my $log = CHI->logger; $log->debug($msg) if $log->is_debug };
-        /die/ && do { die $msg };
+    my $msg = sprintf( "error %s key '%s' in %s: %s",
+        $action, $key, $self->desc, $error );
+
+    for ($on_error) {
         ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
+        /^log$/
+          && do { my $log = CHI->logger; $log->error($msg) };
+        /^ignore$/ && do { };
+        /^warn$/   && do { warn $msg };
+        /^die$/    && do { die $msg };
     }
 }
 
@@ -386,7 +394,7 @@ sub remove_multi {
 sub clear {
     my ($self) = @_;
 
-    $self->remove_multi( [$self->get_keys()] );
+    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub purge {
@@ -403,7 +411,7 @@ sub dump_as_hash {
     my ($self) = @_;
 
     return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
-          $self->get_keys()};
+          $self->get_keys() };
 }
 
 sub is_empty {

@@ -13,9 +13,10 @@ sub readonly_cache {
     );
 }
 
-sub test_set_errors : Test(9) {
+sub test_set_errors : Test(13) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
+    my $error_pattern = qr/error setting key 'medium' in .*: read-only cache/;
     my $log = CHI::Test::Logger->new();
     CHI->logger($log);
 
@@ -28,7 +29,7 @@ sub test_set_errors : Test(9) {
     $cache = readonly_cache('die');
     throws_ok(
         sub { $cache->set( $key, $value ) },
-        qr/read-only cache/,
+        $error_pattern,
         "die - dies"
     );
     ok( !defined( $cache->get($key) ), "die - miss" );
@@ -38,8 +39,19 @@ sub test_set_errors : Test(9) {
     lives_ok( sub { $cache->set( $key, $value ) }, "log - lives" );
     ok( !defined( $cache->get($key) ), "log - miss" );
     $log->contains_ok(qr/cache get for .* key='medium', .*: MISS/);
-    $log->contains_ok(qr/error setting key 'medium' in .*: read-only cache/);
+    $log->contains_ok($error_pattern);
     $log->empty_ok();
+
+    my ( $err_msg, $err_key );
+    $cache = readonly_cache(
+        sub {
+            ( $err_msg, $err_key ) = @_;
+        }
+    );
+    lives_ok( sub { $cache->set( $key, $value ) }, "custom - lives" );
+    ok( !defined( $cache->get($key) ), "custom - miss" );
+    like( $err_msg, $error_pattern, "custom - got msg" );
+    is( $err_key, $key, "custom - got key" );
 }
 
 1;

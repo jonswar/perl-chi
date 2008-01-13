@@ -127,7 +127,7 @@ overhead and minimum of glue code required.
 
 =head1 CONSTRUCTOR
 
-To create a new cache handle, call CHI->new. It takes the following common options.
+To create a new cache handle, call CHI->new. It takes the following common options:
 
 =over
 
@@ -150,17 +150,25 @@ automatically have its own cache. If you want multiple packages to share the sam
 just decide a common namespace like 'main'.
 
 =item expires_in [DURATION]
+
 =item expires_at [NUM]
+
 =item expires_variance [FLOAT]
 
 Provide default values for the corresponding set() options - see set().
 
+=item on_get_error
+
 =item on_set_error
 
-How to handle runtime errors occurring during cache writes, which may or may not
-be considered fatal in your application. Options are:
+How to handle runtime errors occurring during cache gets and cache sets, which may or may
+not be considered fatal in your application. Options are:
 
 =over
+
+=item *
+
+log (the default) - log an error using the currently set logger, or ignore if no logger is set - see L<|LOGGING>
 
 =item *
 
@@ -180,10 +188,10 @@ I<coderef> - call this code reference with three arguments: an appropriate messa
 
 =back
 
-Each driver will take additional options specific to that driver. For example, the File
-driver takes root_dir and depth options.
+=back    
 
-=back
+Some drivers will take additional constructor options. For example, the File driver takes
+C<root_dir> and C<depth> options.
 
 =head1 METHODS
 
