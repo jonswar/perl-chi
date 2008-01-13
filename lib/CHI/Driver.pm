@@ -1,6 +1,7 @@
 package CHI::Driver;
 use strict;
 use warnings;
+use Carp;
 use CHI::CacheObject;
 use CHI::Util;
 use List::MoreUtils qw(pairwise);
@@ -109,7 +110,7 @@ sub desc {
 
 sub get {
     my ( $self, $key, %params ) = @_;
-    return undef unless defined($key);
+    croak "must specify key" unless defined($key);
 
     my $log = CHI->logger();
 
@@ -166,7 +167,7 @@ sub get {
 
 sub get_object {
     my ( $self, $key ) = @_;
-    die "must specify key" unless defined($key);
+    croak "must specify key" unless defined($key);
 
     my $data = $self->fetch($key) or return undef;
     my $obj = CHI::CacheObject->unpack_from_data( $key, $data );
@@ -175,7 +176,7 @@ sub get_object {
 
 sub get_expires_at {
     my ( $self, $key ) = @_;
-    die "must specify key" unless defined($key);
+    croak "must specify key" unless defined($key);
 
     if ( my $obj = $self->get_object($key) ) {
         return $obj->expires_at;
@@ -187,7 +188,7 @@ sub get_expires_at {
 
 sub is_expired {
     my ( $self, $key ) = @_;
-    die "must specify key" unless defined($key);
+    croak "must specify key" unless defined($key);
 
     if ( my $obj = $self->get_object($key) ) {
         return $obj->is_expired;
@@ -199,7 +200,7 @@ sub is_expired {
 
 sub is_valid {
     my ( $self, $key ) = @_;
-    die "must specify key" unless defined($key);
+    croak "must specify key" unless defined($key);
 
     if ( my $obj = $self->get_object($key) ) {
         return !$obj->is_expired;
@@ -211,8 +212,8 @@ sub is_valid {
 
 sub set {
     my ( $self, $key, $value, $options ) = @_;
-    die "must specify key" unless defined($key);
-    return                 unless defined($value);
+    croak "must specify key" unless defined($key);
+    return                  unless defined($value);
 
     # Fill in $options if not passed, copy if passed, and apply defaults.
     #
@@ -265,16 +266,9 @@ sub set {
     return $value;
 }
 
-sub _set_object {
-    my ( $self, $key, $obj ) = @_;
-    die "must specify key and obj" unless defined($obj);
-
-    my $data = $obj->pack_to_data();
-    $self->store( $key, $data );
-}
-
 sub expire {
     my ( $self, $key ) = @_;
+    croak "must specify key" unless defined($key);
 
     my $time = $Test_Time || time();
     if ( defined( my $obj = $self->get_object($key) ) ) {
@@ -287,6 +281,7 @@ sub expire {
 
 sub expire_if {
     my ( $self, $key, $code ) = @_;
+    croak "must specify key and code" unless defined($key) && defined($code);
 
     if ( my $obj = $self->get_object($key) ) {
         my $retval = $code->($obj);
@@ -302,8 +297,91 @@ sub expire_if {
 
 sub remove {
     my ( $self, $key ) = @_;
+    croak "must specify key" unless defined($key);
 
     $self->delete($key);
+}
+
+sub compute {
+    my ( $self, $key, $code, $set_options ) = @_;
+    croak "must specify key and code" unless defined($key) && defined($code);
+
+    my $value = $self->get($key);
+    if ( !defined $value ) {
+        $value = $code->();
+        $self->set( $key, $value, $set_options );
+    }
+    return $value;
+}
+
+sub get_multi_arrayref {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
+
+    return [ map { scalar( $self->get($_) ) } @$keys ];
+}
+
+sub get_multi_hashref {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
+
+    my $values = $self->get_multi_arrayref($keys);
+    my %hash = pairwise { ( $a => $b ) } @$keys, @$values;
+    return \%hash;
+}
+
+sub set_multi {
+    my ( $self, $key_values, $set_options ) = @_;
+    croak "must specify key_values" unless defined($key_values);
+
+    while ( my ( $key, $value ) = each(%$key_values) ) {
+        $self->set( $key, $value, $set_options );
+    }
+}
+
+sub remove_multi {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
+
+    foreach my $key (@$keys) {
+        $self->remove($key);
+    }
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
+}
+
+sub purge {
+    my ($self) = @_;
+
+    foreach my $key ( $self->get_keys() ) {
+        if ( $self->get_object($key)->is_expired() ) {
+            $self->remove($key);
+        }
+    }
+}
+
+sub dump_as_hash {
+    my ($self) = @_;
+
+    return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
+          $self->get_keys() };
+}
+
+sub is_empty {
+    my ($self) = @_;
+
+    return !$self->get_keys();
+}
+
+sub _set_object {
+    my ( $self, $key, $obj ) = @_;
+
+    my $data = $obj->pack_to_data();
+    $self->store( $key, $data );
 }
 
 sub _log_get_result {
@@ -348,76 +426,6 @@ sub _handle_error {
         /^warn$/   && do { warn $msg };
         /^die$/    && do { die $msg };
     }
-}
-
-sub compute {
-    my ( $self, $key, $code, $set_options ) = @_;
-
-    my $value = $self->get($key);
-    if ( !defined $value ) {
-        $value = $code->();
-        $self->set( $key, $value, $set_options );
-    }
-    return $value;
-}
-
-sub get_multi_arrayref {
-    my ( $self, $keys ) = @_;
-
-    return [ map { scalar( $self->get($_) ) } @$keys ];
-}
-
-sub get_multi_hashref {
-    my ( $self, $keys ) = @_;
-
-    my $values = $self->get_multi_arrayref($keys);
-    my %hash = pairwise { ( $a => $b ) } @$keys, @$values;
-    return \%hash;
-}
-
-sub set_multi {
-    my ( $self, $key_values, $set_options ) = @_;
-
-    while ( my ( $key, $value ) = each(%$key_values) ) {
-        $self->set( $key, $value, $set_options );
-    }
-}
-
-sub remove_multi {
-    my ( $self, $keys ) = @_;
-
-    foreach my $key (@$keys) {
-        $self->remove($key);
-    }
-}
-
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
-}
-
-sub purge {
-    my ($self) = @_;
-
-    foreach my $key ( $self->get_keys() ) {
-        if ( $self->get_object($key)->is_expired() ) {
-            $self->remove($key);
-        }
-    }
-}
-
-sub dump_as_hash {
-    my ($self) = @_;
-
-    return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
-          $self->get_keys() };
-}
-
-sub is_empty {
-    my ($self) = @_;
-
-    return !$self->get_keys();
 }
 
 1;

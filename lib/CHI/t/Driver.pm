@@ -641,4 +641,13 @@ sub test_multiple_procs : Test(1) {
     }
 }
 
+sub test_missing_params : Tests(14)
+{
+    # These methods require a key
+    foreach my $method (qw(get get_object get_expires_at is_expired is_valid set expire expire_if remove compute get_multi_arrayref get_multi_hashref set_multi remove_multi)) {
+        throws_ok(sub { $cache->$method() }, qr/must specify key/, "$method throws error when no key passed");
+    }
+}
+
+
 1;

@@ -8,8 +8,8 @@ TO DO
 * expires_next => ['hour', 'day']
 * Implement read-only and write-only caches (useful for multilevel caches)
 * BerkeleyDB driver (w/separate file per namespace, must handle locking)
+* Create faster get_object variant that does not support value - e.g. so file cache can read just metadata - then use this variant for get_expires_at, etc.
 * Handle unicode chars in escape_for_filename by utf8 encoding when needed (but how to know when unescaping...)
-* Make get_object more efficient - eliminate support for value() so that we can read and parse just the metadata header
 * DBI driver (at least mysql)
 * Test:
   * bad driver
