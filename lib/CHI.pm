@@ -485,7 +485,7 @@ Return namespaces associated with the cache.
 
 =back
 
-=item LOGGING
+=head1 LOGGING
 
 If given a logger object, CHI will log events at various levels - for example, a debug log
 message for every cache get and set. To specify the logger object:
