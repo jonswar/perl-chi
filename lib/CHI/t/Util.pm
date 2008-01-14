@@ -7,10 +7,9 @@ use List::MoreUtils qw(uniq);
 use base qw(CHI::Test::Class);
 
 # The inevitably lame unique_id test
-sub test_unique_id : Tests(1)
-{
-    my @ids = map { unique_id } (0..9);
-    cmp_deeply(\@ids, [uniq(@ids)], 'generated ten unique ids');
+sub test_unique_id : Tests(1) {
+    my @ids = map { unique_id } ( 0 .. 9 );
+    cmp_deeply( \@ids, [ uniq(@ids) ], 'generated ten unique ids' );
 }
 
 1;

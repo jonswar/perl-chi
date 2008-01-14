@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use Carp;
 use Cwd qw(realpath cwd);
-use CHI::Util qw(escape_for_filename unescape_for_filename unique_id);
+use CHI::Util
+  qw(escape_for_filename fast_catdir fast_catfile unescape_for_filename unique_id);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
@@ -11,8 +12,6 @@ use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use File::Temp qw(tempfile);
-use URI::Escape;
 use base qw(CHI::Driver);
 
 my $Default_Create_Mode = oct(775);
@@ -20,9 +19,8 @@ my $Default_Depth       = 2;
 my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-file" );
 my $Max_File_Length     = 254;
 
-my $File_Spec_Using_Unix = $File::Spec::ISA[0] eq 'File::Spec::Unix';
-my $Fetch_Flags          = O_RDONLY | O_BINARY;
-my $Store_Flags          = O_WRONLY | O_CREAT | O_BINARY;
+my $Fetch_Flags = O_RDONLY | O_BINARY;
+my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
 
 __PACKAGE__->mk_ro_accessors(
     qw(dir_create_mode file_create_mode depth path_to_namespace root_dir));
@@ -82,7 +80,11 @@ sub store {
     my $file = $self->path_to_key( $key, \$dir ) or return undef;
 
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
-    my $temp_file = catfile( $dir, unique_id() );
+
+    # Generate a temporary filename using unique_id - faster than tempfile, as long as
+    # we don't need automatic removal
+    #
+    my $temp_file = fast_catfile( $dir, unique_id() );
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
     #
@@ -171,7 +173,7 @@ sub get_namespaces {
     my @contents = read_dir( $self->root_dir() );
     my @namespaces =
       map { unescape_for_filename($_) }
-      grep { -d catdir( $self->root_dir(), $_ ) } @contents;
+      grep { -d fast_catdir( $self->root_dir(), $_ ) } @contents;
     return @namespaces;
 }
 
@@ -206,17 +208,16 @@ sub path_to_key {
         return undef;
     }
 
-    # Join paths together. Just join with / as special optimization for Unix, as File::Spec
-    # utilities do a bunch of unnecessary work (e.g. canonicalization) in this case.
+    # Join paths together, computing dir separately if $dir_ref was passed.
     #
-    my $dir = $File_Spec_Using_Unix ? join( "/", @paths ) : catdir(@paths);
-    my $filepath =
-      $File_Spec_Using_Unix
-      ? "$dir/$filename"
-      : catfile( $dir, "$filename" );
-
+    my $filepath;
     if ( defined $dir_ref && ref($dir_ref) ) {
+        my $dir = fast_catdir(@paths);
+        $filepath = fast_catfile( $dir, $filename );
         $$dir_ref = $dir;
+    }
+    else {
+        $filepath = fast_catfile( @paths, $filename );
     }
 
     return $filepath;

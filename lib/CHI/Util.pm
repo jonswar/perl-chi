@@ -4,7 +4,7 @@ use warnings;
 use Carp;
 use Data::Dumper;
 use Data::UUID;
-use File::Spec;
+use File::Spec::Functions qw(catdir catfile);
 use Time::Duration::Parse;
 use base qw(Exporter);
 
@@ -12,6 +12,8 @@ our @EXPORT_OK = qw(
   dp
   dump_one_line
   escape_for_filename
+  fast_catdir
+  fast_catfile
   parse_duration
   require_dynamic
   unescape_for_filename
@@ -92,6 +94,18 @@ sub require_dynamic {
 
         $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
         $str;
+    }
+}
+
+{
+    my $File_Spec_Using_Unix = $File::Spec::ISA[0] eq 'File::Spec::Unix';
+
+    sub fast_catdir {
+        return $File_Spec_Using_Unix ? join( "/", @_ ) : catdir(@_);
+    }
+
+    sub fast_catfile {
+        return $File_Spec_Using_Unix ? join( "/", @_ ) : catfile(@_);
     }
 }
 

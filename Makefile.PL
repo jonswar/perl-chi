@@ -5,12 +5,16 @@ all_from 'lib/CHI.pm';
 
 build_requires 'Test::More';
 
+requires 'Data::UUID'            => 0;
+requires 'Digest::JHash'         => 0;
+requires 'File::Slurp'           => 0;
 requires 'File::Spec'            => 0;
+requires 'Hash::MoreUtils'       => 0;
 requires 'List::MoreUtils'       => '0.21';
+requires 'Module::Find'          => '0.05';
 requires 'Storable'              => 0;
-requires 'Sys::HostIP'           => '1.3.1';
+requires 'Test::Deep'            => 0;
 requires 'Time::Duration::Parse' => '0.03';
-requires 'URI::Escape'           => '3.28';
 
 license 'perl';
 
