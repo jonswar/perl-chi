@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 use CHI::CacheObject;
-use CHI::Util;
+use CHI::Util qw(parse_duration);
 use List::MoreUtils qw(pairwise);
 use base qw(Class::Accessor::Fast);
 
@@ -27,7 +27,7 @@ foreach my $field qw(expires_at expires_in expires_variance) {
 }
 
 # These methods must be implemented by subclass
-foreach my $method (qw(fetch store delete get_keys get_namespaces)) {
+foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
       sub { die "method '$method' must be implemented by subclass" };
@@ -186,13 +186,6 @@ sub get_expires_at {
     }
 }
 
-sub exists {
-    my ( $self, $key ) = @_;
-    croak "must specify key" unless defined($key);
-
-    return defined( $self->fetch($key) );
-}
-
 sub exists_and_is_expired {
     my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
@@ -300,13 +293,6 @@ sub expire_if {
     else {
         return 1;
     }
-}
-
-sub remove {
-    my ( $self, $key ) = @_;
-    croak "must specify key" unless defined($key);
-
-    $self->delete($key);
 }
 
 sub compute {

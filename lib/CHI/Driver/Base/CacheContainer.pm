@@ -1,7 +1,6 @@
 package CHI::Driver::Base::CacheContainer;
 use strict;
 use warnings;
-use CHI::Util;
 use base qw(CHI::Driver);
 
 sub fetch {
@@ -16,7 +15,7 @@ sub store {
     $self->{_contained_cache}->set( $key, $data );
 }
 
-sub delete {
+sub remove {
     my ( $self, $key ) = @_;
 
     $self->{_contained_cache}->remove($key);

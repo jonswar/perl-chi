@@ -3,6 +3,8 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Logger;
+use CHI::Test::Util qw(cmp_bool is_between);
+use CHI::Util qw(dump_one_line);
 use String::Random qw(random_string);
 use base qw(CHI::Test::Class);
 
@@ -86,7 +88,7 @@ sub set_standard_keys_and_values {
         # expected behavior is
     );
 
-    %values = map { $_, scalar( reverse( $keys{$_} ) ) } keys(%keys);
+    %values = map { ( $_, scalar( reverse( $keys{$_} ) ) ) } keys(%keys);
     $values{arrayref} = [ 1, 2 ];
     $values{hashref} = { foo => 'bar' };
 
@@ -183,7 +185,7 @@ sub test_expires_immediately : Test(36) {
     $test_expires_immediately->("now");
 }
 
-sub test_expires_shortly : Test(22) {
+sub test_expires_shortly : Test(18) {
     my $self = shift;
 
     # Expires shortly (real time)
@@ -201,8 +203,7 @@ sub test_expires_shortly : Test(22) {
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key),               "valid ($desc)" );
-        ok( $cache->exists($key),                 "exists ($desc)" );
+        ok( $cache->is_valid($key), "valid ($desc)" );
 
         # Only bother sleeping and expiring for one of the variants
         if ( $set_option eq "2 seconds" ) {
@@ -210,7 +211,6 @@ sub test_expires_shortly : Test(22) {
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
             ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
             ok( !$cache->is_valid($key), "invalid ($desc)" );
-            ok( $cache->exists($key), "exists after expiration ($desc)" );
         }
     };
     $test_expires_shortly->(2);
@@ -218,7 +218,7 @@ sub test_expires_shortly : Test(22) {
     $test_expires_shortly->( { expires_at => time + 2 } );
 }
 
-sub test_expires_later : Test(39) {
+sub test_expires_later : Test(30) {
     my $self = shift;
 
     # Expires later (test time)
@@ -235,15 +235,12 @@ sub test_expires_later : Test(39) {
             $start_time + 3601,
             "expires_at ($desc)"
         );
-        ok( $cache->exists($key),                 "exists ($desc)" );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key),               "valid ($desc)" );
+        ok( $cache->is_valid($key), "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3598;
-        ok( $cache->exists($key),                 "exists ($desc)" );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key),               "valid ($desc)" );
+        ok( $cache->is_valid($key), "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3602;
-        ok( $cache->exists($key),                "exists ($desc)" );
         ok( !defined $cache->get($key),          "miss after 1 hour ($desc)" );
         ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
         ok( !$cache->is_valid($key),             "invalid ($desc)" );
@@ -253,7 +250,7 @@ sub test_expires_later : Test(39) {
     $test_expires_later->( { expires_at => time + 3600 } );
 }
 
-sub test_expires_never : Test(8) {
+sub test_expires_never : Test(6) {
     my $self = shift;
 
     # Expires never (will fail in 2037)
@@ -267,8 +264,7 @@ sub test_expires_never : Test(8) {
             "expires never"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired" );
-        ok( $cache->is_valid($key),               "valid" );
-        ok( $cache->exists($key),                 "exists" );
+        ok( $cache->is_valid($key), "valid" );
     };
     $test_expires_never->();
     $test_expires_never->('never');
@@ -395,7 +391,8 @@ sub test_serialize : Test(9) {
 sub test_namespaces : Test(6) {
     my $self = shift;
 
-    my $cache0 = do { package Foo::Bar; $self->new_cache() };
+    my $cache0 =
+      do { package Foo::Bar; $self->new_cache() }; ## no critic (ProhibitMultiplePackages)
     is( $cache0->namespace, 'Foo::Bar', 'namespace defaults to package' );
 
     my ( $ns1, $ns2, $ns3 ) = ( 'ns1', 'ns2', 'ns3' );
@@ -646,11 +643,11 @@ sub test_multiple_procs : Test(1) {
     }
 }
 
-sub test_missing_params : Tests(15) {
+sub test_missing_params : Tests(13) {
 
     # These methods require a key
     foreach my $method (
-        qw(get get_object get_expires_at exists exists_and_is_expired is_valid set expire expire_if remove compute get_multi_arrayref get_multi_hashref set_multi remove_multi)
+        qw(get get_object get_expires_at exists_and_is_expired is_valid set expire expire_if compute get_multi_arrayref get_multi_hashref set_multi remove_multi)
       )
     {
         throws_ok(

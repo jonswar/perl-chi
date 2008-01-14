@@ -9,7 +9,7 @@ use Sys::HostIP;
 use Time::Duration::Parse;
 use base qw(Exporter);
 
-our @EXPORT = qw(
+our @EXPORT_OK = qw(
   dp
   dump_one_line
   escape_for_filename

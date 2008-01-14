@@ -19,7 +19,6 @@ sub packages_to_import {
           Test::More
           Test::Exception
           CHI::Test::Util
-          CHI::Util
           )
     );
 }
@@ -28,7 +27,7 @@ sub export_to_level {
     my ( $class, $level, $ignore ) = @_;
 
     foreach my $package ( $class->packages_to_import() ) {
-        eval "require $package";
+        eval "require $package";    ## no critic
         die $@ if $@;
         my @export;
         if ( $package eq 'Test::Deep' ) {

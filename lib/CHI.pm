@@ -25,7 +25,7 @@ sub new {
     }
     die "missing required param 'driver' or 'driver_class'"
       unless defined $driver_class;
-    eval "require $driver_class";
+    eval "require $driver_class";    ## no critic
     die $@ if $@;
 
     return $driver_class->new( \%params );
@@ -276,7 +276,7 @@ just before it actually expires, so that users are not impacted by recompute tim
 
 =item remove( $key )
 
-Delete the data associated with the I<$key> from the cache.
+Remove the data associated with the I<$key> from the cache.
 
 =item expire( $key )
 
@@ -295,21 +295,16 @@ parameter. If I<$code> returns a true value, expire the data. e.g.
 
 =over
 
-=item exists( $key )
-
-Returns a boolean indicating whether I<$key> exists in the cache, whether or not it has
-expired.
-
-=item exists_and_is_expired( $key )
-
-Returns a boolean indicating whether I<$key> exists in the cache and has expired.  Note:
-Expiration may be determined probabilistically if L</expires_variance> was used.
-
 =item is_valid( $key )
 
 Returns a boolean indicating whether I<$key> exists in the cache and has not
 expired. Note: Expiration may be determined probabilistically if L</expires_variance>
 was used.
+
+=item exists_and_is_expired( $key )
+
+Returns a boolean indicating whether I<$key> exists in the cache and has expired.  Note:
+Expiration may be determined probabilistically if L</expires_variance> was used.
 
 =item get_expires_at( $key )
 
@@ -447,9 +442,9 @@ Returns the data associated with I<$key> in the namespace. Called by L</"set">. 
 CHI::Driver superclass will take care of extracting out metadata like expiration options
 and determining if the value has expired.
 
-=item delete ( $self, $key )
+=item remove ( $self, $key )
 
-Delete the data associated with the I<$key> in the namespace.
+Remove the data associated with the I<$key> in the namespace.
 
 =back
 

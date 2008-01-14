@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 use Cwd qw(realpath cwd);
-use CHI::Util;
+use CHI::Util qw(escape_for_filename unescape_for_filename unique_id);
 use Digest::MD5 qw(md5_hex);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
@@ -16,7 +16,7 @@ use File::Temp qw(tempfile);
 use URI::Escape;
 use base qw(CHI::Driver);
 
-my $Default_Create_Mode = 0775;
+my $Default_Create_Mode = oct(775);
 my $Default_Depth       = 2;
 my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-file" );
 my $Max_File_Length     = 254;
@@ -32,7 +32,7 @@ sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     $self->{dir_create_mode}  ||= $Default_Create_Mode;
-    $self->{file_create_mode} ||= $self->{dir_create_mode} & 0666;
+    $self->{file_create_mode} ||= $self->{dir_create_mode} & oct(666);
     $self->{depth}            ||= $Default_Depth;
     $self->{root_dir} ||=
       ( delete( $self->{cache_root} ) || $Default_Root_Dir );
@@ -122,7 +122,7 @@ sub store {
     }
 }
 
-sub delete {
+sub remove {
     my ( $self, $key ) = @_;
 
     my $file = $self->path_to_key($key) or return undef;

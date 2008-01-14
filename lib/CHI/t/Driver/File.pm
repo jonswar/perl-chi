@@ -70,9 +70,10 @@ sub test_creation_and_deletion : Test(10) {
     ok( !defined $cache->get($key) );
     ok( -f $cache_file,    "cache file '$cache_file' exists after set" );
     ok( -d $namespace_dir, "namespace dir '$namespace_dir' exists after set" );
-    is( ( stat $cache_file )[2] & 07777, 0664, "'$cache_file' has mode 0664" );
-    is( ( stat $namespace_dir )[2] & 07777,
-        0775, "'$namespace_dir' has mode 0775" );
+    is( ( stat $cache_file )[2] & oct(7777),
+        oct(664), "'$cache_file' has mode 664" );
+    is( ( stat $namespace_dir )[2] & oct(7777),
+        oct(775), "'$namespace_dir' has mode 775" );
 
     $cache->remove($key);
     ok( !-f $cache_file,

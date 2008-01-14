@@ -7,7 +7,7 @@ use base qw(CHI::t::Driver);
 
 my $testaddr = "127.0.0.1:11211";
 
-sub connect : Test(startup) {
+sub connect_to_memcached : Test(startup) {
     my $msock = IO::Socket::INET->new(
         PeerAddr => $testaddr,
         Timeout  => 3

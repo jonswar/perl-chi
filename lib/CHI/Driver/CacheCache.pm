@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Cache::Cache;
 use Carp;
-use CHI::Util;
 use Hash::MoreUtils qw(slice_exists);
 use base qw(CHI::Driver::Base::CacheContainer);
 
@@ -19,11 +18,12 @@ sub new {
       or croak "missing required parameter 'cc_options'";
     my %subparams = slice_exists( $_[0], 'namespace' );
 
-    eval "require $cc_class";
+    eval "require $cc_class";    ## no critic
     die $@ if $@;
 
+    my %final_cc_params = ( %subparams, %{$cc_options} );
     $self->{_contained_cache} = $self->{cc_cache} =
-      $cc_class->new( { %subparams, %{$cc_options} } );
+      $cc_class->new( \%final_cc_params );
 
     return $self;
 }

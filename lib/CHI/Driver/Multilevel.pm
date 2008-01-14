@@ -2,7 +2,6 @@ package CHI::Driver::Multilevel;
 use strict;
 use warnings;
 use Carp;
-use CHI::Util;
 use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(uniq);
 use base qw(CHI::Driver);
@@ -79,10 +78,10 @@ sub store {
     $self->do_for_each_subcache( sub { $_[0]->store( $key, $data ) } );
 }
 
-sub delete {
+sub remove {
     my ( $self, $key ) = @_;
 
-    $self->do_for_each_subcache( sub { $_[0]->delete($key) } );
+    $self->do_for_each_subcache( sub { $_[0]->remove($key) } );
 }
 
 sub clear {

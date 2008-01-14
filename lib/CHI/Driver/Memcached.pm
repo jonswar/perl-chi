@@ -2,7 +2,7 @@ package CHI::Driver::Memcached;
 use strict;
 use warnings;
 use Cache::Memcached;
-use CHI::Util;
+use Carp;
 use base qw(CHI::Driver::Base::CacheContainer);
 
 __PACKAGE__->mk_ro_accessors(
@@ -26,6 +26,7 @@ sub new {
 
 sub get_multi_hashref {
     my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
 
     my $keyvals = $self->{memd}->get_multi(@$keys);
     foreach my $key ( keys(%$keyvals) ) {
@@ -38,6 +39,7 @@ sub get_multi_hashref {
 
 sub get_multi_arrayref {
     my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
 
     my $keyvals = $self->get_multi_hashref($keys);
     return [ map { $keyvals->{$_} } @$keys ];

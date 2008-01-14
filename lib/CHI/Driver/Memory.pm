@@ -26,7 +26,7 @@ sub store {
     $self->{datastore_for_namespace}->{$key} = $data;
 }
 
-sub delete {
+sub remove {
     my ( $self, $key ) = @_;
 
     delete $self->{datastore_for_namespace}->{$key};

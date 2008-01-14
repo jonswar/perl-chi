@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+use Cwd qw(realpath);
+use File::Basename;
+use File::Find;
+use Perl::Critic;
+use strict;
+use warnings;
+
+my $cwd = dirname(realpath($0));
+my $root = realpath("$cwd/..");
+
+my @modules;
+find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ }, no_chdir => 1}, "$root/lib");
+
+my $critic = Perl::Critic->new(-profile => "$root/perlcriticrc");
+Perl::Critic::Violation::set_format("%m at %f line %l. %e. Perl::Critic::Policy::%p.\n");
+foreach my $module (@modules) {
+    if (my @violations = $critic->critique($module)) {
+        print @violations;
+    }
+}
+
+1;

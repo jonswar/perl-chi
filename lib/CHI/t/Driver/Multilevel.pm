@@ -2,6 +2,7 @@ package CHI::t::Driver::Multilevel;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Test::Util qw(is_between);
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 

@@ -1,0 +1,6 @@
+severity = 4
+
+exclude = ProhibitExplicitReturnUndef RequireFinalReturn RequireArgUnpacking
+
+[TestingAndDebugging::ProhibitNoStrict]
+allow = refs

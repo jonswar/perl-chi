@@ -18,3 +18,4 @@ sub get_keys {
     return map { defined $self->get($_) ? ($_) : () } @all_test_keys;
 }
 
+1;

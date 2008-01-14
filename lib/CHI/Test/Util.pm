@@ -4,7 +4,7 @@ use warnings;
 use Test::Builder;
 use base qw(Exporter);
 
-our @EXPORT = qw(is_between cmp_bool);
+our @EXPORT_OK = qw(is_between cmp_bool);
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;

@@ -1,7 +1,7 @@
 package CHI::Test::Logger;
 use strict;
 use warnings;
-use CHI::Util;
+use CHI::Util qw(dump_one_line);
 use List::MoreUtils qw(first_index);
 use Test::Deep qw(cmp_deeply);
 use base qw(Class::Accessor);
