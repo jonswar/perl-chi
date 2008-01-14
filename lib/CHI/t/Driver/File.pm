@@ -31,19 +31,28 @@ sub test_path_to_key : Test(3) {
 
     my $key;
     my $cache = $self->new_cache;
-    my $log = CHI::Test::Logger->new();
+    my $log   = CHI::Test::Logger->new();
     CHI->logger($log);
 
     $key = "\$20.00 plus 5% = \$25.00";
-    my $file = basename($cache->path_to_key($key));
-    is($file, "+2420+2e00+20plus+205+25+20=+20+2425+2e00.dat", "path_to_key for key with mixed chars");
+    my $file = basename( $cache->path_to_key($key) );
+    is(
+        $file,
+        "+2420+2e00+20plus+205+25+20=+20+2425+2e00.dat",
+        "path_to_key for key with mixed chars"
+    );
 
     # Should escape to over 255 chars
     $key = "!@#" x 100;
     $log->clear();
-    ok(!defined($cache->path_to_key($key)), "path_to_key undefined for too-long key");
+    ok(
+        !defined( $cache->path_to_key($key) ),
+        "path_to_key undefined for too-long key"
+    );
     my $namespace = $cache->namespace();
-    $log->contains_ok(qr/key '[^\']+' in namespace '$namespace' is over \d+ chars when escaped; cannot cache/);
+    $log->contains_ok(
+        qr/key '[^\']+' in namespace '$namespace' is over \d+ chars when escaped; cannot cache/
+    );
 }
 
 sub test_creation_and_deletion : Test(10) {
@@ -53,7 +62,7 @@ sub test_creation_and_deletion : Test(10) {
     is( $cache->depth, 2 );
 
     my ( $key, $value ) = $self->kvpair();
-    my $cache_file = $cache->path_to_key($key);
+    my $cache_file    = $cache->path_to_key($key);
     my $namespace_dir = $cache->path_to_namespace();
     ok( !-f $cache_file, "cache file '$cache_file' does not exist before set" );
 

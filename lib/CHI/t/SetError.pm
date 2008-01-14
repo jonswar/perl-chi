@@ -17,7 +17,7 @@ sub test_set_errors : Test(13) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
     my $error_pattern = qr/error setting key 'medium' in .*: read-only cache/;
-    my $log = CHI::Test::Logger->new();
+    my $log           = CHI::Test::Logger->new();
     CHI->logger($log);
 
     my $cache;
@@ -27,11 +27,8 @@ sub test_set_errors : Test(13) {
     ok( !defined( $cache->get($key) ), "ignore - miss" );
 
     $cache = readonly_cache('die');
-    throws_ok(
-        sub { $cache->set( $key, $value ) },
-        $error_pattern,
-        "die - dies"
-    );
+    throws_ok( sub { $cache->set( $key, $value ) },
+        $error_pattern, "die - dies" );
     ok( !defined( $cache->get($key) ), "die - miss" );
 
     $log->clear();

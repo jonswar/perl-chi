@@ -114,7 +114,7 @@ sub test_key_types : Test(55) {
     my @keys_set;
     my $check_keys_set = sub {
         my $desc = shift;
-        cmp_set( [$cache->get_keys], \@keys_set, "checking keys $desc" );
+        cmp_set( [ $cache->get_keys ], \@keys_set, "checking keys $desc" );
     };
 
     $check_keys_set->("before sets");
@@ -170,7 +170,7 @@ sub test_expires_immediately : Test(36) {
             time() - 2,
             time(), "expires_at ($desc)"
         );
-        ok( $cache->is_expired($key), "is_expired ($desc)" );
+        ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
         ok( !defined $cache->get($key), "immediate miss ($desc)" );
     };
     $test_expires_immediately->(0);
@@ -183,7 +183,7 @@ sub test_expires_immediately : Test(36) {
     $test_expires_immediately->("now");
 }
 
-sub test_expires_shortly : Test(18) {
+sub test_expires_shortly : Test(22) {
     my $self = shift;
 
     # Expires shortly (real time)
@@ -200,15 +200,17 @@ sub test_expires_shortly : Test(18) {
             $start_time + 3,
             "expires_at ($desc)"
         );
-        ok( !$cache->is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
+        ok( $cache->exists($key),                 "exists ($desc)" );
 
         # Only bother sleeping and expiring for one of the variants
         if ( $set_option eq "2 seconds" ) {
             sleep(2);
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
-            ok( $cache->is_expired($key), "is_expired ($desc)" );
+            ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
             ok( !$cache->is_valid($key), "invalid ($desc)" );
+            ok( $cache->exists($key), "exists after expiration ($desc)" );
         }
     };
     $test_expires_shortly->(2);
@@ -216,7 +218,7 @@ sub test_expires_shortly : Test(18) {
     $test_expires_shortly->( { expires_at => time + 2 } );
 }
 
-sub test_expires_later : Test(30) {
+sub test_expires_later : Test(39) {
     my $self = shift;
 
     # Expires later (test time)
@@ -233,22 +235,25 @@ sub test_expires_later : Test(30) {
             $start_time + 3601,
             "expires_at ($desc)"
         );
-        ok( !$cache->is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( $cache->exists($key),                 "exists ($desc)" );
+        ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3598;
-        ok( !$cache->is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( $cache->exists($key),                 "exists ($desc)" );
+        ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3602;
-        ok( !defined $cache->get($key), "miss after 1 hour ($desc)" );
-        ok( $cache->is_expired($key), "is_expired ($desc)" );
-        ok( !$cache->is_valid($key), "invalid ($desc)" );
+        ok( $cache->exists($key),                "exists ($desc)" );
+        ok( !defined $cache->get($key),          "miss after 1 hour ($desc)" );
+        ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
+        ok( !$cache->is_valid($key),             "invalid ($desc)" );
     };
     $test_expires_later->(3600);
     $test_expires_later->("1 hour");
     $test_expires_later->( { expires_at => time + 3600 } );
 }
 
-sub test_expires_never : Test(6) {
+sub test_expires_never : Test(8) {
     my $self = shift;
 
     # Expires never (will fail in 2037)
@@ -258,11 +263,12 @@ sub test_expires_never : Test(6) {
         $cache->set( $key, $value, @set_options );
         ok(
             $cache->get_expires_at($key) >
-            time + Time::Duration::Parse::parse_duration('1 year'),
+              time + Time::Duration::Parse::parse_duration('1 year'),
             "expires never"
-            );
-        ok( !$cache->is_expired($key), "not expired" );
-        ok( $cache->is_valid($key), "valid" );
+        );
+        ok( !$cache->exists_and_is_expired($key), "not expired" );
+        ok( $cache->is_valid($key),               "valid" );
+        ok( $cache->exists($key),                 "exists" );
     };
     $test_expires_never->();
     $test_expires_never->('never');
@@ -406,8 +412,7 @@ sub test_namespaces : Test(6) {
         $cache1a->dump_as_hash(),
         'cache1 and cache1a are same cache'
     );
-    ok( !$cache2->get_keys(),
-        'cache2 empty after setting keys in cache1' );
+    ok( !$cache2->get_keys(), 'cache2 empty after setting keys in cache1' );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
@@ -451,7 +456,7 @@ sub test_multi : Test(8) {
     );
     cmp_deeply( $cache->get_multi_hashref( \@ordered_keys ),
         \%ordered_key_values, "get_multi_hashref" );
-    cmp_set( [$cache->get_keys], \@ordered_keys, "get_keys after set_multi" );
+    cmp_set( [ $cache->get_keys ], \@ordered_keys, "get_keys after set_multi" );
 
     $cache->remove_multi( \@ordered_keys );
     cmp_deeply(
@@ -459,7 +464,7 @@ sub test_multi : Test(8) {
         [ (undef) x scalar(@ordered_values) ],
         "get_multi_arrayref after remove_multi"
     );
-    cmp_set( [$cache->get_keys], [], "get_keys after remove_multi" );
+    cmp_set( [ $cache->get_keys ], [], "get_keys after remove_multi" );
 }
 
 sub test_multi_no_keys : Test(4) {
@@ -479,7 +484,7 @@ sub test_clear : Test(10) {
     return "$cache_class does not support clear()" if !$self->supports_clear();
     $self->set_some_keys($cache);
     $cache->clear();
-    cmp_deeply( [$cache->get_keys], [], "get_keys after clear" );
+    cmp_deeply( [ $cache->get_keys ], [], "get_keys after clear" );
     while ( my ( $keyname, $key ) = each(%keys) ) {
         ok( !defined $cache->get($key),
             "key '$keyname' no longer defined after clear" );
@@ -641,13 +646,19 @@ sub test_multiple_procs : Test(1) {
     }
 }
 
-sub test_missing_params : Tests(14)
-{
+sub test_missing_params : Tests(15) {
+
     # These methods require a key
-    foreach my $method (qw(get get_object get_expires_at is_expired is_valid set expire expire_if remove compute get_multi_arrayref get_multi_hashref set_multi remove_multi)) {
-        throws_ok(sub { $cache->$method() }, qr/must specify key/, "$method throws error when no key passed");
+    foreach my $method (
+        qw(get get_object get_expires_at exists exists_and_is_expired is_valid set expire expire_if remove compute get_multi_arrayref get_multi_hashref set_multi remove_multi)
+      )
+    {
+        throws_ok(
+            sub { $cache->$method() },
+            qr/must specify key/,
+            "$method throws error when no key passed"
+        );
     }
 }
-
 
 1;

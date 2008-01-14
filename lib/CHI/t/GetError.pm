@@ -28,8 +28,7 @@ sub test_get_errors : Test(9) {
 
     $cache = writeonly_cache('die');
     $cache->set( $key, $value );
-    throws_ok( sub { $cache->get( $key ) },
-        $error_pattern, "die - dies" );
+    throws_ok( sub { $cache->get($key) }, $error_pattern, "die - dies" );
 
     $log->clear();
     $cache = writeonly_cache('log');

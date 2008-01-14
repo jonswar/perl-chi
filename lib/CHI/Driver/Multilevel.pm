@@ -95,8 +95,7 @@ sub get_keys {
     my ($self) = @_;
 
     my @keys;
-    $self->do_for_each_subcache( sub { push( @keys, $_[0]->get_keys() ) }
-    );
+    $self->do_for_each_subcache( sub { push( @keys, $_[0]->get_keys() ) } );
     return uniq(@keys);
 }
 

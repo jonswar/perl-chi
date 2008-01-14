@@ -61,7 +61,8 @@ sub dump_one_line {
 
     sub _fail_hi {
         my $chr = shift;
-        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}", ord($chr) );
+        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}",
+            ord($chr) );
     }
 
     sub escape_for_filename {

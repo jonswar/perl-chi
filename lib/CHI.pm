@@ -79,6 +79,7 @@ CHI -- Unified cache interface
         $customer = get_customer_from_db($name);
         $cache->set( $name, $customer, "10 minutes" );
     }
+
     $cache->remove($name);
 
 =head1 DESCRIPTION
@@ -92,7 +93,7 @@ available to Perl, such as memory, plain files, memory mapped files, memcached, 
 
 =head1 RELATION TO CACHE::CACHE
 
-CHI is intended as an evolution of DeWitt Clinton's venerable Cache::Cache package. It
+CHI is intended as an evolution of DeWitt Clinton's venerable L<Cache::Cache|Cache::Cache> package. It
 starts with the same basic API (which has proven durable over time) but addresses some
 implementation shortcomings that cannot be fixed in Cache::Cache due to backward
 compatibility concerns.  In particular:
@@ -101,7 +102,7 @@ compatibility concerns.  In particular:
 
 =item Performance
 
-Some of Cache::Cache's subclasses (e.g. Cache::FileCache) have been justifiably criticized
+Some of Cache::Cache's subclasses (e.g. L<Cache::FileCache|Cache::FileCache>) have been justifiably criticized
 as inefficient. CHI has been designed from the ground up with performance in mind, both in
 terms of general overhead and in the built-in driver classes.  Method calls are kept to a
 minimum, data is only serialized when necessary, and metadata such as expiration time is
@@ -119,7 +120,7 @@ individual drivers don't have to worry about them.
 =item Increased compatibility with cache implementations
 
 Probably because of the reasons above, Cache::Cache subclasses were never created for some
-of the most popular caches available on CPAN, e.g. Cache::FastMmap and Cache::Memcached.
+of the most popular caches available on CPAN, e.g. L<Cache::FastMmap|Cache::FastMmap> and L<Cache::Memcached|Cache::Memcached>.
 CHI's goal is to be able to support these and other caches with a minimum performance
 overhead and minimum of glue code required.
 
@@ -127,7 +128,7 @@ overhead and minimum of glue code required.
 
 =head1 CONSTRUCTOR
 
-To create a new cache handle, call CHI->new. It takes the following common options:
+To create a new cache handle, call CHI-E<gt>new. It takes the following common options.
 
 =over
 
@@ -155,11 +156,11 @@ just decide a common namespace like 'main'.
 
 =item expires_variance [FLOAT]
 
-Provide default values for the corresponding set() options - see set().
+Provide default values for the corresponding L</set> options.
 
-=item on_get_error
+=item on_get_error [STRING|CODEREF]
 
-=item on_set_error
+=item on_set_error [STRING|CODEREF]
 
 How to handle runtime errors occurring during cache gets and cache sets, which may or may
 not be considered fatal in your application. Options are:
@@ -168,7 +169,7 @@ not be considered fatal in your application. Options are:
 
 =item *
 
-log (the default) - log an error using the currently set logger, or ignore if no logger is set - see L<|LOGGING>
+log (the default) - log an error using the currently set logger, or ignore if no logger is set - see L</LOGGING>
 
 =item *
 
@@ -193,13 +194,15 @@ I<coderef> - call this code reference with three arguments: an appropriate messa
 Some drivers will take additional constructor options. For example, the File driver takes
 C<root_dir> and C<depth> options.
 
-=head1 METHODS
+=head1 INSTANCE METHODS
 
-The following methods can be called on any cache handle returned from CHI->new(). They are implemented in the L<Cache::Driver> package.
+The following methods can be called on any cache handle returned from CHI-E<gt>new(). They are implemented in the L<Cache::Driver|Cache::Driver> package.
+
+=head2 Getting and setting
 
 =over
 
-=item get( $key, [option => value, ...] )
+=item get( $key, [option =E<gt> value, ...] )
 
 Returns the data associated with I<$key>. If I<$key> does not exist or has expired, returns undef.
 Expired items are not automatically removed and may be examined with L</get_object> or L</get_expires_at>.
@@ -208,20 +211,21 @@ I<$key> may be followed by one or more name/value parameters:
 
 =over
 
-=item expire_if => $code
+=item expire_if [CODEREF]
 
-If I<$key> exists and has not expired, call code reference I<$code> with the
-L<CHI::CacheObject> as a single parameter. If I<$code> returns a true value, expire the
-data. e.g.
+If I<$key> exists and has not expired, call code reference with the
+L<CHI::CacheObject|CHI::CacheObject> as a single parameter. If code returns a true value,
+expire the data. e.g.
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
-=item busy_lock => $duration
+=item busy_lock [DURATION]
 
-If the value has expired, set its expiration time to the current time plus I<$duration>
-before returning undef.  This is used to prevent multiple processes from recomputing the
-same expensive value simultaneously. I<$duration> may be any valid
-L<duration expression|/DURATION EXPRESSIONS>.
+If the value has expired, set its expiration time to the current time plus the specified
+L<duration|/DURATION EXPRESSIONS> before returning undef.  This is used to prevent
+multiple processes from recomputing the same expensive value simultaneously. The problem
+with this technique is that it doubles the number of writes performed - see
+L</expires_variance> for another technique.
 
 =back
 
@@ -229,7 +233,7 @@ L<duration expression|/DURATION EXPRESSIONS>.
 
 Associates I<$data> with I<$key> in the cache, overwriting any existing entry.
 
-The third argument to set() is optional, and may be either a scalar or a hash reference.
+The third argument to C<set> is optional, and may be either a scalar or a hash reference.
 If it is a scalar, it may be the string "now", the string "never", or else a duration
 treated as an I<expires_in> value described below. If it is a hash reference, it may
 contain one or more of the following options. Most of these options can be provided with
@@ -239,8 +243,8 @@ defaults in the cache constructor.
 
 =item expires_in [DURATION]
 
-Amount of time until this data expires; see L</DURATION EXPRESSIONS> for the possible
-forms this can take.
+Amount of time until this data expires, in the form of a L<duration expressions|/DURATION
+EXPRESSIONS>.
 
 =item expires_at [NUM]
 
@@ -253,15 +257,16 @@ than the stated expiration time to help prevent cache miss stampedes.
 
 Value is between 0.0 and 1.0, with 0.0 meaning that items expire exactly when specified
 (feature is disabled), and 1.0 meaning that items might expire anytime from now til the
-stated expiration time. The default is 0.0.
+stated expiration time. The default is 0.0. A setting of 0.10 to 0.25 would introduce a
+small amount of variation without interfering too much with intended expiration times.
 
 The probability of expiration increases as a function of how far along we are in the
 potential expiration window, with the probability being near 0 at the beginning of the
 window and approaching 1 at the end.
 
-For example, all of the following will expire sometime between 15 and 20 minutes, with
-about a 20% chance at 16 minutes, a 40% chance at 17 minutes, and a 100% chance at 20
-minutes.
+For example, in all of the following cases, an item might be considered expired any time
+between 15 and 20 minutes, with about a 20% chance at 16 minutes, a 40% chance at 17
+minutes, and a 100% chance at 20 minutes.
 
     my $cache = CHI->new ( ..., expires_variance => 0.25, ... );
     $cache->set($key, $value, '20 min');
@@ -270,68 +275,20 @@ minutes.
     my $cache = CHI->new ( ... );
     $cache->set($key, $value, { expires_in => '20 min', expires_variance => 0.25 });
 
-By "expire", we simply mean that get() returns undef, as if the specified expiration time
-had been reached. The "dice are rolled" on every get(), so you can get situations like
-this with two consecutive gets:
+CHI will make a new probabilistic choice every time it needs to know whether an item has
+expired (i.e. it does not save the results of its determination), so you can get
+situations like this:
 
-    my $value = $cache->get($key);        # returns undef (indicating expired)
-    my $value = $cache->get($key);        # returns valid value this time!
+    my $value = $cache->get($key);     # returns undef (indicating expired)
+    my $value = $cache->get($key);     # returns valid value this time!
+
+    if ($cache->is_valid($key))        # returns undef (indicating expired)
+    if ($cache->is_valid($key))        # returns true this time!
+
+Typical applications won't be affected by this, since the object is recomputed as soon
+as it is determined to be expired. But it's something to be aware of.
 
 =back
-
-=item remove( $key )
-
-Delete the data associated with the I<$key> from the cache.
-
-=item expire( $key )
-
-If I<$key> exists, expire it by setting its expiration time into the past.
-
-=item expire_if ( $key, $code )
-
-If I<$key> exists, call code reference I<$code> with the L<CHI::CacheObject> as a single
-parameter. If I<$code> returns a true value, expire the data. e.g.
-
-    $cache->expire_if('foo', sub { $_[0]->created_at < (stat($file))[9] });
-
-=item clear( )
-
-Remove all entries from the namespace associated with this cache instance.
-
-=item get_keys( )
-
-Returns a list of keys in the cache. This may include expired keys that have not yet been purged.
-
-=item get_namespaces( )
-
-Returns a list of namespaces associated with the cache. This may or may not include empty namespaces.
-
-=item is_empty( )
-
-Returns a boolean indicating whether the cache is empty, based on get_keys().
-
-=item purge( )
-
-Remove all entries that have expired from the namespace associated
-with this cache instance.
-
-=item get_expires_at( $key )
-
-Returns the epoch time at which I<$key> expires, or undef if it has no expiration time.
-
-=item is_expired( $key )
-
-Returns a boolean indicating whether I<$key> is in the cache and has expired. Note: returns false if the key is not in the cache.
-
-=item is_valid( $key )
-
-Returns a boolean indicating whether I<$key> is in the cache and has not expired.
-
-=item get_object( $key )
-
-Returns a L<CHI::CacheObject> object containing data about the entry associated with
-I<$key>, or undef if no such key exists. The object will be returned even if the entry
-has expired, as long as it has not been removed.
 
 =item compute( $key, $code, $set_options )
 
@@ -345,11 +302,93 @@ just before it actually expires, so that users are not impacted by recompute tim
 
 =back
 
-=head2 MULTIPLE KEY/VALUE OPERATIONS
+=head2 Removing and expiring
+
+=over
+
+=item remove( $key )
+
+Delete the data associated with the I<$key> from the cache.
+
+=item expire( $key )
+
+If I<$key> exists, expire it by setting its expiration time into the past.
+
+=item expire_if ( $key, $code )
+
+If I<$key> exists, call code reference I<$code> with the L<CHI::CacheObject|CHI::CacheObject> as a single
+parameter. If I<$code> returns a true value, expire the data. e.g.
+
+    $cache->expire_if('foo', sub { $_[0]->created_at < (stat($file))[9] });
+
+=back
+
+=head2 Inspecting keys
+
+=over
+
+=item exists( $key )
+
+Returns a boolean indicating whether I<$key> exists in the cache, whether or not it has
+expired.
+
+=item exists_and_is_expired( $key )
+
+Returns a boolean indicating whether I<$key> exists in the cache and has expired.  Note:
+Expiration may be determined probabilistically if L</expires_variance> was used.
+
+=item is_valid( $key )
+
+Returns a boolean indicating whether I<$key> exists in the cache and has not
+expired. Note: Expiration may be determined probabilistically if L</expires_variance>
+was used.
+
+=item get_expires_at( $key )
+
+Returns the epoch time at which I<$key> definitively expires. Returns undef if the key
+does not exist or it has no expiration time.
+
+=item get_object( $key )
+
+Returns a L<CHI::CacheObject|CHI::CacheObject> object containing data about the entry associated with
+I<$key>, or undef if no such key exists. The object will be returned even if the entry
+has expired, as long as it has not been removed.
+
+=back
+
+=head2 Namespace operations
+
+=over
+
+=item clear( )
+
+Remove all entries from the namespace.
+
+=item get_keys( )
+
+Returns a list of keys in the namespace. This may or may not include expired keys, depending on the driver.
+
+=item is_empty( )
+
+Returns a boolean indicating whether the namespace is empty, based on get_keys().
+
+=item purge( )
+
+Remove all entries that have expired from the namespace associated
+with this cache instance. Warning: May be very inefficient, depending on the
+number of keys and the driver.
+
+=item get_namespaces( )
+
+Returns a list of namespaces associated with the cache. This may or may not include empty namespaces, depending on the driver.
+
+=back
+
+=head2 Multiple key/value operations
 
 The methods in this section process multiple keys and/or values at once. By default these
 are implemented with the obvious map operations, but some cache drivers
-(e.g. Cache::Memcached) can override them with more efficient implementations.
+(e.g. L<Cache::Memcached|Cache::Memcached>) can override them with more efficient implementations.
 
 =over
 
@@ -378,10 +417,15 @@ Returns a hash reference containing all the non-expired keys and values in the c
 
 =back
 
+=head2 Property accessors
+
+There is a read-only accessor for C<namespace>, and read/write accessors for C<expires_in>, C<expires_at>, C<expires_variance>,
+C<on_get_error>, and C<on_set_error>.
+
 =head1 DURATION EXPRESSIONS
 
 Various options like I<expire_in> take a duration expression. This will be parsed by
-L<Time::Duration::Parse>. It is either a plain number, which is treated like a number of
+L<Time::Duration::Parse|Time::Duration::Parse>. It is either a plain number, which is treated like a number of
 seconds, or a number and a string representing time units where the string is one of:
 
     s second seconds sec secs
@@ -404,11 +448,11 @@ e.g. the following are all valid duration expressions:
 
 To implement a new driver, create a new subclass of CHI::Driver and implement an
 appropriate subset of the methods listed below. We recommend that you call your subclass
-CHI::Driver::<something> so that users can create it simply by passing I<something> to the
-C<driver> option of CHI->new.
+CHI::Driver::I<something> so that users can create it simply by passing I<something> to the
+C<driver> option of CHI-E<gt>new.
 
 The easiest way to start is to look at or copy existing drivers, such as the
-L<CHI::Driver::Memory> and L<CHI::Driver::File> included with this distribution.
+L<CHI::Driver::Memory|CHI::Driver::Memory> and L<CHI::Driver::File|CHI::Driver::File> included with this distribution.
 
 All cache handles have an assigned namespace that you can access with
 C<$self-E<gt>namespace>. You should use the namespace to partition your data store.
@@ -422,7 +466,7 @@ The following methods have no default implementation, and MUST be defined by you
 =item store ( $self, $key, $data, $expires_at, $options )
 
 Associate I<$data> with I<$key> in the namespace, overwriting any existing entry.  Called
-by L</set>. <$data> will contain any necessary metadata, including expiration options, so
+by L</set>. I<$data> will contain any necessary metadata, including expiration options, so
 you can just store it as a single block.
 
 The I<$expires_at> epoch value is provided in case you are working with an existing
@@ -431,7 +475,7 @@ expiration time for its own purposes. Normally, you can ignore this.
 
 =item fetch ( $self, $key )
 
-Returns the data associated with I<$key> in the namespace. Called by L</set>. The main
+Returns the data associated with I<$key> in the namespace. Called by L</"set">. The main
 CHI::Driver superclass will take care of extracting out metadata like expiration options
 and determining if the value has expired.
 
@@ -508,15 +552,15 @@ for logging, and
 
     is_debug, is_info, is_warning, is_error, is_fatal
 
-for checking whether a message would be logged at that level. This is compatible with Log::Log4perl
-and Catalyst::Log among others.
+for checking whether a message would be logged at that level. This is compatible with L<Log::Log4perl|Log::Log4perl>
+and L<Catalyst::Log|Catalyst::Log> among others.
 
-Warning: CHI->logger is a temporary API. The intention is to replace this with Log::Any
-(http://use.perl.org/~jonswar/journal/34366).
+Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with Log::Any
+(L<http://use.perl.org/~jonswar/journal/34366>).
 
 =head1 SEE ALSO
 
-Cache::Cache, Cache::Memcached, Cache::FastMmap
+L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
 
 =head1 AUTHOR
 

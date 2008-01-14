@@ -170,7 +170,8 @@ Epoch time at which item was last written to.
 
 =item is_expired
 
-Returns boolean indicating whether item has expired.
+Returns boolean indicating whether item has expired. This may be probabilistically
+determined if an L</expires_variance> was used.
 
 =back
 

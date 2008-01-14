@@ -80,10 +80,10 @@ sub store {
     my ( $self, $key, $data ) = @_;
 
     my $dir;
-    my $file = $self->path_to_key($key, \$dir) or return undef;
+    my $file = $self->path_to_key( $key, \$dir ) or return undef;
 
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
-    my $temp_file = catfile($dir, unique_id());
+    my $temp_file = catfile( $dir, unique_id() );
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
     #
@@ -197,10 +197,11 @@ sub path_to_key {
     #
     my $filename = escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
-        my $log = CHI->logger();
+        my $log       = CHI->logger();
         my $namespace = $self->{namespace};
         $log->warn(
-            "key '$key' in namespace '$namespace' is over $Max_File_Length chars when escaped; cannot cache");
+            "key '$key' in namespace '$namespace' is over $Max_File_Length chars when escaped; cannot cache"
+        );
         return undef;
     }
 
@@ -213,7 +214,7 @@ sub path_to_key {
       ? "$dir/$filename"
       : catfile( $dir, "$filename" );
 
-    if (defined $dir_ref && ref($dir_ref)) {
+    if ( defined $dir_ref && ref($dir_ref) ) {
         $$dir_ref = $dir;
     }
 

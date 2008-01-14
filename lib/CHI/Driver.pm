@@ -186,7 +186,14 @@ sub get_expires_at {
     }
 }
 
-sub is_expired {
+sub exists {
+    my ( $self, $key ) = @_;
+    croak "must specify key" unless defined($key);
+
+    return defined( $self->fetch($key) );
+}
+
+sub exists_and_is_expired {
     my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
 
@@ -213,7 +220,7 @@ sub is_valid {
 sub set {
     my ( $self, $key, $value, $options ) = @_;
     croak "must specify key" unless defined($key);
-    return                  unless defined($value);
+    return                   unless defined($value);
 
     # Fill in $options if not passed, copy if passed, and apply defaults.
     #
