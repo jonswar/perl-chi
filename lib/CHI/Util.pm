@@ -3,9 +3,8 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
+use Data::UUID;
 use File::Spec;
-use Regexp::Common qw(number);
-use Sys::HostIP;
 use Time::Duration::Parse;
 use base qw(Exporter);
 
@@ -50,12 +49,20 @@ sub require_dynamic {
 
 {
 
-    # Adapted from Sys::UniqueID
-    my $idnum = 0;
-    my $netaddr = sprintf( '%02X%02X%02X%02X', split( /\./, Sys::HostIP->ip ) );
+    # For efficiency, use Data::UUID to generate an initial unique id, then suffix it to
+    # generate a series of 0x10000 unique ids. Not to be used for hard-to-guess ids, obviously.
+
+    my $ug = Data::UUID->new();
+    my $uuid;
+    my $suffix = 0;
 
     sub unique_id {
-        return sprintf '%012X.%s.%08X.%08X', time, $netaddr, $$, ++$idnum;
+        if ( !$suffix || !defined($uuid) ) {
+            $uuid = $ug->create_hex();
+        }
+        my $hex = sprintf( '%s%04x', $uuid, $suffix );
+        $suffix = ( $suffix + 1 ) & 0xffff;
+        return $hex;
     }
 }
 
