@@ -91,40 +91,8 @@ The CHI interface is implemented by driver classes that support fetching, storin
 clearing of data. Driver classes exist or will exist for the gamut of storage backends
 available to Perl, such as memory, plain files, memory mapped files, memcached, and DBI.
 
-=head1 RELATION TO CACHE::CACHE
-
-CHI is intended as an evolution of DeWitt Clinton's venerable L<Cache::Cache|Cache::Cache> package. It
-starts with the same basic API (which has proven durable over time) but addresses some
-implementation shortcomings that cannot be fixed in Cache::Cache due to backward
-compatibility concerns.  In particular:
-
-=over
-
-=item Performance
-
-Some of Cache::Cache's subclasses (e.g. L<Cache::FileCache|Cache::FileCache>) have been justifiably criticized
-as inefficient. CHI has been designed from the ground up with performance in mind, both in
-terms of general overhead and in the built-in driver classes.  Method calls are kept to a
-minimum, data is only serialized when necessary, and metadata such as expiration time is
-stored in packed binary format alongside the data.
-
-=item Ease of subclassing
-
-New Cache::Cache subclasses can be tedious to create, due to a lack of code refactoring,
-the use of non-OO package subroutines, and the separation of "cache" and "backend"
-classes. With CHI, the goal is to make the creation of new drivers as easy as possible,
-roughly the same as writing a TIE interface to your data store.  Concerns like
-serialization and expiration options are handled by the driver base class so that
-individual drivers don't have to worry about them.
-
-=item Increased compatibility with cache implementations
-
-Probably because of the reasons above, Cache::Cache subclasses were never created for some
-of the most popular caches available on CPAN, e.g. L<Cache::FastMmap|Cache::FastMmap> and L<Cache::Memcached|Cache::Memcached>.
-CHI's goal is to be able to support these and other caches with a minimum performance
-overhead and minimum of glue code required.
-
-=back
+CHI is intended as an evolution of DeWitt Clinton's venerable L<Cache::Cache|Cache::Cache> package.
+See L<Relation to Cache::Cache|RELATION TO CACHE::CACHE>.
 
 =head1 CONSTRUCTOR
 
@@ -557,6 +525,44 @@ and L<Catalyst::Log|Catalyst::Log> among others.
 
 Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with Log::Any
 (L<http://use.perl.org/~jonswar/journal/34366>).
+
+=head1 RELATION TO CACHE::CACHE
+
+CHI is intended as an evolution of DeWitt Clinton's L<Cache::Cache|Cache::Cache> package.
+It starts with the same basic API (which has proven durable over time) but addresses some
+implementation shortcomings that cannot be fixed in Cache::Cache due to backward
+compatibility concerns.  In particular:
+
+=over
+
+=item Performance
+
+Some of Cache::Cache's subclasses (e.g. L<Cache::FileCache|Cache::FileCache>) have been
+justifiably criticized as inefficient. CHI has been designed from the ground up with
+performance in mind, both in terms of general overhead and in the built-in driver classes.
+Method calls are kept to a minimum, data is only serialized when necessary, and metadata
+such as expiration time is stored in packed binary format alongside the data.
+
+As an example, using Rob Mueller's cacheperl benchmarks, CHI's file driver runs 3 to 4
+times faster than Cache::FileCache.
+
+=item Ease of subclassing
+
+New Cache::Cache subclasses can be tedious to create, due to a lack of code refactoring,
+the use of non-OO package subroutines, and the separation of "cache" and "backend"
+classes. With CHI, the goal is to make the creation of new drivers as easy as possible,
+roughly the same as writing a TIE interface to your data store.  Concerns like
+serialization and expiration options are handled by the driver base class so that
+individual drivers don't have to worry about them.
+
+=item Increased compatibility with cache implementations
+
+Probably because of the reasons above, Cache::Cache subclasses were never created for some
+of the most popular caches available on CPAN, e.g. L<Cache::FastMmap|Cache::FastMmap> and L<Cache::Memcached|Cache::Memcached>.
+CHI's goal is to be able to support these and other caches with a minimum performance
+overhead and minimum of glue code required.
+
+=back
 
 =head1 SEE ALSO
 
