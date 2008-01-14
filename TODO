@@ -2,7 +2,6 @@ TO DO
 
 * Run benchmarks on linux for memcached, others
 * Look into switching to moose (startup time has been improved)
-* perl critic
 * expires_next => ['hour', 'day']
 * BerkeleyDB driver (w/separate file per namespace, must handle locking)
 * Create faster get_object variant that does not support value - e.g. so file cache can read just metadata - then use this variant for get_expires_at, etc.
