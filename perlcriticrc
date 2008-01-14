@@ -1,6 +1,28 @@
-severity = 4
+severity = 3
 
-exclude = ProhibitExplicitReturnUndef RequireFinalReturn RequireArgUnpacking
+# Some methods (like $cache->get()) are only meant to be called in scalar context,
+# so really should always return undef rather than the empty list.
+[-Subroutines::ProhibitExplicitReturnUndef]
 
+# Constants are necessary for optimal performance - some users may not have Readonly::XS
+[-ValuesAndExpressions::ProhibitConstantPragma]
+
+# These are just too restrictive IMO
+[-Subroutines::RequireArgUnpacking]
+[-Subroutines::RequireFinalReturn]
+[-NamingConventions::ProhibitAmbiguousNames]
+
+# Jury's still out on these
+[-RegularExpressions::RequireExtendedFormatting]
+
+# Exception needed for $CHI::Driver::TestTime
+[Variables::ProhibitPackageVars]
+packages = CHI::Driver
+
+# Necessary for generating named subroutines
 [TestingAndDebugging::ProhibitNoStrict]
 allow = refs
+
+# Default too short
+[RegularExpressions::ProhibitComplexRegexes]
+max_characters = 100

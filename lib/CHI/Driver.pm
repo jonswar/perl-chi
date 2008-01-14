@@ -30,13 +30,13 @@ foreach my $field qw(expires_at expires_in expires_variance) {
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
-      sub { die "method '$method' must be implemented by subclass" };
+      sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
 }
 
-our $Max_Time = 0xffffffff;
+use constant Max_Time => 0xffffffff;
 
-# To override time() for testing
-our $Test_Time;
+# To override time() for testing - must be writable in a dynamically scoped way from tests
+our $Test_Time;    ## no critic (ProhibitPackageVars)
 
 sub new {
     my $class = shift;
@@ -63,7 +63,7 @@ sub new {
         }
         elsif (
             $caller =~ /^CHI(?::|$)/
-            || ( UNIVERSAL::can( $caller, 'isa_chi_class' )
+            || (   $caller->can('isa_chi_class')
                 && $caller->isa_chi_class() )
           )
         {
@@ -89,7 +89,7 @@ sub _compute_default_set_options {
     my ($self) = @_;
 
     $self->{default_set_options}->{expires_at} = $self->{expires_at}
-      || $Max_Time;
+      || Max_Time;
     $self->{default_set_options}->{expires_in} =
       defined( $self->{expires_in} )
       ? parse_duration( $self->{expires_in} )
@@ -223,7 +223,7 @@ sub set {
     else {
         if ( !ref($options) ) {
             if ( $options eq 'never' ) {
-                $options = { expires_at => $Max_Time };
+                $options = { expires_at => Max_Time };
             }
             elsif ( $options eq 'now' ) {
                 $options = { expires_in => 0 };
@@ -244,8 +244,8 @@ sub set {
       ? $time + parse_duration( $options->{expires_in} )
       : $options->{expires_at};
     my $early_expires_at =
-      ( $expires_at == $Max_Time )
-      ? $Max_Time
+      ( $expires_at == Max_Time )
+      ? Max_Time
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 
@@ -360,8 +360,13 @@ sub purge {
 sub dump_as_hash {
     my ($self) = @_;
 
-    return { map { my $value = $self->get($_); $value ? ( $_, $value ) : () }
-          $self->get_keys() };
+    my %hash;
+    foreach my $key ( $self->get_keys() ) {
+        if ( defined( my $value = $self->get($key) ) ) {
+            $hash{$key} = $value;
+        }
+    }
+    return \%hash;
 }
 
 sub is_empty {
@@ -416,8 +421,8 @@ sub _handle_error {
         /^log$/
           && do { my $log = CHI->logger; $log->error($msg) };
         /^ignore$/ && do { };
-        /^warn$/   && do { warn $msg };
-        /^die$/    && do { die $msg };
+        /^warn$/   && do { carp $msg };
+        /^die$/    && do { croak $msg };
     }
 }
 

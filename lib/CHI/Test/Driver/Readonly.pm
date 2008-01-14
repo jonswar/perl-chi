@@ -1,4 +1,5 @@
 package CHI::Test::Driver::Readonly;
+use Carp;
 use strict;
 use warnings;
 use base qw(CHI::Driver::Memory);
@@ -6,7 +7,7 @@ use base qw(CHI::Driver::Memory);
 sub store {
     my ( $self, $key, $data ) = @_;
 
-    die "read-only cache";
+    croak "read-only cache";
 }
 
 1;

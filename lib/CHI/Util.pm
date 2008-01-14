@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
   dump_one_line
   escape_for_filename
   parse_duration
+  require_dynamic
   unescape_for_filename
   unique_id
 );
@@ -38,6 +39,13 @@ sub dump_one_line {
 
     return Data::Dumper->new( [$value] )->Indent(0)->Sortkeys(1)->Quotekeys(0)
       ->Terse(1)->Dump();
+}
+
+sub require_dynamic {
+    my ($class) = @_;
+
+    eval "require $class";    ## no critic (ProhibitStringyEval)
+    croak $@ if $@;
 }
 
 {

@@ -56,13 +56,13 @@ sub fetch {
     # Fast slurp, adapted from File::Slurp::read, with unnecessary options removed
     #
     my $buf = "";
-    local *read_fh;
-    unless ( sysopen( *read_fh, $file, $Fetch_Flags ) ) {
+    my $read_fh;
+    unless ( sysopen( $read_fh, $file, $Fetch_Flags ) ) {
         croak "read_file '$file' - sysopen: $!";
     }
-    my $size_left = -s *read_fh;
+    my $size_left = -s $read_fh;
     while (1) {
-        my $read_cnt = sysread( *read_fh, $buf, $size_left, length $buf );
+        my $read_cnt = sysread( $read_fh, $buf, $size_left, length $buf );
         if ( defined $read_cnt ) {
             last if $read_cnt == 0;
             $size_left -= $read_cnt;
@@ -88,10 +88,10 @@ sub store {
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
     #
     {
-        local *write_fh;
+        my $write_fh;
         unless (
             sysopen(
-                *write_fh,    $temp_file,
+                $write_fh,    $temp_file,
                 $Store_Flags, $self->{file_create_mode}
             )
           )
@@ -101,7 +101,7 @@ sub store {
         my $size_left = length($data);
         my $offset    = 0;
         do {
-            my $write_cnt = syswrite( *write_fh, $data, $size_left, $offset );
+            my $write_cnt = syswrite( $write_fh, $data, $size_left, $offset );
             unless ( defined $write_cnt ) {
                 croak "write_file '$temp_file' - syswrite: $!";
             }
@@ -118,7 +118,8 @@ sub store {
     if ( -f $temp_file ) {
         my $error = $!;
         unlink($temp_file);
-        die "could not rename '$temp_file' to '$file': $error";
+        die "could not rename '$temp_file' to '$file': $error"
+          ;    ## no critic (RequireCarping)
     }
 }
 
@@ -127,7 +128,7 @@ sub remove {
 
     my $file = $self->path_to_key($key) or return undef;
     unlink($file);
-    die "could not unlink '$file'" if -f $file;
+    die "could not unlink '$file'" if -f $file;    ## no critic (RequireCarping)
 }
 
 sub clear {
@@ -135,7 +136,8 @@ sub clear {
 
     my $namespace_dir = $self->{path_to_namespace};
     rmtree($namespace_dir);
-    die "could not remove '$namespace_dir'" if -d $namespace_dir;
+    die "could not remove '$namespace_dir'"
+      if -d $namespace_dir;                        ## no critic (RequireCarping)
 }
 
 sub get_keys {

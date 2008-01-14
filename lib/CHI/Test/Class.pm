@@ -1,6 +1,7 @@
 package CHI::Test::Class;
 use strict;
 use warnings;
+use CHI::Util qw(require_dynamic);
 use Getopt::Long;
 use Module::Find qw(findallmod);
 use base qw(Test::Class);
@@ -18,8 +19,7 @@ sub load_tests {
     foreach my $class (@candidates) {
         next
           if defined($test_class_pattern) && $class !~ /$test_class_pattern/o;
-        eval "require $class";    ## no critic
-        die $@ if $@;
+        require_dynamic($class);
     }
     if ( $ENV{TEST_STACK_TRACE} ) {
 

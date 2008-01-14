@@ -1,9 +1,11 @@
 package CHI;
 use strict;
 use warnings;
+use Carp;
 use CHI::NullLogger;
+use CHI::Util qw(require_dynamic);
 
-our $Logger = CHI::NullLogger->new();
+our $Logger = CHI::NullLogger->new();    ## no critic
 
 sub logger {
     my $self = shift;
@@ -23,10 +25,9 @@ sub new {
     else {
         $driver_class = delete( $params{driver_class} );
     }
-    die "missing required param 'driver' or 'driver_class'"
+    croak "missing required param 'driver' or 'driver_class'"
       unless defined $driver_class;
-    eval "require $driver_class";    ## no critic
-    die $@ if $@;
+    require_dynamic($driver_class);
 
     return $driver_class->new( \%params );
 }

@@ -6,6 +6,7 @@ use warnings;
 use CHI;
 use CHI::Driver::Memory;
 use CHI::Test::Logger;
+use CHI::Util qw(require_dynamic);
 
 sub import {
     my $class = shift;
@@ -27,8 +28,7 @@ sub export_to_level {
     my ( $class, $level, $ignore ) = @_;
 
     foreach my $package ( $class->packages_to_import() ) {
-        eval "require $package";    ## no critic
-        die $@ if $@;
+        require_dynamic($package);
         my @export;
         if ( $package eq 'Test::Deep' ) {
 

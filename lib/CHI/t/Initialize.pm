@@ -2,6 +2,7 @@ package CHI::t::Initialize;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Util qw(dump_one_line);
 use base qw(CHI::Test::Class);
 
 sub is_good {

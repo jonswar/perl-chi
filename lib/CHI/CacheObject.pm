@@ -4,8 +4,6 @@ use warnings;
 use Storable;
 use base qw(Class::Accessor::Fast);
 
-# Use constants for maximum speed
-## no critic (ProhibitConstantPragma)
 use constant f_key              => 0;
 use constant f_raw_value        => 1;
 use constant f_created_at       => 2;
@@ -14,7 +12,6 @@ use constant f_expires_at       => 4;
 use constant f_is_serialized    => 5;
 use constant f_cache_version    => 6;
 use constant f_value            => 7;
-## use critic
 
 my $Metadata_Format = "LLLCC";
 my $Metadata_Length = 14;
@@ -30,6 +27,7 @@ sub set_created_at       { $_[0]->[f_created_at]       = $_[1] }
 sub set_early_expires_at { $_[0]->[f_early_expires_at] = $_[1] }
 sub set_expires_at       { $_[0]->[f_expires_at]       = $_[1] }
 
+## no critic (ProhibitManyArgs)
 sub new {
     my ( $class, $key, $value, $created_at, $early_expires_at, $expires_at ) =
       @_;

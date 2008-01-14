@@ -49,11 +49,11 @@ sub get_multi_arrayref {
 #
 
 sub get_keys {
-    die "get_keys not supported for this driver";
+    carp "get_keys not supported for " . __PACKAGE__;
 }
 
 sub get_namespaces {
-    die "get_namespaces not supported for this driver";
+    carp "get_namespaces not supported for " . __PACKAGE__;
 }
 
 1;

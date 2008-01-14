@@ -1,4 +1,5 @@
 package CHI::Test::Driver::Writeonly;
+use Carp;
 use strict;
 use warnings;
 use base qw(CHI::Driver::Memory);
@@ -6,7 +7,7 @@ use base qw(CHI::Driver::Memory);
 sub fetch {
     my ( $self, $key ) = @_;
 
-    die "write-only cache";
+    croak "write-only cache";
 }
 
 1;
