@@ -4,7 +4,6 @@ use warnings;
 use Carp;
 use Cwd qw(realpath cwd);
 use CHI::Util qw(escape_for_filename unescape_for_filename unique_id);
-use Digest::MD5 qw(md5_hex);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
