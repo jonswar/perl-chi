@@ -1,0 +1,23 @@
+^bench
+^bin
+^docs
+^inc
+^misc
+^perlcriticrc
+^perltidyrc
+^tmp
+^lib/Test
+
+# Backup files, etc.
+~$
+(^|/)#
+(^|/)\.
+\.bak$
+\.tar\.gz$
+
+# SVN cruft
+^\.svn
+
+# MakeMaker cruft
+^Makefile$
+^blib

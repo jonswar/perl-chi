@@ -1,0 +1,2 @@
+#!/bin/bash
+pom2 html ../lib/CHI.pm > ../html/CHI.html
