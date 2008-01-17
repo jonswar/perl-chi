@@ -48,6 +48,8 @@ CHI -- Unified cache interface
 
     use CHI;
 
+    # Choose a standard driver
+    #
     my $cache = CHI->new( driver => 'Memory' );
     my $cache = CHI->new( driver => 'File', cache_root => '/path/to/root' );
     my $cache = CHI->new(
@@ -70,6 +72,8 @@ CHI -- Unified cache interface
         ],
     );
 
+    # Create your own driver
+    # 
     my $cache = CHI->new( driver_class => 'My::Special::Driver' );
 
     # (These drivers coming soon...)
@@ -77,12 +81,13 @@ CHI -- Unified cache interface
     my $cache = CHI->new( driver => 'DBI', dbh => $dbh, table => 'app_cache' );
     my $cache = CHI->new( driver => 'BerkeleyDB', root_dir => '/path/to/root' );
 
+    # Basic cache operations
+    #
     my $customer = $cache->get($name);
     if ( !defined $customer ) {
         $customer = get_customer_from_db($name);
         $cache->set( $name, $customer, "10 minutes" );
     }
-
     $cache->remove($name);
 
 =head1 DESCRIPTION
@@ -95,7 +100,7 @@ clearing of data. Driver classes exist or will exist for the gamut of storage ba
 available to Perl, such as memory, plain files, memory mapped files, memcached, and DBI.
 
 CHI is intended as an evolution of DeWitt Clinton's venerable L<Cache::Cache|Cache::Cache> package.
-See L<Relation to Cache::Cache|RELATION TO CACHE::CACHE>.
+See L<Relation to Cache::Cache|RELATION TO OTHER MODULES/Cache::Cache>.
 
 =head1 CONSTRUCTOR
 
@@ -410,6 +415,41 @@ e.g. the following are all valid duration expressions:
     1 minute and ten seconds
     1 hour
 
+=head1 AVAILABILITY OF DRIVERS
+
+The following drivers are currently available as part of this distribution. The bundling
+within a single distribution is a temporary convenience during the initial phase of
+(possibly) rapid changes. Once things have stabilized a bit, all the drivers except for
+Memory, File, and Multilevel will be moved out to their own CPAN distributions.
+
+=over
+
+=item *
+
+L<CHI::Driver::Memory|CHI::Driver::Memory> - In-process memory based cache
+
+=item *
+
+L<CHI::Driver::File|CHI::Driver::File> - File-based cache using one file per entry in a multi-level directory structure
+
+=item *
+
+L<CHI::Driver::FastMmap|CHI::Driver::FastMmap> - Shared memory interprocess cache via mmap'ed files
+
+=item *
+
+L<CHI::Driver::Memcached|CHI::Driver::Memcached> - Distributed cache via memcached (memory cache daemon)
+
+=item *
+
+L<CHI::Driver::Multilevel|CHI::Driver::Multilevel> - Cache formed from several subcaches chained together
+
+=item *
+
+L<CHI::Driver::CacheCache|CHI::Driver::CacheCache> - CHI wrapper for Cache::Cache
+
+=back
+
 =head1 IMPLEMENTING NEW DRIVERS
 
 To implement a new driver, create a new subclass of CHI::Driver and implement an
@@ -417,8 +457,9 @@ appropriate subset of the methods listed below. We recommend that you call your 
 CHI::Driver::I<something> so that users can create it simply by passing I<something> to the
 C<driver> option of CHI-E<gt>new.
 
-The easiest way to start is to look at or copy existing drivers, such as the
-L<CHI::Driver::Memory|CHI::Driver::Memory> and L<CHI::Driver::File|CHI::Driver::File> included with this distribution.
+The easiest way to start is to look at, subclass, or copy existing drivers, such as the
+L<CHI::Driver::Memory|CHI::Driver::Memory> and L<CHI::Driver::File|CHI::Driver::File>
+included with this distribution.
 
 All cache handles have an assigned namespace that you can access with
 C<$self-E<gt>namespace>. You should use the namespace to partition your data store.
@@ -524,7 +565,9 @@ and L<Catalyst::Log|Catalyst::Log> among others.
 Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with Log::Any
 (L<http://use.perl.org/~jonswar/journal/34366>).
 
-=head1 RELATION TO CACHE::CACHE
+=head1 RELATION TO OTHER MODULES
+
+=head2 Cache::Cache
 
 CHI is intended as an evolution of DeWitt Clinton's L<Cache::Cache|Cache::Cache> package.
 It starts with the same basic API (which has proven durable over time) but addresses some
@@ -559,6 +602,46 @@ Probably because of the reasons above, Cache::Cache subclasses were never create
 of the most popular caches available on CPAN, e.g. L<Cache::FastMmap|Cache::FastMmap> and L<Cache::Memcached|Cache::Memcached>.
 CHI's goal is to be able to support these and other caches with a minimum performance
 overhead and minimum of glue code required.
+
+=back
+
+=head2 Cache::Memcached, Cache::FastMmap, etc.
+
+CPAN sports a variety of full-featured standalone cache modules representing particular
+backends. CHI does not reinvent these but simply wraps them with an appropriate
+driver. For example, CHI::Driver::Memcached and CHI::Driver::FastMmap are thin layers
+around Cache::Memcached and Cache::FastMmap.
+
+Of course, because these modules are full-featured, there will be considerable
+overlap. Cache::FastMmap, for example, already has code to serialize data structures and
+to associate expiration times with items. Here's how CHI resolves these issues.
+
+=over
+
+=item Serialization
+
+CHI handles its own serialization, passing a flat binary string to the underlying cache
+backend.
+
+=item Expiration
+
+CHI packs expiration times (as well as other metadata) inside the binary string passed to
+the underlying cache backend. The backend is unaware of these values; from its point of
+view the item has no expiration time. Among other things, this means that you can use CHI
+to examine expired items (e.g. with $cache-E<gt>get_object) even if this is not supported
+natively by the backend.
+
+At some point CHI will provide the option of explicitly notifying the backend of the
+expiration time as well. This might allow the backend to do better storage management,
+etc., but would prevent CHI from examining expired items.
+
+=item Overhead
+
+Naturally, using Cache::FastMmap through CHI will never be as time or storage efficient as
+simply using Cache::FastMmap.  In terms of performance, we've attempted to make the overhead
+as small as possible (benchmarks coming soon). In terms of storage size, CHI adds about 16
+bytes of metadata overhead to each item. How much this matters obviously depends on the
+typical size of items in your cache.
 
 =back
 

@@ -233,7 +233,7 @@ __END__
 
 =head1 NAME
 
-CHI::Driver::File -- File-based cache using one file per entry.
+CHI::Driver::File -- File-based cache using one file per entry in a multi-level directory structure
 
 =head1 SYNOPSIS
 
@@ -255,6 +255,9 @@ The base filename is the key itself, with unsafe characters replaced with an esc
 sequence similar to URI escaping. The filename length is capped at 255 characters, which
 is the maximum for most Unix systems, so gets/sets for keys that escape to longer than 255
 characters will fail.
+
+The files are evenly distributed within a multi-level directory structure with a
+customizable depth, to minimize the time needed to search for a given entry.
 
 =head1 CONSTRUCTOR OPTIONS
 
