@@ -1,5 +1,6 @@
 TO DO
 
+* Null driver
 * Run benchmarks on linux for memcached, others
 * Look into switching to moose (startup time has been improved)
 * expires_next => ['hour', 'day']
@@ -18,6 +19,7 @@ TO DO
 
 QUESTIONS
 
+* Which drivers (memory, file, fastmmap, memcached) should we include with CHI, and which should we release separately?
 * Is there a value to separating out the constructor to CHI->new, and putting everything else in CHI::Driver, other than that it is vaguely DBI-like?
 * What should set() return? The value? Success flag? Cache::Cache doesn't seem to specify.
 * Should we auto-remove items after a miss, like Cache::Cache? Or is this silly b/c it will probably be followed with a set?

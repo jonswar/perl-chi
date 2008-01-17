@@ -1,4 +1,4 @@
-CHI
+CHI -- Cache Interface
 
 CHI provides a unified caching API, designed to assist a developer in persisting data for
 a specified period of time.
@@ -48,4 +48,3 @@ Copyright (C) 2007 Jonathan Swartz
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
-

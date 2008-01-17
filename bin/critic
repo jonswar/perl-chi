@@ -6,8 +6,7 @@ use Perl::Critic;
 use strict;
 use warnings;
 
-my $cwd = dirname(realpath($0));
-my $root = realpath("$cwd/..");
+my $root = dirname(dirname(realpath($0)));
 
 my @modules;
 find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ }, no_chdir => 1}, "$root/lib");

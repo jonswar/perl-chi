@@ -7,8 +7,7 @@ use IPC::System::Simple qw(run);
 use strict;
 use warnings;
 
-my $cwd = dirname(realpath($0));
-my $root = realpath("$cwd/..");
+my $root = dirname(dirname(realpath($0)));
 my $test_class_pattern = '.';
 
 Getopt::Long::Configure( 'pass_through' );
@@ -19,6 +18,6 @@ GetOptions(
 my @t_files = map { "$root/t/$_" } grep { /$test_class_pattern/ && /\.t$/ } read_dir("$root/t");
 
 chdir($root);
-run("$cwd/prove", "-I$root/lib", @ARGV, @t_files);
+run("$root/bin/prove", "-I$root/lib", @ARGV, @t_files);
 
 1;
