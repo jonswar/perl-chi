@@ -8,8 +8,10 @@ use warnings;
 
 my $root = dirname(dirname(realpath($0)));
 
+my $pattern = shift(@ARGV) || '.';
+
 my @modules;
-find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ }, no_chdir => 1}, "$root/lib");
+find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ && /$pattern/ }, no_chdir => 1}, "$root/lib");
 
 # Is there no way to prevent backup files?
 run("perltidy", "-pro=$root/perltidyrc", "-b", @modules);

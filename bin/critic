@@ -8,8 +8,10 @@ use warnings;
 
 my $root = dirname(dirname(realpath($0)));
 
+my $pattern = shift(@ARGV) || '.';
+
 my @modules;
-find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ }, no_chdir => 1}, "$root/lib");
+find ({wanted => sub { push(@modules, $_) if /CHI/ && /\.pm$/ && /$pattern/ }, no_chdir => 1}, "$root/lib");
 
 my $critic = Perl::Critic->new(-profile => "$root/perlcriticrc");
 Perl::Critic::Violation::set_format("%m at %f line %l. %e. Perl::Critic::Policy::%p.\n");
