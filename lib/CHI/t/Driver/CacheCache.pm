@@ -7,6 +7,10 @@ use base qw(CHI::t::Driver);
 
 my $root_dir;
 
+sub required_modules {
+    return { 'Cache::Cache' => undef };
+}
+
 sub new_cache_options {
     my $self = shift;
 

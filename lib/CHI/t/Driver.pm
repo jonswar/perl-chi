@@ -576,6 +576,8 @@ sub test_busy_lock : Test(5) {
 
 sub test_multiple_procs : Test(1) {
     my $self = shift;
+    return "internal test only" unless $self->is_internal();
+
     my ( @values, @pids, %valid_values );
     my $shared_key = $keys{medium};
 
