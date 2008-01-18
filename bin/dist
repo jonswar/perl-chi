@@ -11,6 +11,10 @@ use strict;
 my $root = dirname(dirname(realpath($0)));
 my $output;
 
+# Run perl Makefile.PL
+print "*** running perl Makefile.PL\n";
+run("cd $root; perl Makefile.PL");
+
 # Run make manifest
 print "*** running make manifest\n";
 run("cd $root; make manifest");

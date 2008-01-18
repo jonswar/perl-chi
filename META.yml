@@ -1,10 +1,13 @@
 --- 
-abstract: ~
-author: Jonathan Swartz
+abstract: Unified cache interface
+author: 
+  - Jonathan Swartz
 build_requires: 
+  Test::Class: 0
+  Test::Deep: 0
   Test::More: 0
 distribution_type: module
-generated_by: Module::Install version 0.65
+generated_by: Module::Install version 0.68
 license: perl
 meta-spec: 
   url: http://module-build.sourceforge.net/META-spec-v1.3.html
@@ -19,11 +22,10 @@ requires:
   Data::UUID: 0
   Digest::JHash: 0
   File::Slurp: 0
-  File::Spec: 0
+  File::Spec: 0.80
   Hash::MoreUtils: 0
-  List::MoreUtils: 0.21
+  List::MoreUtils: 0.13
   Module::Find: 0.05
   Storable: 0
-  Test::Deep: 0
   Time::Duration::Parse: 0.03
 version: 0.01
