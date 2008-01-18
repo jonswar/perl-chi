@@ -4,7 +4,7 @@ use warnings;
 use Test::Builder;
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(is_between cmp_bool);
+our @EXPORT_OK = qw(is_between cmp_bool random_string);
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;
@@ -32,6 +32,15 @@ sub cmp_bool {
     else {
         $tb->ok( 1, $desc );
     }
+}
+
+# Generate random string of printable ASCII characters.
+#
+sub random_string
+{
+    my ($length) = @_;
+        
+    return join('', map { chr(int(rand(95)+33)) } (1..$length));
 }
 
 1;

@@ -2,16 +2,16 @@ package CHI::t::Driver::Memcached;
 use strict;
 use warnings;
 use CHI::Test;
-use IO::Socket::INET;
 use base qw(CHI::t::Driver);
 
 my $testaddr = "127.0.0.1:11211";
 
 sub required_modules {
-    return { 'Cache::Memcached' => undef };
+    return { 'Cache::Memcached' => undef, 'IO::Socket::INET' => undef };
 }
 
 sub connect_to_memcached : Test(startup) {
+    require IO::Socket::INET;
     my $msock = IO::Socket::INET->new(
         PeerAddr => $testaddr,
         Timeout  => 3

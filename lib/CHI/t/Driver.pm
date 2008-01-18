@@ -3,9 +3,8 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Logger;
-use CHI::Test::Util qw(cmp_bool is_between);
+use CHI::Test::Util qw(cmp_bool is_between random_string);
 use CHI::Util qw(dump_one_line);
-use String::Random qw(random_string);
 use base qw(CHI::Test::Class);
 
 my ( $cache, $cache_class, %keys, %values, @keynames );
@@ -597,7 +596,7 @@ sub test_multiple_procs : Test(1) {
     };
 
     foreach my $p ( 0 .. 2 ) {
-        $values[$p] = random_string( scalar( "c" x 5000 ) );
+        $values[$p] = random_string( 5000 );
         $valid_values{ $values[$p] }++;
         if ( my $pid = fork() ) {
             $pids[$p] = $pid;
