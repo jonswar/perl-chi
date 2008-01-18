@@ -1,0 +1,111 @@
+#!/usr/bin/perl
+#
+# Test distribution under CPAN
+#
+use Cwd qw(realpath);
+use Data::Dump qw(dump);
+use File::Basename;
+use File::Path;
+use File::Slurp;
+use File::Spec::Functions qw(tmpdir);
+use File::Temp qw(tempfile tempdir);
+use IPC::System::Simple qw(run);
+use warnings;
+use strict;
+
+my $root         = dirname( dirname( realpath($0) ) );
+my $dist         = realpath("$root/dist/CHI-latest.tar.gz");
+my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 0 );
+my $cpan_sources = "$cpan_root/sources";
+
+my $perl = "/Users/swartz/install/perl-5.10/bin/perl";
+
+# Create mock CPAN root
+print "Creating cpan root $cpan_root\n";
+mkpath( $cpan_sources, 0, oct(775) );
+mkpath( "$cpan_root/CPAN", 0, oct(775) );
+write_file( "$cpan_root/CPAN/MyConfig.pm",
+    '$CPAN::Config = ' . dump( cpan_config($cpan_root) ) );
+
+# Get Object::Tiny to initialize things
+run_cpan("notest install Object::Tiny");
+
+# Inject our distribution
+my $cpan = CPAN::Inject->new(
+    sources => "$cpan_sources",
+    author  => 'LOCAL',
+);
+$cpan->add( file => $dist );
+my $install_path = $cpan->install_path($dist);
+
+# Install our distribution
+run_cpan("install $install_path");
+
+sub run_cpan {
+    my ($input) = @_;
+    my ( undef, $inputfile ) =
+      tempfile( 'cpanmock-XXXX', DIR => tmpdir, UNLINK => 1 );
+    write_file( $inputfile, $input, "\n" );
+    my $cmd =
+      "$perl -I$cpan_root -MCPAN::MyConfig -MCPAN -e shell < $inputfile";
+    print "running '$cmd'\n";
+    run($cmd);
+}
+
+sub cpan_config {
+    my $cpan_root = shift;
+
+    return {
+        'auto_commit'                  => q[1],
+        'build_cache'                  => q[100],
+        'build_dir'                    => qq[$cpan_root/build],
+        'cache_metadata'               => q[1],
+        'commandnumber_in_prompt'      => q[1],
+        'cpan_home'                    => qq[$cpan_root],
+        'dontload_hash'                => {},
+        'ftp'                          => q[/usr/bin/ftp],
+        'ftp_passive'                  => q[1],
+        'ftp_proxy'                    => q[],
+        'getcwd'                       => q[cwd],
+        'gpg'                          => q[],
+        'gzip'                         => q[/usr/bin/gzip],
+        'histfile'                     => qq[$cpan_root/histfile],
+        'histsize'                     => q[100],
+        'http_proxy'                   => q[],
+        'inactivity_timeout'           => q[0],
+        'index_expire'                 => q[1],
+        'inhibit_startup_message'      => q[0],
+        'keep_source_where'            => qq[$cpan_root/sources],
+        'lynx'                         => q[],
+        'make'                         => q[/usr/bin/make],
+        'make_arg'                     => q[],
+        'make_install_arg'             => q[],
+        'make_install_make_command'    => q[/usr/bin/make],
+        'makepl_arg'                   => qq[prefix=$cpan_root/install/perl],
+        'mbuild_arg'                   => q[],
+        'mbuild_install_arg'           => q[],
+        'mbuild_install_build_command' => q[./Build],
+        'mbuildpl_arg'                 => q[],
+        'ncftp'                        => q[],
+        'ncftpget'                     => q[],
+        'no_proxy'                     => q[],
+        'pager'                        => q[/usr/bin/less],
+        'prerequisites_policy'         => q[follow],
+        'scan_cache'                   => q[never],
+        'shell'                        => q[/bin/bash],
+        'show_upload_date'             => q[0],
+        'tar'                          => q[/usr/bin/tar],
+        'term_is_latin'                => q[1],
+        'term_ornaments'               => q[1],
+        'unzip'                        => q[/usr/bin/unzip],
+        'urllist'                      => [
+            q[http://mirrors.kernel.org/cpan/],
+            q[http://cpan.llarian.net/],
+            q[ftp://cpan.llarian.net/pub/CPAN/],
+            q[ftp://mirrors.kernel.org/pub/CPAN],
+            q[ftp://ftp-mirror.internap.com/pub/CPAN/]
+        ],
+        'use_sqlite' => q[0],
+        'wget'       => q[],
+    };
+}

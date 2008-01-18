@@ -11,46 +11,51 @@ use strict;
 my $root = dirname(dirname(realpath($0)));
 my $output;
 
+# Run make manifest
+print "*** running make manifest\n";
+run("cd $root; make manifest");
+unlink("$root/MANIFEST.bak");
+
 # Run bin/tidyall
-print "running tidyall\n";
+print "*** running tidyall\n";
 run("$root/bin/tidyall");
 
 # Check for svn differences, abort if found
-print "checking svn status\n";
+print "*** checking svn status\n";
 $output = `cd $root; svn status`;
 if ($output =~ /\S/) {
-    print "svn status returned output:\n$output\n";
+    print "*** svn status returned output:\n$output\n";
     exit;
 }
 
 # Run bin/critic, abort (and print output) if any output
-print "running critic\n";
+print "*** running critic\n";
 $output = `$root/bin/critic`;
 if ($output =~ /\S/) {
-    print "critic returned output:\n$output\n";
+    print "*** critic returned output:\n$output\n";
     exit;
 }
 
 # Run tests, abort (and print output) if we don't see "All tests passed"
-print "running chitest\n";
+print "*** running chitest\n";
 $output = `$root/bin/chitest`;
 if ($output !~ /All tests successful/ || $output !~ /Files=\d\d/) {
-    print "chitest failed:\n$output\n";
+    print "*** chitest failed:\n$output\n";
     exit;
 }
 
 # Run "make dist"
-print "running make dist\n";
+print "*** running make dist\n";
 run("cd $root; make dist");
 
 # Move tarballs to dist/ (with mv -i)
-print "moving tarballs to dist/";
+print "*** moving tarballs to dist/\n";
 run("cd $root; mv -i *.tar.gz dist");
 
 # svn tag with chi-release-x.xx
 my $tag = "chi-release-x.xx";
-print "tag with '$tag'? ";
+print "*** tag with '$tag'? ";
 my $ans = <>;
 if ($ans =~ /y/i) {
-    run("cd $root; svn copy https://perl-cache.googlecode.com/svn/chi https://perl-cache.googlecode.com/svn/chi/tags/$tag");
+    run("cd $root; svn copy -m 'tag with $tag' https://perl-cache.googlecode.com/svn/chi/trunk https://perl-cache.googlecode.com/svn/chi/tags/$tag");
 }
