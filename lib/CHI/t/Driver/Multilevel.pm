@@ -13,12 +13,12 @@ sub new_cache_options {
     my $self = shift;
 
     $root_dir ||=
-      tempdir( "chi-driver-fastmmap-XXXX", TMPDIR => 1, CLEANUP => 1 );
+      tempdir( "chi-driver-multilevel-XXXX", TMPDIR => 1, CLEANUP => 1 );
     return (
         $self->SUPER::new_cache_options(),
         subcaches => [
             { driver => 'Memory' },
-            { driver => 'FastMmap', root_dir => $root_dir }
+            { driver => 'File', root_dir => $root_dir }
         ]
     );
 }
