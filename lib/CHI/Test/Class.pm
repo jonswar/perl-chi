@@ -42,15 +42,18 @@ sub runtests {
 
     # Check for internal_only
     #
-    if ($class->internal_only && !$class->is_internal) {
+    if ( $class->internal_only && !$class->is_internal ) {
         $class->skip_all('internal test only');
     }
 
     # Check for required modules
     #
-    if (my $required_modules = $class->required_modules) {
-        unless (can_load(modules => $required_modules)) {
-            $class->skip_all(sprintf('one of required modules not installed: %s', dump_one_line($required_modules)));
+    if ( my $required_modules = $class->required_modules ) {
+        unless ( can_load( modules => $required_modules ) ) {
+            $class->skip_all(
+                sprintf( 'one of required modules not installed: %s',
+                    dump_one_line($required_modules) )
+            );
         }
     }
 
@@ -60,25 +63,21 @@ sub runtests {
     Test::Class::runtests($test_obj);
 }
 
-sub skip_all
-{
+sub skip_all {
     my ($reason) = @_;
-    
-    Test::More::plan(skip_all => $reason);
+
+    Test::More::plan( skip_all => $reason );
 }
 
-sub is_internal
-{
+sub is_internal {
     return $ENV{CHI_INTERNAL_TESTS};
 }
 
-sub internal_only
-{
+sub internal_only {
     return 0;
 }
 
-sub required_modules
-{
+sub required_modules {
     return {};
 }
 
