@@ -21,6 +21,3 @@
 # MakeMaker cruft
 ^Makefile$
 ^blib
-
-# Author-only tests
-t/perl-critic.t

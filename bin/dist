@@ -36,9 +36,9 @@ if ($output =~ /\S/) {
     exit;
 }
 
-# Run tests, abort (and print output) if we don't see "All tests passed"
+# Run external tests, abort (and print output) if we don't see "All tests passed"
 print "*** running chitest\n";
-$output = `$root/bin/chitest`;
+$output = `$root/bin/chitest --external`;
 if ($output !~ /All tests successful/ || $output !~ /Files=\d\d/) {
     print "*** chitest failed:\n$output\n";
     exit;

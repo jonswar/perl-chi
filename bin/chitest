@@ -9,11 +9,17 @@ use warnings;
 
 my $root = dirname(dirname(realpath($0)));
 my $test_class_pattern = '.';
+my $external_tests_only;
 
 Getopt::Long::Configure( 'pass_through' );
 GetOptions(
     'c|class=s' => \$test_class_pattern,
+    'external' => \$external_tests_only,
 );
+
+unless ($external_tests_only) {
+    $ENV{CHI_INTERNAL_TESTS} = 1;
+}    
 
 my @t_files = map { "$root/t/$_" } grep { /$test_class_pattern/ && /\.t$/ } read_dir("$root/t");
 
