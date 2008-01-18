@@ -129,7 +129,7 @@ Jonathan Swartz
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright (C) 2007 Jonathan Swartz, all rights reserved.
+Copyright (C) 2007 Jonathan Swartz.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
