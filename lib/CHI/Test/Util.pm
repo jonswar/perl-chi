@@ -36,11 +36,10 @@ sub cmp_bool {
 
 # Generate random string of printable ASCII characters.
 #
-sub random_string
-{
+sub random_string {
     my ($length) = @_;
-        
-    return join('', map { chr(int(rand(95)+33)) } (1..$length));
+
+    return join( '', map { chr( int( rand(95) + 33 ) ) } ( 1 .. $length ) );
 }
 
 1;

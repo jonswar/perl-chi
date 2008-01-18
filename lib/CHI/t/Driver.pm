@@ -596,7 +596,7 @@ sub test_multiple_procs : Test(1) {
     };
 
     foreach my $p ( 0 .. 2 ) {
-        $values[$p] = random_string( 5000 );
+        $values[$p] = random_string(5000);
         $valid_values{ $values[$p] }++;
         if ( my $pid = fork() ) {
             $pids[$p] = $pid;
