@@ -1,6 +1,10 @@
+BEFORE RELEASE
+
+* Add this todo list to CHI pod
+* Add information about mailing list etc. to CHI pod and README
+
 TO DO
 
-* Null driver
 * Run benchmarks on linux for memcached, others
 * Look into switching to moose (startup time has been improved)
 * expires_next => ['hour', 'day']
@@ -13,6 +17,7 @@ TO DO
   * default settings for $cache object: expires_at, expires_in
 * support key escaping for any drivers that need it, e.g. memcached (via parameter, default on)
 * background compute
+* null driver
 * implement read-only and write-only caches (useful for multilevel caches)
 * Put cache version into metadata and check on get
 * Think about different name for multilevel driver (potential confusion with get_multi_*, set_multi, etc.)

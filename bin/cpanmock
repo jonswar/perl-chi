@@ -3,6 +3,7 @@
 # Test distribution under CPAN
 #
 use Cwd qw(realpath);
+use CPAN::Inject;
 use Data::Dump qw(dump);
 use File::Basename;
 use File::Path;
@@ -15,11 +16,13 @@ use strict;
 
 my $root         = dirname( dirname( realpath($0) ) );
 my $dist         = realpath("$root/dist/CHI-latest.tar.gz");
-my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 0 );
+# my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 0 );
+my $cpan_root    = "/tmp/cpanmock-KRaj";
 my $cpan_sources = "$cpan_root/sources";
 
 my $perl = "/Users/swartz/install/perl-5.10/bin/perl";
 
+if (0) {
 # Create mock CPAN root
 print "Creating cpan root $cpan_root\n";
 mkpath( $cpan_sources, 0, oct(775) );
@@ -29,8 +32,10 @@ write_file( "$cpan_root/CPAN/MyConfig.pm",
 
 # Get Object::Tiny to initialize things
 run_cpan("notest install Object::Tiny");
+}
 
 # Inject our distribution
+print "Injecting our distribution $dist\n";
 my $cpan = CPAN::Inject->new(
     sources => "$cpan_sources",
     author  => 'LOCAL',
