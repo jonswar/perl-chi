@@ -6,6 +6,7 @@ use Cwd qw(realpath);
 use CPAN::Inject;
 use Data::Dump qw(dump);
 use File::Basename;
+use File::Copy::Recursive qw(rcopy);
 use File::Path;
 use File::Slurp;
 use File::Spec::Functions qw(tmpdir);
@@ -16,15 +17,23 @@ use strict;
 
 my $root         = dirname( dirname( realpath($0) ) );
 my $dist         = realpath("$root/dist/CHI-latest.tar.gz");
-# my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 0 );
-my $cpan_root    = "/tmp/cpanmock-KRaj";
+my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 1 );
 my $cpan_sources = "$cpan_root/sources";
+my $perl_root    = "/Users/swartz/install/perl-5.10";
+my $perl_binary  = "$perl_root/bin/perl";
 
-my $perl = "/Users/swartz/install/perl-5.10/bin/perl";
+# Restore Perl site_libs to their base state (i.e. just what we need for efficient CPAN)
+if ( -d "$perl_root/lib/site_perl.base" ) {
+    rmtree("$perl_root/lib/site_perl.bak");
+    rename( "$perl_root/lib/site_perl", "$perl_root/lib/site_perl.bak" );
+    rcopy( "$perl_root/lib/site_perl.base", "$perl_root/lib/site_perl" );
+}
+else {
+    die "could not find '$perl_root/lib/site_perl.base'";
+}
 
-if (0) {
 # Create mock CPAN root
-print "Creating cpan root $cpan_root\n";
+msg("Creating cpan root $cpan_root");
 mkpath( $cpan_sources, 0, oct(775) );
 mkpath( "$cpan_root/CPAN", 0, oct(775) );
 write_file( "$cpan_root/CPAN/MyConfig.pm",
@@ -32,10 +41,9 @@ write_file( "$cpan_root/CPAN/MyConfig.pm",
 
 # Get Object::Tiny to initialize things
 run_cpan("notest install Object::Tiny");
-}
 
 # Inject our distribution
-print "Injecting our distribution $dist\n";
+msg("Injecting our distribution $dist");
 my $cpan = CPAN::Inject->new(
     sources => "$cpan_sources",
     author  => 'LOCAL',
@@ -46,14 +54,19 @@ my $install_path = $cpan->install_path($dist);
 # Install our distribution
 run_cpan("install $install_path");
 
+sub msg {
+    my ($msg) = @_;
+    print "*** $msg\n";
+}
+
 sub run_cpan {
     my ($input) = @_;
     my ( undef, $inputfile ) =
       tempfile( 'cpanmock-XXXX', DIR => tmpdir, UNLINK => 1 );
     write_file( $inputfile, $input, "\n" );
     my $cmd =
-      "$perl -I$cpan_root -MCPAN::MyConfig -MCPAN -e shell < $inputfile";
-    print "running '$cmd'\n";
+      "$perl_binary -I$cpan_root -MCPAN::MyConfig -MCPAN -e shell < $inputfile";
+    msg("Running '$cmd'");
     run($cmd);
 }
 
@@ -86,7 +99,7 @@ sub cpan_config {
         'make_arg'                     => q[],
         'make_install_arg'             => q[],
         'make_install_make_command'    => q[/usr/bin/make],
-        'makepl_arg'                   => qq[prefix=$cpan_root/install/perl],
+        'makepl_arg'                   => q[],
         'mbuild_arg'                   => q[],
         'mbuild_install_arg'           => q[],
         'mbuild_install_build_command' => q[./Build],

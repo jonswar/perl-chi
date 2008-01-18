@@ -1,0 +1,29 @@
+--- 
+abstract: ~
+author: Jonathan Swartz
+build_requires: 
+  Test::More: 0
+distribution_type: module
+generated_by: Module::Install version 0.65
+license: perl
+meta-spec: 
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  version: 1.3
+name: CHI
+no_index: 
+  directory: 
+    - inc
+    - t
+requires: 
+  Class::Accessor::Fast: 0
+  Data::UUID: 0
+  Digest::JHash: 0
+  File::Slurp: 0
+  File::Spec: 0
+  Hash::MoreUtils: 0
+  List::MoreUtils: 0.21
+  Module::Find: 0.05
+  Storable: 0
+  Test::Deep: 0
+  Time::Duration::Parse: 0.03
+version: 0.01

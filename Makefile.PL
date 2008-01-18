@@ -1,19 +1,22 @@
 use inc::Module::Install;
 
 name 'CHI';
+abstract 'Unified cache interface';
 all_from 'lib/CHI.pm';
 
-build_requires 'Test::More';
+build_requires 'Test::More' => 0;
+build_requires 'Test::Class' => 0;
+build_requires 'Test::Deep' => 0;
 
+requires 'Class::Accessor::Fast' => 0;
 requires 'Data::UUID'            => 0;
 requires 'Digest::JHash'         => 0;
 requires 'File::Slurp'           => 0;
-requires 'File::Spec'            => 0;
+requires 'File::Spec'            => '0.80';
 requires 'Hash::MoreUtils'       => 0;
-requires 'List::MoreUtils'       => '0.21';
+requires 'List::MoreUtils'       => '0.13';
 requires 'Module::Find'          => '0.05';
 requires 'Storable'              => 0;
-requires 'Test::Deep'            => 0;
 requires 'Time::Duration::Parse' => '0.03';
 
 license 'perl';

@@ -4,7 +4,6 @@ Build
 CHI-*
 MANIFEST
 MANIFEST.bak
-META.yml
 Makefile
 Makefile.old
 _build*
