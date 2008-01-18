@@ -15,6 +15,9 @@ severity = 3
 # Jury's still out on these
 [-RegularExpressions::RequireExtendedFormatting]
 
+# Unfortunately, this will mistakenly hit on anon hash references
+[-ValuesAndExpressions::ProhibitCommaSeparatedStatements]
+
 # Exception needed for $CHI::Driver::TestTime
 [Variables::ProhibitPackageVars]
 packages = CHI::Driver
