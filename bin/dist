@@ -16,9 +16,9 @@ print "*** running make manifest\n";
 run("cd $root; make manifest");
 unlink("$root/MANIFEST.bak");
 
-# Run bin/tidyall
-print "*** running tidyall\n";
-run("$root/bin/tidyall");
+# Run bin/tidy
+print "*** running tidy\n";
+run("$root/bin/tidy");
 
 # Check for svn differences, abort if found
 print "*** checking svn status\n";
