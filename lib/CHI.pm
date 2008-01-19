@@ -651,6 +651,10 @@ Questions and feedback are welcome, and should be directed to the perl-cache mai
 
     http://groups.google.com/group/perl-cache-discuss
 
+=head1 TODO
+
+See the TODO file in the root of this distribution.
+
 =head1 SEE ALSO
 
 L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
