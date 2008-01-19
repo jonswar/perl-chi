@@ -1,12 +1,14 @@
 ^bench
 ^bin
+^dist
 ^docs
 ^inc/\.author
+^lib/Test
 ^misc
 ^perlcriticrc
 ^perltidyrc
 ^tmp
-^lib/Test
+^wiki
 
 # Backup files, etc.
 ~$
@@ -20,4 +22,6 @@
 
 # MakeMaker cruft
 ^Makefile$
+^Makefile.old$
 ^blib
+^MANIFEST.SKIP$
