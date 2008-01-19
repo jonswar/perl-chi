@@ -3,10 +3,11 @@ TO DO
 * Switch to Moose!
 * Run full suite of benchmarks comparing CHI and non-CHI caches
 * expires_next => ['hour', 'day']
-* BerkeleyDB driver (w/separate file per namespace, must handle locking)
+* compare strategies for reducing miss stampedes in docs
 * Create faster get_object variant that does not support value - e.g. so file cache can read just metadata - then use this variant for get_expires_at, etc.
 * Handle unicode chars in escape_for_filename by utf8 encoding when needed (but how to know when unescaping...)
 * DBI driver (at least mysql)
+* BerkeleyDB driver (w/separate file per namespace, must handle locking)
 * Test:
   * bad driver
   * default settings for $cache object: expires_at, expires_in
@@ -15,7 +16,6 @@ TO DO
 * null driver
 * implement read-only and write-only caches (useful for multilevel caches)
 * Put cache version into metadata and check on get
-* Think about different name for multilevel driver (potential confusion with get_multi_*, set_multi, etc.)
 
 QUESTIONS
 
@@ -26,3 +26,4 @@ QUESTIONS
 * Should namespace default to caller package?
 * What happens if a reference is passed as a key? Stringify reference, or reject, or serialize automatically to a key?
 * Should get_namespace() always/sometimes/never report empty namespaces - i.e. namespaces that have been created but not populated, or namespaces that have been cleared?
+* Should multilevel driver be renamed - potential confusion with get_multi_*, set_multi, etc.?
