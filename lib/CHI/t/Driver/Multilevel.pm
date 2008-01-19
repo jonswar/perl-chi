@@ -177,7 +177,7 @@ sub test_expiration_options : Test(7) {
         my $subcache_spec = {
             subcaches => [
                 { driver => 'Memory',   %$subcache_new_flags },
-                { driver => 'FastMmap', root_dir => $root_dir }
+                { driver => 'File', root_dir => $root_dir }
             ]
         };
         my $cache = $self->new_cache( %$parent_new_flags, %$subcache_spec );
