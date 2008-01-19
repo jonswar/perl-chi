@@ -26,6 +26,7 @@ requires:
   Hash::MoreUtils: 0
   List::MoreUtils: 0.13
   Module::Find: 0.05
+  Module::Load::Conditional: 0
   Storable: 0
   Time::Duration::Parse: 0.03
 version: 0.01

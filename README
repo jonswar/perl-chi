@@ -27,6 +27,14 @@ perldoc command.
 
     perldoc CHI
 
+Questions and feedback are welcome, and should be directed to the perl-cache mailing list:
+
+    http://groups.google.com/group/perl-cache-discuss
+
+The latest source code is available at:
+
+    http://code.google.com/p/perl-cache/wiki/Source
+
 You can also look for information at:
 
     RT, CPAN's request tracker
@@ -41,10 +49,16 @@ You can also look for information at:
     Search CPAN
         http://search.cpan.org/dist/CHI
 
+LICENSE
 
-COPYRIGHT AND LICENCE
+The development and release of this software was graciously supported by the Digital Media
+group of the Hearst Corporation, a diversified media company based in New York City.
+However, Hearst has no direct involvement with this open source release and bears no
+responsibility for its support or maintenance.
 
-Copyright (C) 2007 Jonathan Swartz
+CHI is provided "as is" and without any express or implied warranties, including, without
+limitation, the implied warranties of merchantibility and fitness for a particular
+purpose.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+Copyright (C) 2007 Jonathan Swartz. This program is free software; you can redistribute it
+and/or modify it under the same terms as Perl itself.

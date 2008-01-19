@@ -645,6 +645,12 @@ typical size of items in your cache.
 
 =back
 
+=head1 SUPPORT
+
+Questions and feedback are welcome, and should be directed to the perl-cache mailing list:
+
+    http://groups.google.com/group/perl-cache-discuss
+
 =head1 SEE ALSO
 
 L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
