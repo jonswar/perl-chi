@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Test::More;
 
-unless ($ENV{CHI_INTERNAL_TESTS}) {
+unless ( $ENV{CHI_INTERNAL_TESTS} ) {
     plan skip_all => "internal test only";
 }
 
