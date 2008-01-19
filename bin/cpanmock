@@ -19,7 +19,7 @@ my $root         = dirname( dirname( realpath($0) ) );
 my $dist         = realpath("$root/dist/CHI-latest.tar.gz");
 my $cpan_root    = tempdir( 'cpanmock-XXXX', TMPDIR => 1, CLEANUP => 1 );
 my $cpan_sources = "$cpan_root/sources";
-my $perl_root    = "/Users/swartz/install/perl-5.6.2";
+my $perl_root    = "/Users/swartz/install/perl-5.10";
 my $perl_binary  = "$perl_root/bin/perl";
 
 # Restore Perl site_libs to their base state (i.e. just what we need for efficient CPAN)
