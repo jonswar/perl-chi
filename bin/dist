@@ -26,14 +26,11 @@ run("$root/bin/tidy");
 
 # Check for svn differences, abort if found
 # Take this out while testing
-print "*** SKIPPING SVN CHECK\n";
-if (0) {
-    print "*** checking svn status\n";
-    $output = `cd $root; svn status`;
-    if ($output =~ /\S/) {
-        print "*** svn status returned output:\n$output\n";
-        exit;
-    }
+print "*** checking svn status\n";
+$output = `cd $root; svn status`;
+if ($output =~ /\S/) {
+    print "*** svn status returned output:\n$output\n";
+    exit;
 }
 
 # Run bin/critic, abort (and print output) if any output
