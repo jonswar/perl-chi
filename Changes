@@ -1,4 +1,12 @@
 Revision history for CHI
 
+0.02  Jan 19, 2008
+
+[ BUG FIXES ]
+
+- Create temporary root dir in Multilevel-Single test
+- Eliminated non-portable file permissions test
+- Concealed use of test package name (Foo::Bar) from PAUSE indexer
+
 0.01  Jan 15, 2008
 - Initial version

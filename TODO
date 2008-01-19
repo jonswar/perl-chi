@@ -11,6 +11,7 @@ TO DO
 * Test:
   * bad driver
   * default settings for $cache object: expires_at, expires_in
+  * dir_create_mode and file_create_mode in File driver (test only under Unix)
 * support key escaping for any drivers that need it, e.g. memcached (via parameter, default on)
 * background compute
 * null driver
