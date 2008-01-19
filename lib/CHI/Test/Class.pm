@@ -64,7 +64,7 @@ sub runtests {
 }
 
 sub skip_all {
-    my ($reason) = @_;
+    my ($class, $reason) = @_;
 
     Test::More::plan( skip_all => $reason );
 }
