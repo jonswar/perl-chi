@@ -11,66 +11,82 @@ use strict;
 my $root = dirname(dirname(realpath($0)));
 my $output;
 
-# Ask tag question up front
 my $chi_version = `perl -I$root/lib -MCHI -e 'print \$CHI::VERSION'`;
+
+# Ask questions up front
+my $dist_version_file = "dist/CHI-$chi_version.tar.gz";
+if (-e $dist_version_file) {
+    print "removing existing $dist_version_file? [n] ";
+    my $overwrite_ans = <>;
+    exit unless $overwrite_ans =~ /y/i;
+    unlink($dist_version_file);
+}
+
 my $tag = "chi-release-$chi_version";
-print "*** tag with '$tag'? [n] ";
+print "tag with '$tag'? [n] ";
 my $tag_ans = <>;
 
 # Run perl Makefile.PL
-print "*** running perl Makefile.PL\n";
+msg("running perl Makefile.PL");
 run("cd $root; perl Makefile.PL");
 
 # Run make manifest
-print "*** running make manifest\n";
+msg("running make manifest");
 unlink("$root/MANIFEST");
 run("cd $root; make manifest");
 unlink("$root/MANIFEST.bak");
 
 # Run bin/tidy
-print "*** running tidy\n";
+msg("running tidy");
 run("$root/bin/tidy");
 
 # Check for svn differences, abort if found
-print "*** checking svn status\n";
+msg("checking svn status");
 $output = `cd $root; svn status`;
 $output =~ s{\w\s+bin/.*\n}{}mg;
 if ($output =~ /\S/) {
-    print "*** svn status returned output:\n$output\n";
+    msg("svn status returned output:\n$output");
     exit;
 }
 
 # Run bin/critic, abort (and print output) if any output
-print "*** running critic\n";
+msg("running critic");
 $output = `$root/bin/critic`;
 if ($output =~ /\S/) {
-    print "*** critic returned output:\n$output\n";
+    msg("critic returned output:\n$output");
     exit;
 }
 
 # Run external tests, abort (and print output) if we don't see "All tests passed"
-print "*** running chitest\n";
+msg("running chitest");
 $output = `$root/bin/chitest --external`;
 if ($output !~ /All tests successful/ || $output !~ /Files=\d\d/) {
-    print "*** chitest failed:\n$output\n";
+    msg("chitest failed:\n$output");
     exit;
 }
 
 # Run "make dist"
-print "*** running make dist\n";
+msg("running make dist");
 run("cd $root; make dist");
 
-# Move tarballs to dist/ (with mv -i)
-print "*** moving tarballs to dist/\n";
-run("cd $root; mv -i *.tar.gz dist");
+# Move tarballs to dist/
+msg("moving tarballs to dist/");
+run("cd $root; mv *.tar.gz dist");
 
 # svn tag with chi-release-x.xx
 if ($tag_ans =~ /y/i) {
+    msg("tagging with $tag");
+    run("svn delete -m 'remove tag $tag' https://perl-cache.googlecode.com/svn/chi/tags/$tag");
     run("svn copy -m 'tag with $tag' https://perl-cache.googlecode.com/svn/chi/trunk https://perl-cache.googlecode.com/svn/chi/tags/$tag");
 }
 
 # change CHI-latest link
-print "*** linking CHI-latest.tar.gz to CHI-$chi_version.tar.gz\n";
+msg("linking CHI-latest.tar.gz to CHI-$chi_version.tar.gz");
 chdir("$root/dist");
 unlink("CHI-latest.tar.gz");
 symlink("CHI-$chi_version.tar.gz", "CHI-latest.tar.gz");
+
+sub msg {
+    my ($msg) = @_;
+    print "*** $msg\n";
+}
