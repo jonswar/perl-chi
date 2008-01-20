@@ -29,4 +29,4 @@ requires:
   Module::Load::Conditional: 0
   Storable: 0
   Time::Duration::Parse: 0.03
-version: 0.01
+version: 0.02
