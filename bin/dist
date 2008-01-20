@@ -11,12 +11,19 @@ use strict;
 my $root = dirname(dirname(realpath($0)));
 my $output;
 
+# Ask tag question up front
+my $chi_version = `perl -I$root/lib -MCHI -e 'print \$CHI::VERSION'`;
+my $tag = "chi-release-$chi_version";
+print "*** tag with '$tag'? [n] ";
+my $tag_ans = <>;
+
 # Run perl Makefile.PL
 print "*** running perl Makefile.PL\n";
 run("cd $root; perl Makefile.PL");
 
 # Run make manifest
 print "*** running make manifest\n";
+unlink("$root/MANIFEST");
 run("cd $root; make manifest");
 unlink("$root/MANIFEST.bak");
 
@@ -25,9 +32,9 @@ print "*** running tidy\n";
 run("$root/bin/tidy");
 
 # Check for svn differences, abort if found
-# Take this out while testing
 print "*** checking svn status\n";
 $output = `cd $root; svn status`;
+$output =~ s{\w\s+bin/.*\n}{}mg;
 if ($output =~ /\S/) {
     print "*** svn status returned output:\n$output\n";
     exit;
@@ -58,9 +65,12 @@ print "*** moving tarballs to dist/\n";
 run("cd $root; mv -i *.tar.gz dist");
 
 # svn tag with chi-release-x.xx
-my $tag = "chi-release-x.xx";
-print "*** tag with '$tag'? ";
-my $ans = <>;
-if ($ans =~ /y/i) {
-    run("cd $root; svn copy -m 'tag with $tag' https://perl-cache.googlecode.com/svn/chi/trunk https://perl-cache.googlecode.com/svn/chi/tags/$tag");
+if ($tag_ans =~ /y/i) {
+    run("svn copy -m 'tag with $tag' https://perl-cache.googlecode.com/svn/chi/trunk https://perl-cache.googlecode.com/svn/chi/tags/$tag");
 }
+
+# change CHI-latest link
+print "*** linking CHI-latest.tar.gz to CHI-$chi_version.tar.gz\n";
+chdir("$root/dist");
+unlink("CHI-latest.tar.gz");
+symlink("CHI-$chi_version.tar.gz", "CHI-latest.tar.gz");
