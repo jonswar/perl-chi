@@ -124,7 +124,7 @@ separation of multiple caches with different data but conflicting keys.
 
 Defaults to the package from which new() was called, which means that each package will
 automatically have its own cache. If you want multiple packages to share the same cache,
-just decide a common namespace like 'main'.
+just decide on a common namespace like 'main'.
 
 =item expires_in [DURATION]
 
@@ -191,7 +191,8 @@ I<$key> may be followed by one or more name/value parameters:
 
 If I<$key> exists and has not expired, call code reference with the
 L<CHI::CacheObject|CHI::CacheObject> as a single parameter. If code returns a true value,
-expire the data. e.g.
+expire the data. For example, to expire the cache if I<$file> has changed since
+the value was computed:
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
@@ -220,7 +221,7 @@ defaults in the cache constructor.
 =item expires_in [DURATION]
 
 Amount of time until this data expires, in the form of a L<duration expressions|/DURATION
-EXPRESSIONS>.
+EXPRESSIONS> - e.g. "10 seconds" or "5 minutes".
 
 =item expires_at [NUM]
 
@@ -395,9 +396,10 @@ C<on_get_error>, and C<on_set_error>.
 
 =head1 DURATION EXPRESSIONS
 
-Various options like I<expire_in> take a duration expression. This will be parsed by
-L<Time::Duration::Parse|Time::Duration::Parse>. It is either a plain number, which is treated like a number of
-seconds, or a number and a string representing time units where the string is one of:
+Duration expressions, which appear in the L</set> command and various other parts of the
+API, are parsed by L<Time::Duration::Parse|Time::Duration::Parse>. A duration is either a
+plain number, which is treated like a number of seconds, or a number and a string
+representing time units where the string is one of:
 
     s second seconds sec secs
     m minute minutes min mins
@@ -508,7 +510,8 @@ Override this if you want to provide an efficient method of clearing a namespace
 The default implementation will iterate over all keys and call L</remove> for each.
 
 =item _serialize ( $value )
-=item _deserialize ( $value )
+
+=item _deserialize ( $serialized_value )
 
 Override these if you want to change the serialization method used for references. The
 default is Storable freeze/thaw.
@@ -536,11 +539,12 @@ but are not required for basic cache operations.
 
 =item get_keys ( $self )
 
-Return all keys in the namespace. It is acceptable to return expired keys as well.
+Return all keys in the namespace. It is acceptable to include or omit expired keys.
 
 =item get_namespaces ( $self )
 
-Return namespaces associated with the cache.
+Return namespaces associated with the cache. It is acceptable to include or omit namespaces
+with no valid keys.
 
 =back
 
@@ -650,6 +654,10 @@ typical size of items in your cache.
 Questions and feedback are welcome, and should be directed to the perl-cache mailing list:
 
     http://groups.google.com/group/perl-cache-discuss
+
+The latest source code is available at:
+
+    http://code.google.com/p/perl-cache/wiki/Source
 
 =head1 TODO
 
