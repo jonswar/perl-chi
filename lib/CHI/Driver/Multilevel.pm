@@ -190,6 +190,7 @@ Do a get from each subcache in turn, returning the first defined and unexpired v
 For example, in our memory-memcached example, a hit from the memcached cache would cause the value to be written into the memory cache, but a hit from the memory cache would not result in a write to the memcached cache.
 
 =item get_object
+
 =item get_expires_at
 
 Calls the method on each subcache in turn, returning the first defined value found. These methods are not very well suited to multilevel caches; you might be better off calling these methods manually on the individual subcache handles.
@@ -199,11 +200,13 @@ Calls the method on each subcache in turn, returning the first defined value fou
 Set the value in all subcaches (write-through). Expiration options are taken from the set() method, then from the default options for the parent cache. Subcaches may not have their own default expiration options (this may change in the future).
 
 =item remove
+
 =item clear
 
 Calls the method on each subcache.
 
 =item get_keys
+
 =item get_namespaces
 
 Calls the method on all subcaches and returns the union of the results.

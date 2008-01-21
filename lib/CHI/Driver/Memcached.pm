@@ -90,8 +90,11 @@ L<CHI|general constructor options/constructor>.
 =over
 
 =item cache_size
+
 =item page_size
+
 =item num_pages
+
 =item init_file
 
 These options are passed directly to L<Cache::Memcached>.
