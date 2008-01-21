@@ -16,35 +16,29 @@ my $pattern = shift(@ARGV) || '.';
 my @files;
 find ({wanted => sub { push(@files, $_) if /CHI/ && /\.pm$/ && /$pattern/ }, no_chdir => 1}, "$root/lib");
 
-sub base_sig
-{
-    return join(";", sig($rcfile), sig($INC{'Perl/Critic.pm'}));
-}
+my $base_sig = join('; ', map { File::Signature->new($_) } ($rcfile, $INC{'Perl/Critic.pm'}));
 
 sub sig
 {
     my ($file) = @_;
 
-    return File::Signature->new($file) . '';
+    return join('; ', $base_sig, File::Signature->new($file));
 }
 
 my $cache = CHI->new(driver => 'FastMmap', root_dir => "$root/data/cache", namespace => 'critic');
-if (($cache->get("BASE") || '') ne base_sig()) {
-    print "base signature mismatch; clearing cache\n";
-    $cache->clear();
-}
 
 my $critic = Perl::Critic->new(-profile => $rcfile);
 Perl::Critic::Violation::set_format("%m at %f line %l. %e. Perl::Critic::Policy::%p.\n");
 
 foreach my $file (@files) {
-    next if (($cache->get($file) || '') eq sig($file));
-    print "$file\n";
-    if (my @violations = $critic->critique($file)) {
-        print @violations;
-    }
-    else {
-        $cache->set($file, sig($file));
+    if (($cache->get($file) || '') ne sig($file)) {
+        print "$file\n";
+        if (my @violations = $critic->critique($file)) {
+            print @violations;
+        }
+        else {
+            $cache->set($file, sig($file));
+        }
     }
 }
 

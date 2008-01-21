@@ -5,7 +5,6 @@ use File::Basename;
 use File::Find;
 use File::Signature;
 use File::Slurp;
-use IPC::System::Simple qw(run);
 use Perl::Tidy;
 use strict;
 use warnings;
@@ -18,33 +17,24 @@ my $pattern = shift(@ARGV) || '.';
 my @files;
 find ({wanted => sub { push(@files, $_) if /CHI/ && /\.pm$/ && /$pattern/ }, no_chdir => 1}, "$root/lib");
 
-sub base_sig
-{
-    return join(";", sig($rcfile), sig($INC{'Perl/Tidy.pm'}));
-}
+my $base_sig = join('; ', map { File::Signature->new($_) } ($rcfile, $INC{'Perl/Tidy.pm'}));
 
 sub sig
 {
     my ($file) = @_;
 
-    return File::Signature->new($file) . '';
+    return join('; ', $base_sig, File::Signature->new($file));
 }
 
 my $cache = CHI->new(driver => 'FastMmap', root_dir => "$root/data/cache", namespace => 'tidy');
-if (($cache->get("BASE") || '') ne base_sig()) {
-    $cache->clear();
-}
 
 foreach my $file (@files) {
-    next if (($cache->get($file) || '') eq sig($file));
-    print "$file\n";
-    Perl::Tidy::perltidy(source => $file, destination => \my $result, perltidyrc => $rcfile);
-    write_file($file, $result);
-    $cache->set($file, sig($file));
-}
-
-if (!$cache->get("BASE")) {
-    $cache->set("BASE", base_sig());
+    if (($cache->get($file) || '') ne sig($file)) {
+        print "$file\n";
+        Perl::Tidy::perltidy(source => $file, destination => \my $result, perltidyrc => $rcfile);
+        write_file($file, $result);
+        $cache->set($file, sig($file));
+    }
 }
 
 1;
