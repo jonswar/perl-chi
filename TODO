@@ -1,7 +1,9 @@
 TO DO
 
+* Add caching to tidy and critic
 * Switch to Moose!
 * Run full suite of benchmarks comparing CHI and non-CHI caches
+* Convert to Log::Any
 * expires_next => ['hour', 'day']
 * compare strategies for reducing miss stampedes in docs
 * Create faster get_object variant that does not support value - e.g. so file cache can read just metadata - then use this variant for get_expires_at, etc.
