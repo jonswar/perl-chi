@@ -172,7 +172,7 @@ sub test_expires_immediately : Test(36) {
             time(), "expires_at ($desc)"
         );
         ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
-        ok( !defined $cache->get($key), "immediate miss ($desc)" );
+        ok( !defined $cache->get($key),          "immediate miss ($desc)" );
     };
     $test_expires_immediately->(0);
     $test_expires_immediately->(-1);
@@ -202,14 +202,14 @@ sub test_expires_shortly : Test(18) {
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
 
         # Only bother sleeping and expiring for one of the variants
         if ( $set_option eq "2 seconds" ) {
             sleep(2);
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
             ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
-            ok( !$cache->is_valid($key), "invalid ($desc)" );
+            ok( !$cache->is_valid($key),             "invalid ($desc)" );
         }
     };
     $test_expires_shortly->(2);
@@ -235,10 +235,10 @@ sub test_expires_later : Test(30) {
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3598;
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
-        ok( $cache->is_valid($key), "valid ($desc)" );
+        ok( $cache->is_valid($key),               "valid ($desc)" );
         local $CHI::Driver::Test_Time = $start_time + 3602;
         ok( !defined $cache->get($key),          "miss after 1 hour ($desc)" );
         ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
@@ -263,7 +263,7 @@ sub test_expires_never : Test(6) {
             "expires never"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired" );
-        ok( $cache->is_valid($key), "valid" );
+        ok( $cache->is_valid($key),               "valid" );
     };
     $test_expires_never->();
     $test_expires_never->('never');
@@ -278,7 +278,7 @@ sub test_expires_manually : Test(3) {
     is( $cache->get($key), $value, "hit ($desc)" );
     $cache->expire($key);
     ok( !defined $cache->get($key), "miss after expire ($desc)" );
-    ok( !$cache->is_valid($key), "invalid after expire ($desc)" );
+    ok( !$cache->is_valid($key),    "invalid after expire ($desc)" );
 }
 
 sub test_expires_conditionally : Test(24) {
@@ -412,7 +412,7 @@ sub test_namespaces : Test(6) {
     ok( !$cache2->get_keys(), 'cache2 empty after setting keys in cache1' );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
-    is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
+    is( $cache3->get('medium'), 'different',     'cache1{medium} = different' );
 
     # Have to figure out proper behavior of get_namespaces - whether it automatically includes new or now-empty namespaces
     # cmp_set([$cache1->get_namespaces()], [$cache->namespace(), $ns1, $ns2, $ns3], "get_namespaces");

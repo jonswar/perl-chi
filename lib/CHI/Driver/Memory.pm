@@ -8,7 +8,7 @@ my $Default_Datastore = {};
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
-    $self->{datastore}                       ||= $Default_Datastore;
+    $self->{datastore} ||= $Default_Datastore;
     $self->{datastore}->{ $self->namespace } ||= {};
     $self->{datastore_for_namespace} = $self->{datastore}->{ $self->namespace };
     return $self;
