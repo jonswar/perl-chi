@@ -6,6 +6,14 @@ use base qw(CHI::t::Driver);
 
 my $testaddr = "127.0.0.1:11211";
 
+# Making this internal only for now, since test success depends on presence and configuration
+# of an external server.
+#
+# When CHI::Driver::Memcached is pulled out into a separate distribution, it'll make
+# sense to test externally again.
+#
+sub internal_only { 1 }
+
 sub required_modules {
     return { 'Cache::Memcached' => undef, 'IO::Socket::INET' => undef };
 }
