@@ -647,9 +647,9 @@ backends. CHI does not reinvent these but simply wraps them with an appropriate
 driver. For example, CHI::Driver::Memcached and CHI::Driver::FastMmap are thin layers
 around Cache::Memcached and Cache::FastMmap.
 
-Of course, because these modules are full-featured, there will be considerable
-overlap. Cache::FastMmap, for example, already has code to serialize data structures and
-to associate expiration times with items. Here's how CHI resolves these issues.
+Of course, because these modules already work on their own, there will be some overlap.
+Cache::FastMmap, for example, already has code to serialize data and handle expiration
+times. Here's how CHI resolves these overlaps.
 
 =over
 
@@ -670,15 +670,14 @@ At some point CHI will provide the option of explicitly notifying the backend of
 expiration time as well. This might allow the backend to do better storage management,
 etc., but would prevent CHI from examining expired items.
 
-=item Overhead
-
-Naturally, using CHI's FastMmap driver will never be as time or storage efficient as
-simply using Cache::FastMmap.  In terms of performance, we've attempted to make the
-overhead as small as possible, on the order of 5% per get or set (benchmarks coming
-soon). In terms of storage size, CHI adds about 16 bytes of metadata overhead to each
-item. How much this matters obviously depends on the typical size of items in your cache.
-
 =back
+
+Naturally, using CHI's FastMmap or Memcached driver will never be as time or storage
+efficient as simply using Cache::FastMmap or Cache::Memcached.  In terms of performance,
+we've attempted to make the overhead as small as possible, on the order of 5% per get or
+set (benchmarks coming soon). In terms of storage size, CHI adds about 16 bytes of
+metadata overhead to each item. How much this matters obviously depends on the typical
+size of items in your cache.
 
 =head1 SUPPORT AND DOCUMENTATION
 
