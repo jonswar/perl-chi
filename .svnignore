@@ -6,6 +6,7 @@ MANIFEST
 MANIFEST.bak
 Makefile
 Makefile.old
+README
 _build*
 blib*
 cover_db

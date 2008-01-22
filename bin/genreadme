@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+use Cwd qw(realpath);
+use File::Basename;
+use Pod::Readme;
+use strict;
+use warnings;
+
+my $root = dirname(dirname(realpath($0)));
+my $parser = Pod::Readme->new();
+$parser->parse_from_file("$root/lib/CHI.pm", "$root/README");

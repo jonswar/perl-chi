@@ -5,7 +5,7 @@ use Carp;
 use CHI::NullLogger;
 use CHI::Util qw(require_dynamic);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 our $Logger = CHI::NullLogger->new();    ## no critic
 
@@ -101,8 +101,9 @@ available to Perl, such as memory, plain files, memory mapped files, memcached, 
 
 CHI is intended as an evolution of DeWitt Clinton's L<Cache::Cache|Cache::Cache> package,
 adhering to the basic Cache API but adding new features and addressing limitations in the
-Cache::Cache implementation. See L<Relation to other modules|RELATION TO OTHER
-MODULES/Cache::Cache>.
+Cache::Cache implementation.
+
+=for readme stop
 
 =head1 CONSTRUCTOR
 
@@ -441,6 +442,8 @@ e.g. the following are all valid duration expressions:
     1 minute and ten seconds
     1 hour
 
+=for readme continue
+
 =head1 AVAILABILITY OF DRIVERS
 
 The following drivers are currently available as part of this distribution. The bundling
@@ -475,6 +478,8 @@ L<CHI::Driver::Multilevel|CHI::Driver::Multilevel> - Cache formed from several s
 L<CHI::Driver::CacheCache|CHI::Driver::CacheCache> - CHI wrapper for Cache::Cache
 
 =back
+
+=for readme stop
 
 =head1 IMPLEMENTING NEW DRIVERS
 
@@ -592,6 +597,8 @@ and L<Catalyst::Log|Catalyst::Log> among others.
 
 Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with Log::Any
 (L<http://use.perl.org/~jonswar/journal/34366>).
+
+=for readme continue
 
 =head1 RELATION TO OTHER MODULES
 
