@@ -24,17 +24,17 @@ foreach my $perl_version (qw(5.6.2 5.10)) {
     my $cpan_root    = "$perl_root/mock_cpan";
     my $cpan_sources = "$cpan_root/sources";
     rmtree($cpan_root);
-    mkpath($cpan_sources, 0, 0775);
+    mkpath( $cpan_sources, 0, 0775 );
 
     msg("Testing in $perl_root");
 
-    my $run_cpan  = sub {
+    my $run_cpan = sub {
         my ($input) = @_;
         my ( undef, $inputfile ) =
-            tempfile( 'cpanmock-XXXX', DIR => tmpdir, UNLINK => 1 );
+          tempfile( 'cpanmock-XXXX', DIR => tmpdir, UNLINK => 1 );
         write_file( $inputfile, $input, "\n" );
         my $cmd =
-            "$perl_binary -I$cpan_root -MCPAN::MyConfig -MCPAN -e shell < $inputfile >> $cpan_root/install.log 2>&1";
+          "$perl_binary -I$cpan_root -MCPAN::MyConfig -MCPAN -e shell < $inputfile >> $cpan_root/install.log 2>&1";
         msg("Running '$cmd' with input '$input'");
         run($cmd);
     };
@@ -51,7 +51,7 @@ foreach my $perl_version (qw(5.6.2 5.10)) {
 
     # Create mock CPAN root
     msg("Creating cpan root $cpan_root");
-    mkpath( $cpan_sources, 0, oct(775) );
+    mkpath( $cpan_sources,     0, oct(775) );
     mkpath( "$cpan_root/CPAN", 0, oct(775) );
     write_file( "$cpan_root/CPAN/MyConfig.pm",
         '$CPAN::Config = ' . dump( cpan_config($cpan_root) ) );
@@ -123,12 +123,10 @@ sub cpan_config {
         'term_is_latin'                => q[1],
         'term_ornaments'               => q[1],
         'unzip'                        => q[/usr/bin/unzip],
-        'urllist'                      => [
-            q[http://mirrors.kernel.org/cpan/],
-            q[http://cpan.llarian.net/],
-            q[ftp://cpan.llarian.net/pub/CPAN/],
-            q[ftp://mirrors.kernel.org/pub/CPAN],
-            q[ftp://ftp-mirror.internap.com/pub/CPAN/]
+
+        # Based on perl/cpan/bench.pl
+        'urllist' => [
+            qw(ftp://cpan.llarian.net/pub/CPAN/ http://cpan.llarian.net/ ftp://osl.uoregon.edu/CPAN/ http://cpan.schatt.com/ http://cpan.mirror.facebook.com/ http://cpan.cs.utah.edu ftp://ftp-mirror.internap.com/pub/CPAN/ ftp://mirror.xmission.com/CPAN/ ftp://cpan.cs.utah.edu/pub/CPAN/)
         ],
         'use_sqlite' => q[0],
         'wget'       => q[],
