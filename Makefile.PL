@@ -4,9 +4,11 @@ name 'CHI';
 abstract 'Unified cache interface';
 all_from 'lib/CHI.pm';
 
-build_requires 'Test::More' => 0;
+perl_version '5.006';
+
 build_requires 'Test::Class' => 0;
 build_requires 'Test::Deep' => 0;
+build_requires 'Test::More' => 0;
 
 requires 'Class::Accessor::Fast'     => 0;
 requires 'Data::UUID'                => 0;
