@@ -26,6 +26,10 @@ my $tag = "chi-release-$chi_version";
 print "tag with '$tag'? [n] ";
 my $tag_ans = <>;
 
+# Generate README
+msg("Running genreadme");
+run("$root/bin/genreadme");
+
 # Run perl Makefile.PL
 msg("running perl Makefile.PL");
 run("cd $root; perl Makefile.PL");
