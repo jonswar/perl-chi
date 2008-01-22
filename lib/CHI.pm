@@ -715,7 +715,7 @@ Jonathan Swartz
 
 L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
 
-LICENSE
+=head1 COPYRIGHT & LICENSE
 
 Copyright (C) 2007 Jonathan Swartz.
 
