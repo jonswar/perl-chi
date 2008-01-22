@@ -99,8 +99,10 @@ The CHI interface is implemented by driver classes that support fetching, storin
 clearing of data. Driver classes exist or will exist for the gamut of storage backends
 available to Perl, such as memory, plain files, memory mapped files, memcached, and DBI.
 
-CHI is intended as an evolution of DeWitt Clinton's venerable L<Cache::Cache|Cache::Cache> package.
-See L<Relation to Cache::Cache|RELATION TO OTHER MODULES/Cache::Cache>.
+CHI is intended as an evolution of DeWitt Clinton's L<Cache::Cache|Cache::Cache> package,
+adhering to the basic Cache API but adding new features and addressing limitations in the
+Cache::Cache implementation. See L<Relation to other modules|RELATION TO OTHER
+MODULES/Cache::Cache>.
 
 =head1 CONSTRUCTOR
 
@@ -119,12 +121,34 @@ The exact CHI::Driver subclass to drive the cache, for example "My::Memory::Driv
 
 =item namespace [STRING]
 
-Identifies a namespace that all cache entries for this object will be in. This allows
-separation of multiple caches with different data but conflicting keys.
+Identifies a namespace that all cache entries for this object will be in. This allows easy
+separation of multiple, distinct caches without worrying about key collision.
 
-Defaults to the package from which new() was called, which means that each package will
-automatically have its own cache. If you want multiple packages to share the same cache,
-just decide on a common namespace like 'main'.
+Suggestions for easy namespace selection:
+
+=over
+
+=item *
+
+In a class, use the class name:
+
+    CHI->new(namespace => __PACKAGE__, ...);
+
+=item *
+
+In a script, use the script's absolute path name:
+
+    use Cwd qw(realpath);
+    CHI->new(namespace => realpath($0), ...);
+
+=item *
+
+In a web template, use the template name. For example, in Mason, $m-e<gt>cache will set
+the namespace to the current component path.
+
+=back
+
+Defaults to 'Default' if not specified.
 
 =item expires_in [DURATION]
 
@@ -641,19 +665,23 @@ etc., but would prevent CHI from examining expired items.
 
 =item Overhead
 
-Naturally, using Cache::FastMmap through CHI will never be as time or storage efficient as
-simply using Cache::FastMmap.  In terms of performance, we've attempted to make the overhead
-as small as possible (benchmarks coming soon). In terms of storage size, CHI adds about 16
-bytes of metadata overhead to each item. How much this matters obviously depends on the
-typical size of items in your cache.
+Naturally, using CHI's FastMmap driver will never be as time or storage efficient as
+simply using Cache::FastMmap.  In terms of performance, we've attempted to make the
+overhead as small as possible, on the order of 5% per get or set (benchmarks coming
+soon). In terms of storage size, CHI adds about 16 bytes of metadata overhead to each
+item. How much this matters obviously depends on the typical size of items in your cache.
 
 =back
 
-=head1 SUPPORT
+=head1 SUPPORT AND DOCUMENTATION
 
 Questions and feedback are welcome, and should be directed to the perl-cache mailing list:
 
     http://groups.google.com/group/perl-cache-discuss
+
+Bugs and feature requests will be tracked at RT:
+
+    http://rt.cpan.org/NoAuth/Bugs.html?Dist=CHI
 
 The latest source code is available at:
 
@@ -663,19 +691,32 @@ The latest source code is available at:
 
 See the TODO file in the root of this distribution.
 
-=head1 SEE ALSO
+=head1 ACKNOWLEDGMENTS
 
-L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
+Thanks to Dewitt Clinton for the original Cache::Cache, to Rob Mueller for the Perl cache
+benchmarks, and to Perrin Harkins for the discussions that got this going.
+
+CHI was originally designed and developed for the Digital Media group of the Hearst
+Corporation, a diversified media company based in New York City.  Many thanks to Hearst
+management for agreeing to this open source release.
 
 =head1 AUTHOR
 
 Jonathan Swartz
 
-=head1 COPYRIGHT & LICENSE
+=head1 SEE ALSO
+
+L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>, L<Cache::FastMmap|Cache::FastMmap>
+
+LICENSE
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+CHI is provided "as is" and without any express or implied warranties, including, without
+limitation, the implied warranties of merchantibility and fitness for a particular
+purpose.
+
+This program is free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
 
 =cut

@@ -390,10 +390,8 @@ sub test_serialize : Test(9) {
 sub test_namespaces : Test(6) {
     my $self = shift;
 
-    # Conceal package name from PAUSE indexer
-    my $package = join( "::", "Foo", "Bar" );
-    my $cache0 = eval "package $package; \$self->new_cache()";    ## no critic
-    is( $cache0->namespace, 'Foo::Bar', 'namespace defaults to package' );
+    my $cache0 = $self->new_cache();
+    is( $cache0->namespace, 'Default', 'namespace defaults to "Default"' );
 
     my ( $ns1, $ns2, $ns3 ) = ( 'ns1', 'ns2', 'ns3' );
     my ( $cache1, $cache1a, $cache2, $cache3 ) =

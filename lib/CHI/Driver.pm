@@ -45,6 +45,7 @@ sub new {
 
     my %defaults = (
         driver       => 'Memory',
+        namespace    => 'Default',
         on_get_error => 'log',
         on_set_error => 'log',
     );
