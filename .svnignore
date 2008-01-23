@@ -5,6 +5,7 @@ CHI-*
 MANIFEST
 MANIFEST.bak
 META.yml
+VERSION
 Makefile
 Makefile.old
 README
