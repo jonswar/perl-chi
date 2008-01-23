@@ -1,7 +1,6 @@
 Revision history for CHI
 
-0.03
-
+0.03  Jan 21, 2008
 [ INCOMPATIBLE CHANGES ]
 
 - ** Eliminated automatic namespace selection based on caller; namespace now defaults to 'Default', as in Cache::Cache.
