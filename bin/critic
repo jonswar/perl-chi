@@ -34,7 +34,7 @@ foreach my $file (@files) {
     if (($cache->get($file) || '') ne sig($file)) {
         print "$file\n";
         if (my @violations = $critic->critique($file)) {
-            print @violations;
+            print (map { "** $_" } @violations);
         }
         else {
             $cache->set($file, sig($file));

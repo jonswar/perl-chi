@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+#
+# Release a distribution
+#
+use Cwd qw(realpath);
+use File::Basename;
+use IPC::System::Simple qw(run);
+use warnings;
+use strict;
+
+my $root = dirname( dirname( realpath($0) ) );
+chomp( my $chi_version = read_file("$root/VERSION") );
+die "could not get CHI version" unless $chi_version =~ /\d\.\d/;
+my $tag       = "chi-release-$chi_version";
+my $dist_file = "$root/dist/CHI-$chi_version.tar.gz";
+die "could not find '$dist_file'" unless -f $dist_file;
+
+print "Really release version $chi_version? [n] ";
+exit unless scalar(<>) =~ /y/i;
+
+# upload to PAUSE
+msg("uploading to PAUSE");
+run("cpan-upload-http $dist_file");
+
+# svn tag
+msg("tagging with '$tag'");
+my $svnroot = 'https://perl-cache.googlecode.com/svn/chi';
+run("svn delete -m 'remove tag $tag' $svnroot/tags/$tag");
+run("svn copy -m 'tag with $tag' $svnroot/trunk $svnroot/tags/$tag");
+
+# update version in VERSION, Changes, CHI.pm
+my $next_version = sprintf("%1.2f", $VERSION + 0.01);
+print "Update version to $next_version? [y]";
+exit if scalar(<>) =~ /n/i;
+
+msg("updating VERSION");
+write_file("$root/VERSION", $next_version);
+
+msg("updating Changes");
+my @changes = read_file("$root/Changes");
+my $today_date = time2str("%b %e, %Y", time());
+splice(@changes, 2, 0, "$next_version  $today_date\n", "\n");
+write_file("$root/Changes", @changes);
+
+msg("updating CHI.pm");
+my $chi_pm = read_file("$root/lib/CHI.pm");
+$chi_pm =~ s/our \$VERSION = .*/our \$VERSION = '$next_version';/;
+write_file("$root/lib/CHI.pm", $chi_pm);
+
