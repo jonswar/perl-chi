@@ -1,5 +1,7 @@
 TO DO
 
+* Look into FastMmap test_persist failures
+* Integrate CHI with core Mason caching
 * Add caching to tidy and critic
 * Switch to Moose!
 * Run full suite of benchmarks comparing CHI and non-CHI caches
