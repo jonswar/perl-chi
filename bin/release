@@ -20,18 +20,15 @@ die "could not find '$dist_file'" unless -f $dist_file;
 print "Really release version $chi_version? [n] ";
 exit unless scalar(<>) =~ /y/i;
 
-if (0) {
+# upload to PAUSE
+msg("uploading to PAUSE");
+run("cpan-upload-http $dist_file");
 
-    # upload to PAUSE
-    msg("uploading to PAUSE");
-    run("cpan-upload-http $dist_file");
-
-    # svn tag
-    msg("tagging with '$tag'");
-    my $svnroot = 'https://perl-cache.googlecode.com/svn/chi';
-    run("svn delete -m 'remove tag $tag' $svnroot/tags/$tag");
-    run("svn copy -m 'tag with $tag' $svnroot/trunk $svnroot/tags/$tag");
-}
+# svn tag
+msg("tagging with '$tag'");
+my $svnroot = 'https://perl-cache.googlecode.com/svn/chi';
+system("svn delete -m 'remove tag $tag' $svnroot/tags/$tag");  # ignore error
+run("svn copy -m 'tag with $tag' $svnroot/trunk $svnroot/tags/$tag");
 
 # update version in VERSION, Changes, CHI.pm
 my $next_version = sprintf( "%1.2f", $chi_version + 0.01 );
