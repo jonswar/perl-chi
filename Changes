@@ -1,5 +1,11 @@
 Revision history for CHI
 
+0.04  Jan 25, 2008
+
+[ BUG FIXES ]
+
+- Default unlink_on_exit to 0 for Cache::FastMmap to conform to the CHI API
+
 0.03  Jan 23, 2008
 
 [ INCOMPATIBLE CHANGES ]

@@ -19,6 +19,7 @@ sub new {
 
     $self->{root_dir}        ||= $Default_Root_Dir;
     $self->{dir_create_mode} ||= $Default_Create_Mode;
+    $self->{unlink_on_exit}  ||= 0;
     mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
       if !-d $self->{root_dir};
     $self->{share_file} =
@@ -26,7 +27,7 @@ sub new {
     my %fm_params = (
         raw_values => 1,
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
-          qw(init_file share_file cache_size page_size num_pages)
+          qw(init_file unlink_on_exit share_file cache_size page_size num_pages)
     );
     $self->{_contained_cache} = $self->{fm_cache} =
       Cache::FastMmap->new(%fm_params);
@@ -95,6 +96,12 @@ on UNIX).
 =item dir_create_mode
 
 Permissions mode to use when creating directories. Defaults to 0775.
+
+=item unlink_on_exit
+
+Indicates whether L<Cache::FastMmap|Cache::FastMmap> should remove the cache when the
+object is destroyed. We default this to 0 to conform to the CHI API (unlike Cache::FastMmap, 
+which defaults it to 1 if the cache files doesn't already exist).
 
 =item cache_size
 

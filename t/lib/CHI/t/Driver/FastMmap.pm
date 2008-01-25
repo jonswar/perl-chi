@@ -2,6 +2,7 @@ package CHI::t::Driver::FastMmap;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Util qw(dp);
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 
