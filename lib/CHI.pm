@@ -6,7 +6,7 @@ use Carp;
 use CHI::NullLogger;
 use CHI::Util qw(require_dynamic);
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our $Logger = CHI::NullLogger->new();    ## no critic
 
