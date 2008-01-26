@@ -696,7 +696,29 @@ The latest source code is available at:
 
 =head1 TODO
 
-See the TODO file in the root of this distribution.
+=over
+
+=item *
+
+Integrate CHI with Mason, and create CHI plugins for Catalyst and CGI::Application
+
+=item *
+
+Switch to Moose for CHI classes
+
+=item *
+
+Add BerkeleyDB and DBI drivers
+
+=item *
+
+Add docs comparing various strategies for reducing miss stampedes and cost of recomputes
+
+=item *
+
+Create XS versions of main functions in Driver.pm (e.g. get, set)
+
+=back
 
 =head1 ACKNOWLEDGMENTS
 
