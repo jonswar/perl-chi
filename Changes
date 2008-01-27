@@ -4,30 +4,23 @@ Revision history for CHI
 
 0.04  Jan 25, 2008
 
-[ BUG FIXES ]
-
 - Default unlink_on_exit to 0 for Cache::FastMmap to conform to the CHI API
 
 0.03  Jan 23, 2008
 
-[ INCOMPATIBLE CHANGES ]
-
-- ** Eliminated automatic namespace selection based on caller; namespace now defaults to 'Default', as in Cache::Cache.
-
-[ INSTALLATION ]
-
+- ** Eliminated automatic namespace selection based on caller; namespace now defaults to
+  'Default', as in Cache::Cache.
 - Added 5.6.0 requirement
-- Made Memcached test internal-only for now, since test success depends on presence and configuration
-of an external server
+- Made Memcached test internal-only for now, since test success depends on presence and
+  configuration of an external server
 - Changed README to generate from CHI.pm
 
 0.02  Jan 19, 2008
-
-[ BUG FIXES ]
 
 - Changed Multilevel-Single test to use a temporary root dir
 - Eliminated non-portable file permissions test
 - Concealed use of test package name (Foo::Bar) from PAUSE indexer
 
 0.01  Jan 15, 2008
+
 - Initial version
