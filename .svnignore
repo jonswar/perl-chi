@@ -5,13 +5,15 @@ CHI-*
 MANIFEST
 MANIFEST.bak
 META.yml
-VERSION
 Makefile
 Makefile.old
 README
+TODO
+VERSION
 _build*
 blib*
 cover_db
+cp.yml
 data
 dist
 inc
