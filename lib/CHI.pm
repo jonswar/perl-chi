@@ -1,10 +1,10 @@
 package CHI;
 use 5.006;
-use strict;
-use warnings;
 use Carp;
 use CHI::NullLogger;
 use CHI::Util qw(require_dynamic);
+use strict;
+use warnings;
 
 our $VERSION = '0.05';
 

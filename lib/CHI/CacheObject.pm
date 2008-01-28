@@ -1,7 +1,7 @@
 package CHI::CacheObject;
+use Storable;
 use strict;
 use warnings;
-use Storable;
 use base qw(Class::Accessor::Fast);
 
 use constant f_key              => 0;

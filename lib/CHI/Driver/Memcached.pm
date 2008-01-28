@@ -1,8 +1,8 @@
 package CHI::Driver::Memcached;
-use strict;
-use warnings;
 use Cache::Memcached;
 use Carp;
+use strict;
+use warnings;
 use base qw(CHI::Driver::Base::CacheContainer);
 
 __PACKAGE__->mk_ro_accessors(

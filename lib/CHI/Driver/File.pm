@@ -1,6 +1,4 @@
 package CHI::Driver::File;
-use strict;
-use warnings;
 use Carp;
 use Cwd qw(realpath cwd);
 use CHI::Util
@@ -12,6 +10,8 @@ use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use strict;
+use warnings;
 use base qw(CHI::Driver);
 
 my $Default_Create_Mode = oct(775);
