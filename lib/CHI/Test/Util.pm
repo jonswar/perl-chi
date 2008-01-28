@@ -1,7 +1,7 @@
 package CHI::Test::Util;
+use Test::Builder;
 use strict;
 use warnings;
-use Test::Builder;
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(is_between cmp_bool random_string);

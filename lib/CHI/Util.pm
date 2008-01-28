@@ -1,11 +1,11 @@
 package CHI::Util;
-use strict;
-use warnings;
 use Carp;
 use Data::Dumper;
 use Data::UUID;
 use File::Spec::Functions qw(catdir catfile);
 use Time::Duration::Parse;
+use strict;
+use warnings;
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(

@@ -1,11 +1,11 @@
 package CHI::Test::Class;
-use strict;
-use warnings;
 use CHI::Util qw(dump_one_line require_dynamic);
 use Getopt::Long;
 use Module::Find qw(findallmod);
 use Module::Load::Conditional qw(can_load);
 use Test::More qw();
+use strict;
+use warnings;
 use base qw(Test::Class);
 
 sub load_tests {

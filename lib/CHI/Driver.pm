@@ -1,10 +1,10 @@
 package CHI::Driver;
-use strict;
-use warnings;
 use Carp;
 use CHI::CacheObject;
 use CHI::Util qw(parse_duration);
 use List::MoreUtils qw(pairwise);
+use strict;
+use warnings;
 use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_ro_accessors(

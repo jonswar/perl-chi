@@ -1,12 +1,12 @@
 # $Id: $
 #
 package CHI::Test;
-use strict;
-use warnings;
 use CHI;
 use CHI::Driver::Memory;
 use CHI::Test::Logger;
 use CHI::Util qw(require_dynamic);
+use strict;
+use warnings;
 
 sub import {
     my $class = shift;
