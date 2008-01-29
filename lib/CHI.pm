@@ -704,7 +704,7 @@ Integrate CHI with Mason, and create CHI plugins for Catalyst and CGI::Applicati
 
 =item *
 
-Publish comprehensive cache benchmarks comparing both CHI and non-CHI cache implementations
+Perform cache benchmarks comparing both CHI and non-CHI cache implementations
 
 =item *
 
