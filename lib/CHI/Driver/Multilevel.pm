@@ -2,11 +2,13 @@ package CHI::Driver::Multilevel;
 use Carp;
 use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(uniq);
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver);
 
-__PACKAGE__->mk_ro_accessors(qw(subcaches));
+extends 'CHI::Driver';
+
+has 'subcaches' => ( is => 'ro' );
 
 # TODO: Do a better job determining, and documenting, how constructor and get and set
 # options get passed from parent cache to subcaches

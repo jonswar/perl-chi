@@ -10,9 +10,17 @@ use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver);
+
+extends 'CHI::Driver';
+
+has 'dir_create_mode'   => ( is => 'ro' );
+has 'file_create_mode'  => ( is => 'ro' );
+has 'depth'             => ( is => 'ro' );
+has 'path_to_namespace' => ( is => 'ro' );
+has 'root_dir'          => ( is => 'ro' );
 
 my $Default_Create_Mode = oct(775);
 my $Default_Depth       = 2;
@@ -21,9 +29,6 @@ my $Max_File_Length     = 254;
 
 my $Fetch_Flags = O_RDONLY | O_BINARY;
 my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
-
-__PACKAGE__->mk_ro_accessors(
-    qw(dir_create_mode file_create_mode depth path_to_namespace root_dir));
 
 sub new {
     my $class = shift;

@@ -4,8 +4,11 @@ use List::MoreUtils qw(first_index);
 use Test::Deep qw(cmp_deeply);
 use strict;
 use warnings;
-use base qw(Class::Accessor);
-__PACKAGE__->mk_ro_accessors(qw(msgs));
+use Moose;
+use strict;
+use warnings;
+
+has 'msgs' => ( is => 'ro' );
 
 foreach my $level (qw(fatal error warn info debug)) {
     no strict 'refs';

@@ -1,7 +1,11 @@
 package CHI::Driver::Memory;
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver);
+
+extends 'CHI::Driver';
+
+has 'datastore' => ( is => 'ro' );
 
 my $Default_Datastore = {};
 

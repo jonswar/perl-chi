@@ -3,28 +3,23 @@ use Carp;
 use CHI::CacheObject;
 use CHI::Util qw(parse_duration);
 use List::MoreUtils qw(pairwise);
+use Moose;
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
 
-__PACKAGE__->mk_ro_accessors(
-    qw(default_set_options short_driver_name namespace));
-__PACKAGE__->mk_accessors(qw(is_subcache on_get_error on_set_error));
+# Call this when updating default set options
+my @set_options_trigger =
+  ( trigger => sub { $_[0]->_compute_default_set_options() } );
 
-# When these are set, call _compute_default_set_options again.
-foreach my $field qw(expires_at expires_in expires_variance) {
-    no strict 'refs';
-    *{ __PACKAGE__ . "::$field" } = sub {
-        my $self = shift;
-        if (@_) {
-            $self->{$field} = $_[0];
-            $self->_compute_default_set_options();
-        }
-        else {
-            return $self->{$field};
-        }
-    };
-}
+has 'default_set_options' => ( is => 'ro' );
+has 'expires_at'          => ( is => 'rw', @set_options_trigger );
+has 'expires_in'          => ( is => 'rw', @set_options_trigger );
+has 'expires_variance'    => ( is => 'rw', @set_options_trigger );
+has 'is_subcache'         => ( is => 'rw' );
+has 'namespace'           => ( is => 'ro' );
+has 'on_get_error'        => ( is => 'rw' );
+has 'on_set_error'        => ( is => 'rw' );
+has 'short_driver_name'   => ( is => 'ro' );
 
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {

@@ -2,7 +2,6 @@ package CHI::CacheObject;
 use Storable;
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
 
 use constant f_key              => 0;
 use constant f_raw_value        => 1;
@@ -15,6 +14,9 @@ use constant f_value            => 7;
 
 my $Metadata_Format = "LLLCC";
 my $Metadata_Length = 14;
+
+# Eschewing Moose and hash-based objects for this class to get the extra speed.
+# Eventually will probably write in C anyway.
 
 sub key              { $_[0]->[f_key] }
 sub created_at       { $_[0]->[f_created_at] }

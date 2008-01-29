@@ -3,11 +3,14 @@ use Cache::Cache;
 use Carp;
 use CHI::Util qw(require_dynamic);
 use Hash::MoreUtils qw(slice_exists);
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver::Base::CacheContainer);
 
-__PACKAGE__->mk_ro_accessors(qw(cc_class cc_options));
+extends 'CHI::Driver::Base::CacheContainer';
+
+has 'cc_class'   => ( is => 'ro' );
+has 'cc_options' => ( is => 'ro' );
 
 sub new {
     my $class = shift;

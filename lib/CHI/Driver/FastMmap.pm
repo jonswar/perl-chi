@@ -4,14 +4,19 @@ use CHI::Util qw(escape_for_filename unescape_for_filename);
 use File::Path qw(mkpath);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver::Base::CacheContainer);
+
+extends 'CHI::Driver::Base::CacheContainer';
+
+has 'dir_create_mode' => ( is => 'ro' );
+has 'fm_cache'        => ( is => 'ro' );
+has 'share_file'      => ( is => 'ro' );
+has 'root_dir'        => ( is => 'ro' );
 
 my $Default_Root_Dir = catdir( tmpdir(), "chi-driver-fastmmap" );
 my $Default_Create_Mode = oct(775);
-
-__PACKAGE__->mk_ro_accessors(qw(dir_create_mode fm_cache share_file root_dir));
 
 sub new {
     my $class = shift;

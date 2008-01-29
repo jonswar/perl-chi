@@ -1,12 +1,17 @@
 package CHI::Driver::Memcached;
 use Cache::Memcached;
 use Carp;
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver::Base::CacheContainer);
 
-__PACKAGE__->mk_ro_accessors(
-    qw(compress_threshold debug memd no_rehash servers));
+extends 'CHI::Driver::Base::CacheContainer';
+
+has 'compress_threshold' => ( is => 'ro' );
+has 'debug'              => ( is => 'ro' );
+has 'memd'               => ( is => 'ro' );
+has 'no_rehash'          => ( is => 'ro' );
+has 'servers'            => ( is => 'ro' );
 
 sub new {
     my $class = shift;

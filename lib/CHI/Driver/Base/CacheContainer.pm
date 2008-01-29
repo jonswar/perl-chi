@@ -1,7 +1,9 @@
 package CHI::Driver::Base::CacheContainer;
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver);
+
+extends 'CHI::Driver';
 
 sub fetch {
     my ( $self, $key ) = @_;

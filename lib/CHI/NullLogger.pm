@@ -1,7 +1,7 @@
 package CHI::NullLogger;
+use Moose;
 use strict;
 use warnings;
-use base qw(Class::Accessor::Fast);
 
 foreach my $level (qw(fatal error warn info debug)) {
     no strict 'refs';
