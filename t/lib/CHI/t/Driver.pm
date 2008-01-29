@@ -269,6 +269,31 @@ sub test_expires_never : Test(6) {
     $test_expires_never->('never');
 }
 
+sub test_expires_defaults : Test(4) {
+    my $self = shift;
+
+    my $start_time = time();
+    local $CHI::Driver::Test_Time = $start_time;
+    my $cache;
+
+    my $set_and_confirm_expires_at = sub {
+        my ($expected_expires_at) = @_;
+        my ($key, $value) = (random_string(10), random_string(10));
+        $cache->set($key, $value);
+        is($cache->get_expires_at($key), $expected_expires_at);
+    };
+    
+    $cache = $self->new_cache(expires_in => 10);
+    $set_and_confirm_expires_at->($start_time + 10);
+    $cache->expires_in(20);
+    $set_and_confirm_expires_at->($start_time + 20);
+
+    $cache = $self->new_cache(expires_at => $start_time + 30);
+    $set_and_confirm_expires_at->($start_time + 30);
+    $cache->expires_at($start_time + 40);
+    $set_and_confirm_expires_at->($start_time + 40);
+}
+
 sub test_expires_manually : Test(3) {
     my $self = shift;
 
