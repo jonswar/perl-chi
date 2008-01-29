@@ -704,15 +704,27 @@ Integrate CHI with Mason, and create CHI plugins for Catalyst and CGI::Applicati
 
 =item *
 
-Switch to Moose for CHI classes
+Publish comprehensive cache benchmarks comparing both CHI and non-CHI cache implementations
 
 =item *
 
-Add BerkeleyDB and DBI drivers
+Separate FastMmap and Memcached drivers into their own CPAN distributions
+
+=item *
+
+Release BerkeleyDB and DBI drivers as separate CPAN distributions
 
 =item *
 
 Add docs comparing various strategies for reducing miss stampedes and cost of recomputes
+
+=item *
+
+Add expires_next syntax (e.g. expires_next => 'hour')
+
+=item *
+
+Support automatic serialization and escaping of keys
 
 =item *
 

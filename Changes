@@ -2,7 +2,8 @@ Revision history for CHI
 
 0.05  Jan 29, 2008
 
-- Switch to Moose
+- Switched to Moose
+- Added TODO to CHI.pm pod
 
 0.04  Jan 25, 2008
 
