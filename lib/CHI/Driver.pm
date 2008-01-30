@@ -4,22 +4,27 @@ use CHI::CacheObject;
 use CHI::Util qw(parse_duration);
 use List::MoreUtils qw(pairwise);
 use Moose;
+use Moose::Util::TypeConstraints;
 use strict;
 use warnings;
 
 # Call this when updating default set options
-my @set_options_trigger =
+my @trigger_set_options =
   ( trigger => sub { $_[0]->_compute_default_set_options() } );
 
+type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)/ };
+
 has 'default_set_options' => ( is => 'ro' );
-has 'expires_at'          => ( is => 'rw', @set_options_trigger );
-has 'expires_in'          => ( is => 'rw', @set_options_trigger );
-has 'expires_variance'    => ( is => 'rw', @set_options_trigger );
+has 'expires_at'          => ( is => 'rw', @trigger_set_options );
+has 'expires_in'          => ( is => 'rw', @trigger_set_options );
+has 'expires_variance'    => ( is => 'rw', @trigger_set_options );
 has 'is_subcache'         => ( is => 'rw' );
-has 'namespace'           => ( is => 'ro' );
-has 'on_get_error'        => ( is => 'rw' );
-has 'on_set_error'        => ( is => 'rw' );
+has 'namespace'           => ( is => 'ro', isa => 'Str', default => 'Default' );
+has 'on_get_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
+has 'on_set_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'short_driver_name'   => ( is => 'ro' );
+
+__PACKAGE__->meta->make_immutable();
 
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
@@ -33,52 +38,12 @@ use constant Max_Time => 0xffffffff;
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
 
-sub new {
-    my $class = shift;
-
-    my $self = $class->SUPER::new(@_);
-
-    my %defaults = (
-        driver       => 'Memory',
-        namespace    => 'Default',
-        on_get_error => 'log',
-        on_set_error => 'log',
-    );
-    while ( my ( $key, $value ) = each(%defaults) ) {
-        $self->{$key} = $value if !defined( $self->{$key} );
-    }
-
-    # Default the namespace to the first non-chi caller, or 'Default' if none found
-    #
-    my $level = 0;
-    while ( !defined( $self->{namespace} ) ) {
-        $level++;
-        my $caller = caller($level);
-        if ( !defined($caller) ) {
-            $self->{namespace} = 'Default';
-        }
-        elsif (
-            $caller =~ /^CHI(?::|$)/
-            || (   $caller->can('isa_chi_class')
-                && $caller->isa_chi_class() )
-          )
-        {
-            next;
-        }
-        else {
-            $self->{namespace} = $caller;
-        }
-    }
+sub BUILD {
+    my ( $self, $params ) = @_;
 
     $self->_compute_default_set_options();
 
-    # TODO: validate:
-    # on_set_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
-    # on_get_error      => 'warn'   ('ignore', 'warn', 'die', sub { })
-
     ( $self->{short_driver_name} = ref($self) ) =~ s/^CHI::Driver:://;
-
-    return $self;
 }
 
 sub _compute_default_set_options {

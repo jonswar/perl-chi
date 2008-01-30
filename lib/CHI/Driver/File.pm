@@ -16,31 +16,29 @@ use warnings;
 
 extends 'CHI::Driver';
 
-has 'dir_create_mode'   => ( is => 'ro' );
-has 'file_create_mode'  => ( is => 'ro' );
-has 'depth'             => ( is => 'ro' );
+has 'depth'            => ( is => 'ro', isa => 'Int', default => 2 );
+has 'dir_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(775) );
+has 'file_create_mode' => ( is => 'ro', isa => 'Int', default => oct(666) );
+has 'root_dir'         => ( is => 'ro', isa => 'Str' );
 has 'path_to_namespace' => ( is => 'ro' );
-has 'root_dir'          => ( is => 'ro' );
 
-my $Default_Create_Mode = oct(775);
-my $Default_Depth       = 2;
-my $Default_Root_Dir    = catdir( tmpdir(), "chi-driver-file" );
-my $Max_File_Length     = 254;
+__PACKAGE__->meta->make_immutable();
 
-my $Fetch_Flags = O_RDONLY | O_BINARY;
-my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
+my $Max_File_Length = 254;
+my $Fetch_Flags     = O_RDONLY | O_BINARY;
+my $Store_Flags     = O_WRONLY | O_CREAT | O_BINARY;
 
-sub new {
-    my $class = shift;
-    my $self  = $class->SUPER::new(@_);
-    $self->{dir_create_mode}  ||= $Default_Create_Mode;
-    $self->{file_create_mode} ||= $self->{dir_create_mode} & oct(666);
-    $self->{depth}            ||= $Default_Depth;
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    # Allow 'cache_root' for backward compatibility with Cache::Filecache
     $self->{root_dir} ||=
-      ( delete( $self->{cache_root} ) || $Default_Root_Dir );
+      ( delete( $self->{cache_root} )
+          || catdir( tmpdir(), "chi-driver-file" ) );
+
+    # Calculate directory corresponding to our namespace
     $self->{path_to_namespace} =
       catdir( $self->root_dir, escape_for_filename( $self->{namespace} ) );
-    return $self;
 }
 
 sub desc {
@@ -285,8 +283,8 @@ Permissions mode to use when creating directories. Defaults to 0775.
 
 =item file_create_mode
 
-Permissions mode to change cache files to after creation, using chmod, e.g. 0666 or
-0664. Default is to not use chmod and just create files with the current umask.
+Permissions mode to use when creating files, modified by the current umask. Defaults to
+0666.
 
 =item depth
 

@@ -13,7 +13,7 @@ sub readonly_cache {
     );
 }
 
-sub test_set_errors : Test(13) {
+sub test_set_errors : Test(14) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
     my $error_pattern = qr/error setting key 'medium' in .*: read-only cache/;
@@ -49,6 +49,12 @@ sub test_set_errors : Test(13) {
     ok( !defined( $cache->get($key) ), "custom - miss" );
     like( $err_msg, $error_pattern, "custom - got msg" );
     is( $err_key, $key, "custom - got key" );
+
+    throws_ok(
+        sub { readonly_cache('bad') },
+        qr/Attribute \(on_set_error\) does not pass the type constraint \(OnError\) with 'bad'/,
+        "bad - dies"
+    );
 }
 
 1;

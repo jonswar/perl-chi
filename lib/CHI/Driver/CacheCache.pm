@@ -9,26 +9,23 @@ use warnings;
 
 extends 'CHI::Driver::Base::CacheContainer';
 
-has 'cc_class'   => ( is => 'ro' );
-has 'cc_options' => ( is => 'ro' );
+has 'cc_class'   => ( is => 'ro', isa => 'Str',     required => 1 );
+has 'cc_options' => ( is => 'ro', isa => 'HashRef', required => 1 );
 
-sub new {
-    my $class = shift;
-    my $self  = $class->SUPER::new(@_);
+__PACKAGE__->meta->make_immutable();
 
-    my $cc_class = $self->{cc_class}
-      or croak "missing required parameter 'cc_class'";
-    my $cc_options = $self->{cc_options}
-      or croak "missing required parameter 'cc_options'";
-    my %subparams = slice_exists( $_[0], 'namespace' );
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    my $cc_class   = $self->{cc_class};
+    my $cc_options = $self->{cc_options};
+    my %subparams  = slice_exists( $params, 'namespace' );
 
     require_dynamic($cc_class);
 
     my %final_cc_params = ( %subparams, %{$cc_options} );
     $self->{_contained_cache} = $self->{cc_cache} =
       $cc_class->new( \%final_cc_params );
-
-    return $self;
 }
 
 1;

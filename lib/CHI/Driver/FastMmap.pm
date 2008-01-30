@@ -1,6 +1,6 @@
 package CHI::Driver::FastMmap;
 use Cache::FastMmap;
-use CHI::Util qw(escape_for_filename unescape_for_filename);
+use CHI::Util qw(dp escape_for_filename unescape_for_filename);
 use File::Path qw(mkpath);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
@@ -10,21 +10,21 @@ use warnings;
 
 extends 'CHI::Driver::Base::CacheContainer';
 
-has 'dir_create_mode' => ( is => 'ro' );
+has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'fm_cache'        => ( is => 'ro' );
 has 'share_file'      => ( is => 'ro' );
-has 'root_dir'        => ( is => 'ro' );
+has 'root_dir'        => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => catdir( tmpdir(), "chi-driver-fastmmap" )
+);
+has 'unlink_on_exit' => ( is => 'ro', isa => 'Int', default => 0 );
 
-my $Default_Root_Dir = catdir( tmpdir(), "chi-driver-fastmmap" );
-my $Default_Create_Mode = oct(775);
+__PACKAGE__->meta->make_immutable();
 
-sub new {
-    my $class = shift;
-    my $self  = $class->SUPER::new(@_);
+sub BUILD {
+    my ( $self, $params ) = @_;
 
-    $self->{root_dir}        ||= $Default_Root_Dir;
-    $self->{dir_create_mode} ||= $Default_Create_Mode;
-    $self->{unlink_on_exit}  ||= 0;
     mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
       if !-d $self->{root_dir};
     $self->{share_file} =
@@ -36,8 +36,6 @@ sub new {
     );
     $self->{_contained_cache} = $self->{fm_cache} =
       Cache::FastMmap->new(%fm_params);
-
-    return $self;
 }
 
 sub get_keys {

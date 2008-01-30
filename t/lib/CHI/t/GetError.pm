@@ -13,7 +13,7 @@ sub writeonly_cache {
     );
 }
 
-sub test_get_errors : Test(9) {
+sub test_get_errors : Test(10) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
     my $error_pattern = qr/error getting key 'medium' in .*: write-only cache/;
@@ -48,6 +48,12 @@ sub test_get_errors : Test(9) {
     ok( !defined( $cache->get($key) ), "custom - miss" );
     like( $err_msg, $error_pattern, "custom - got msg" );
     is( $err_key, $key, "custom - got key" );
+
+    throws_ok(
+        sub { writeonly_cache('bad') },
+        qr/Attribute \(on_get_error\) does not pass the type constraint \(OnError\) with 'bad'/,
+        "bad - dies"
+    );
 }
 
 1;
