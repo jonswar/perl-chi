@@ -2,6 +2,8 @@ package CHI::t::Driver::File;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Test::Util qw(random_string);
+use CHI::Util qw(fast_catdir);
 use File::Basename;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
@@ -21,18 +23,17 @@ sub set_standard_keys_and_values {
     my ( $keys, $values ) = $self->SUPER::set_standard_keys_and_values();
 
     # keys have max length of 255 or so
-    # but on windows xp, the full filename is limited to 255 chars
-    # TODO: address this - maybe go back to SHA1 for file caches by default
-    $keys->{'large'} = scalar( 'ab' x 64 );
+    # but on windows xp, the full pathname is limited to 255 chars as well
+    $keys->{'large'} = scalar( 'ab' x ($^O eq 'MSWin32' ? 64 : 120) );
 
     return ( $keys, $values );
 }
 
-sub test_path_to_key : Test(3) {
+sub test_path_to_key : Test(5) {
     my ($self) = @_;
 
     my $key;
-    my $cache = $self->new_cache;
+    my $cache = $self->new_cache(namespace => random_string(10));
     my $log   = CHI::Test::Logger->new();
     CHI->logger($log);
 
@@ -53,7 +54,22 @@ sub test_path_to_key : Test(3) {
     );
     my $namespace = $cache->namespace();
     $log->contains_ok(
-        qr/key '[^\']+' in namespace '$namespace' is over \d+ chars when escaped; cannot cache/
+        qr/escaped key '.+' in namespace '\Q$namespace\E' is over \d+ chars; cannot cache/
+    );
+
+    # Full path is too long
+    my $max_path_length = ($^O eq 'MSWin32' ? 254 : 1023);
+    my $long_root_dir = fast_catdir($root_dir, scalar("a" x ($max_path_length - 60)));
+    $cache = $self->new_cache(root_dir => $long_root_dir, namespace => random_string(10));
+    $key = 'abcd' x 25;
+    $log->clear();
+    ok(
+        !defined( $cache->path_to_key($key) ),
+        "path_to_key undefined for too-long key"
+    );
+    $namespace = $cache->namespace();
+    $log->contains_ok(
+        qr/full escaped path for key '.+' in namespace '\Q$namespace\E' is over \d+ chars; cannot cache/
     );
 }
 

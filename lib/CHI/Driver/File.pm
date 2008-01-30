@@ -24,9 +24,8 @@ has 'path_to_namespace' => ( is => 'ro' );
 
 __PACKAGE__->meta->make_immutable();
 
-# on windows xp, the full filename is limited to 255 chars
-# TODO: address this - maybe go back to SHA1 for file caches by default
-my $Max_File_Length = 160;
+my $Max_File_Length = 254;
+my $Max_Path_Length = ( $^O eq 'MSWin32' ? 254 : 1023 );
 my $Fetch_Flags     = O_RDONLY | O_BINARY;
 my $Store_Flags     = O_WRONLY | O_CREAT | O_BINARY;
 
@@ -118,7 +117,7 @@ sub store {
 
     # Rename can fail in rare race conditions...try multiple times
     #
-    for ( my $try = 0 ; $try < 10 ; $try++ ) {
+    for ( my $try = 0 ; $try < 3 ; $try++ ) {
         last if ( rename( $temp_file, $file ) );
     }
     if ( -f $temp_file ) {
@@ -207,11 +206,11 @@ sub path_to_key {
     #
     my $filename = escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
-        my $log       = CHI->logger();
         my $namespace = $self->{namespace};
-        $log->warn(
-            "key '$key' in namespace '$namespace' is over $Max_File_Length chars when escaped; cannot cache"
-        );
+        CHI->logger()
+          ->warn(
+            "escaped key '$key' in namespace '$namespace' is over $Max_File_Length chars; cannot cache"
+          );
         return undef;
     }
 
@@ -225,6 +224,15 @@ sub path_to_key {
     }
     else {
         $filepath = fast_catfile( @paths, $filename );
+    }
+
+    if ( length($filepath) > $Max_Path_Length ) {
+        my $namespace = $self->{namespace};
+        CHI->logger()
+          ->warn(
+            "full escaped path for key '$key' in namespace '$namespace' is over $Max_Path_Length chars; cannot cache"
+          );
+        return undef;
     }
 
     return $filepath;
