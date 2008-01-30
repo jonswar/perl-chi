@@ -3,6 +3,7 @@ Revision history for CHI
 0.05  Jan 30, 2008
 
 - Switched to Moose
+- Added maximum full path length check to File driver, mainly for MSWin32
 - Added TODO to pod
 
 0.04  Jan 25, 2008
