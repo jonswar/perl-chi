@@ -21,7 +21,9 @@ sub set_standard_keys_and_values {
     my ( $keys, $values ) = $self->SUPER::set_standard_keys_and_values();
 
     # keys have max length of 255 or so
-    $keys->{'large'} = scalar( 'ab' x 125 );
+    # but on windows xp, the full filename is limited to 255 chars
+    # TODO: address this - maybe go back to SHA1 for file caches by default
+    $keys->{'large'} = scalar( 'ab' x 64 );
 
     return ( $keys, $values );
 }

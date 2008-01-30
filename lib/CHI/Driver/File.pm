@@ -24,7 +24,9 @@ has 'path_to_namespace' => ( is => 'ro' );
 
 __PACKAGE__->meta->make_immutable();
 
-my $Max_File_Length = 254;
+# on windows xp, the full filename is limited to 255 chars
+# TODO: address this - maybe go back to SHA1 for file caches by default
+my $Max_File_Length = 160;
 my $Fetch_Flags     = O_RDONLY | O_BINARY;
 my $Store_Flags     = O_WRONLY | O_CREAT | O_BINARY;
 
