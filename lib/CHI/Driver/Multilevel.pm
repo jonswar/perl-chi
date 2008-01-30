@@ -24,7 +24,7 @@ sub BUILD {
     foreach my $subcache (@$subcaches) {
         if ( ref($subcache) eq 'HASH' ) {
             my $subcache_options = $subcache;
-            my $chi_class        = 'CHI';   # TODO: make this work with CHI subclasses
+            my $chi_class = 'CHI';    # TODO: make this work with CHI subclasses
             $subcache = $chi_class->new( %subparams, %$subcache_options );
             if (
                 my ($option) =

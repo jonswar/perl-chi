@@ -7,7 +7,8 @@ extends 'CHI::Driver';
 
 my $Default_Datastore = {};
 
-has 'datastore' => ( is => 'ro', isa => 'HashRef', default => sub { $Default_Datastore } );
+has 'datastore' =>
+  ( is => 'ro', isa => 'HashRef', default => sub { $Default_Datastore } );
 
 __PACKAGE__->meta->make_immutable();
 
