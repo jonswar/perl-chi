@@ -2,6 +2,8 @@ Revision history for CHI
 
 0.06  Jan 30, 2008
 
+- Fix clear() in Memcached driver - reported by Justin Ellison
+
 0.05  Jan 30, 2008
 
 - Switched to Moose

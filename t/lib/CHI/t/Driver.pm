@@ -11,7 +11,6 @@ my ( $cache, $cache_class, %keys, %values, @keynames );
 
 # Flags indicating what each test driver supports
 sub supports_clear    { 1 }
-sub supports_get_keys { 1 }
 
 sub standard_keys_and_values : Test(startup) {
     my ($self) = @_;
@@ -501,13 +500,18 @@ sub test_multi_no_keys : Test(4) {
 sub test_clear : Test(10) {
     my $self = shift;
 
-    return "$cache_class does not support clear()" if !$self->supports_clear();
-    $self->set_some_keys($cache);
-    $cache->clear();
-    cmp_deeply( [ $cache->get_keys ], [], "get_keys after clear" );
-    while ( my ( $keyname, $key ) = each(%keys) ) {
-        ok( !defined $cache->get($key),
-            "key '$keyname' no longer defined after clear" );
+    if ($self->supports_clear()) {
+        $self->set_some_keys($cache);
+        $cache->clear();
+        cmp_deeply( [ $cache->get_keys ], [], "get_keys after clear" );
+        while ( my ( $keyname, $key ) = each(%keys) ) {
+            ok( !defined $cache->get($key),
+                "key '$keyname' no longer defined after clear" );
+        }
+    }
+    else {
+        throws_ok(sub { $cache->clear() }, qr/not supported/, "clear not supported");
+        SKIP: { skip "clear not supported", 9 }
     }
 }
 

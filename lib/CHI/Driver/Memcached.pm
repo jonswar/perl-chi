@@ -25,6 +25,12 @@ sub BUILD {
       Cache::Memcached->new( \%mc_params );
 }
 
+sub clear {
+    my ($self) = @_;
+
+    $self->{_contained_cache}->flush_all();
+}
+
 # Memcached supports fast multiple get
 #
 
@@ -53,11 +59,11 @@ sub get_multi_arrayref {
 #
 
 sub get_keys {
-    carp "get_keys not supported for " . __PACKAGE__;
+    croak "get_keys not supported for " . __PACKAGE__;
 }
 
 sub get_namespaces {
-    carp "get_namespaces not supported for " . __PACKAGE__;
+    croak "get_namespaces not supported for " . __PACKAGE__;
 }
 
 1;

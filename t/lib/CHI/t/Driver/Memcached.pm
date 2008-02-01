@@ -63,7 +63,12 @@ sub set_standard_keys_and_values {
     return ( $keys, $values );
 }
 
-sub supports_clear    { 0 }
-sub supports_get_keys { 0 }
+sub test_get_keys : Test(1) {
+    my $self = shift;
+
+    # Make sure we get a 'not supported' error with regular memcached driver
+    my $cache = $self->SUPER::new_cache(driver => 'Memcached', servers => [$testaddr]);
+    throws_ok(sub { $cache->get_keys() }, qr/not supported/, "get_keys not supported");
+}
 
 1;
