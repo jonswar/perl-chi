@@ -22,7 +22,9 @@ has 'is_subcache'         => ( is => 'rw' );
 has 'namespace'           => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
+has 'read_only'           => ( is => 'ro' );
 has 'short_driver_name'   => ( is => 'ro' );
+has 'write_only'          => ( is => 'ro' );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -77,7 +79,10 @@ sub get {
 
     # Fetch cache object
     #
-    my $data = $params{data} || eval { $self->fetch($key) };
+    my $data = $params{data}
+      || eval {
+        $self->{write_only} ? croak('write-only cache') : $self->fetch($key);
+      };
     if ( my $error = $@ ) {
         $self->_handle_error( $key, $error, 'getting', $self->on_get_error() );
         return;
@@ -175,6 +180,14 @@ sub set {
     my ( $self, $key, $value, $options ) = @_;
     croak "must specify key" unless defined($key);
     return unless defined($value);
+
+    # Check for read-only flag
+    #
+    if ( $self->{read_only} ) {
+        $self->_handle_error( $key, 'read-only cache',
+            'setting', $self->on_set_error() );
+        return;
+    }
 
     # Fill in $options if not passed, copy if passed, and apply defaults.
     #

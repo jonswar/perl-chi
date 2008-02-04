@@ -191,6 +191,14 @@ I<coderef> - call this code reference with three arguments: an appropriate messa
 
 =back
 
+=item read_only [BOOL]
+
+Set the cache to be read-only. Any writes will fail and be handled according to the L</on_set_error> setting.
+
+=item write_only [BOOL]
+
+Set the cache to be write-only. Any reads will fail and be handled according to the L</on_get_error> setting.
+
 =back    
 
 Some drivers will take additional constructor options. For example, the File driver takes
