@@ -52,7 +52,7 @@ sub test_get_errors : Test(10) {
 
     throws_ok(
         sub { writeonly_cache('bad') },
-        qr/Attribute \(on_get_error\) does not pass the type constraint \(OnError\) with 'bad'/,
+        qr/Attribute .* does not pass the type constraint/,
         "bad - dies"
     );
 }
