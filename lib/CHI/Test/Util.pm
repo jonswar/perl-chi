@@ -36,13 +36,12 @@ sub cmp_bool {
     }
 }
 
-sub skip_until
-{
-    my ($until_str, $how_many, $code) = @_;
+sub skip_until {
+    my ( $until_str, $how_many, $code ) = @_;
 
     my $until = str2time($until_str);
-    SKIP: {
-        skip "until $until_str", $how_many if (time < $until);
+  SKIP: {
+        skip "until $until_str", $how_many if ( time < $until );
         $code->();
     }
 }
