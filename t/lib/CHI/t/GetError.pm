@@ -8,7 +8,8 @@ sub writeonly_cache {
     my ($on_get_error) = @_;
 
     return CHI->new(
-        driver_class => 'CHI::Test::Driver::Writeonly',
+        driver => 'Memory',
+        write_only => 1,
         on_get_error => $on_get_error
     );
 }
