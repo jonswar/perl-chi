@@ -1,10 +1,12 @@
 package CHI::Test::Util;
+use Date::Parse;
 use Test::Builder;
+use Test::More;
 use strict;
 use warnings;
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(is_between cmp_bool random_string);
+our @EXPORT_OK = qw(is_between cmp_bool random_string skip_until);
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;
@@ -31,6 +33,17 @@ sub cmp_bool {
     }
     else {
         $tb->ok( 1, $desc );
+    }
+}
+
+sub skip_until
+{
+    my ($until_str, $how_many, $code) = @_;
+
+    my $until = str2time($until_str);
+    SKIP: {
+        skip "until $until_str", $how_many if (time < $until);
+        $code->();
     }
 }
 
