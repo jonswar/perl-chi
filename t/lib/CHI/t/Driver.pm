@@ -156,7 +156,7 @@ sub test_deep_copy : Test(8) {
     }
 }
 
-sub test_expires_immediately : Test(36) {
+sub test_expires_immediately : Test(32) {
     my $self = shift;
 
     # Expires immediately
