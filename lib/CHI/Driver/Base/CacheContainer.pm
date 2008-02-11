@@ -5,6 +5,8 @@ use warnings;
 
 extends 'CHI::Driver';
 
+__PACKAGE__->meta->make_immutable();
+
 sub fetch {
     my ( $self, $key ) = @_;
 

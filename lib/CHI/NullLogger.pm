@@ -9,4 +9,6 @@ foreach my $level (qw(fatal error warn info debug)) {
     *{ __PACKAGE__ . "::is_$level" } = sub { undef };
 }
 
+__PACKAGE__->meta->make_immutable();
+
 1;

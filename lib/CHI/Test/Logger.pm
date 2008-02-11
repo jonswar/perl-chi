@@ -20,6 +20,8 @@ foreach my $level (qw(fatal error warn info debug)) {
     *{ __PACKAGE__ . "::is_$level" } = sub { 1 };
 }
 
+__PACKAGE__->meta->make_immutable();
+
 sub contains_ok {
     my ( $self, $regex ) = @_;
     my $tb = Test::Builder->new();
