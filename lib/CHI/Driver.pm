@@ -349,6 +349,38 @@ sub is_empty {
     return !$self->get_keys();
 }
 
+{
+
+    # Escape/unescape keys and namespaces for filename safety - used by various
+    # drivers.  Adapted from URI::Escape, but use '+' for escape character, like Mason's
+    # compress_path.
+    #
+    my %escapes;
+    for ( 0 .. 255 ) {
+        $escapes{ chr($_) } = sprintf( "+%02x", $_ );
+    }
+
+    my $_fail_hi = sub {
+        my $chr = shift;
+        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}",
+            ord($chr) );
+    };
+
+    sub escape_for_filename {
+        my ( $self, $text ) = @_;
+
+        $text =~ s/([^\w\=\-\~])/$escapes{$1} || $_fail_hi->($1)/ge;
+        $text;
+    }
+
+    sub unescape_for_filename {
+        my ( $self, $str ) = @_;
+
+        $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
+        $str;
+    }
+}
+
 sub _set_object {
     my ( $self, $key, $obj ) = @_;
 

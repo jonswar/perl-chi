@@ -2,7 +2,7 @@ package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
 use CHI::Util
-  qw(escape_for_filename fast_catdir fast_catfile unescape_for_filename unique_id);
+  qw(fast_catdir fast_catfile unique_id);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
@@ -39,7 +39,7 @@ sub BUILD {
 
     # Calculate directory corresponding to our namespace
     $self->{path_to_namespace} =
-      catdir( $self->root_dir, escape_for_filename( $self->{namespace} ) );
+      catdir( $self->root_dir, $self->escape_for_filename( $self->{namespace} ) );
 }
 
 sub desc {
@@ -167,7 +167,7 @@ sub _collect_keys_via_file_find {
     my $key_start = length($namespace_dir) + 1 + $self->depth * 2;
     foreach my $filepath (@$filepaths) {
         my $key = substr( $filepath, $key_start, -4 );
-        $key = unescape_for_filename( join( "", splitdir($key) ) );
+        $key = $self->unescape_for_filename( join( "", splitdir($key) ) );
         push( @keys, $key );
     }
     return @keys;
@@ -178,7 +178,7 @@ sub get_namespaces {
 
     my @contents = read_dir( $self->root_dir() );
     my @namespaces =
-      map { unescape_for_filename($_) }
+      map { $self->unescape_for_filename($_) }
       grep { -d fast_catdir( $self->root_dir(), $_ ) } @contents;
     return @namespaces;
 }
@@ -204,7 +204,7 @@ sub path_to_key {
 
     # Escape key to make safe for filesystem
     #
-    my $filename = escape_for_filename($key) . ".dat";
+    my $filename = $self->escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
         my $namespace = $self->{namespace};
         CHI->logger()

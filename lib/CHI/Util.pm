@@ -11,12 +11,10 @@ use base qw(Exporter);
 our @EXPORT_OK = qw(
   dp
   dump_one_line
-  escape_for_filename
   fast_catdir
   fast_catfile
   parse_duration
   require_dynamic
-  unescape_for_filename
   unique_id
 );
 
@@ -27,8 +25,8 @@ sub _dump_value_with_caller {
       Data::Dumper->new( [$value] )->Indent(1)->Sortkeys(1)->Quotekeys(0)
       ->Terse(1)->Dump();
     my @caller = caller(1);
-    return
-      sprintf( "[%s line %d] [%d] %s\n", $caller[1], $caller[2], $$, $dump );
+    return sprintf( "[dp at %s line %d.] [%d] %s\n",
+        $caller[1], $caller[2], $$, $dump );
 }
 
 sub dp {
@@ -65,35 +63,6 @@ sub require_dynamic {
         my $hex = sprintf( '%s%04x', $uuid, $suffix );
         $suffix = ( $suffix + 1 ) & 0xffff;
         return $hex;
-    }
-}
-
-{
-
-    # Adapted from URI::Escape, but use '+' for escape character, like Mason's compress_path
-    my %escapes;
-    for ( 0 .. 255 ) {
-        $escapes{ chr($_) } = sprintf( "+%02x", $_ );
-    }
-
-    sub _fail_hi {
-        my $chr = shift;
-        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}",
-            ord($chr) );
-    }
-
-    sub escape_for_filename {
-        my ($text) = @_;
-
-        $text =~ s/([^\w\=\-\~])/$escapes{$1} || _fail_hi($1)/ge;
-        $text;
-    }
-
-    sub unescape_for_filename {
-        my ($str) = @_;
-
-        $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
-        $str;
     }
 }
 

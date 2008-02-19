@@ -32,7 +32,7 @@ sub new {
       unless defined $driver_class;
     require_dynamic($driver_class);
 
-    return $driver_class->new( %params );
+    return $driver_class->new(%params);
 }
 
 1;

@@ -1,6 +1,6 @@
 package CHI::Driver::FastMmap;
 use Cache::FastMmap;
-use CHI::Util qw(dp escape_for_filename unescape_for_filename);
+use CHI::Util qw(dp);
 use File::Path qw(mkpath);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
@@ -28,7 +28,7 @@ sub BUILD {
     mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
       if !-d $self->{root_dir};
     $self->{share_file} =
-      catfile( $self->{root_dir}, escape_for_filename( $self->{namespace} ) );
+      catfile( $self->{root_dir}, $self->escape_for_filename( $self->{namespace} ) );
     my %fm_params = (
         raw_values => 1,
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
@@ -49,7 +49,7 @@ sub get_namespaces {
 
     my @contents = read_dir( $self->root_dir() );
     my @namespaces =
-      map { unescape_for_filename($_) }
+      map { $self->unescape_for_filename($_) }
       grep { -d catdir( $self->root_dir(), $_ ) } @contents;
     return @namespaces;
 }

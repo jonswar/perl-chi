@@ -7,7 +7,7 @@ use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
 use base qw(CHI::Test::Class);
 
-my ( $cache, $cache_class, %keys, %values, @keynames );
+my ( $cache, $cache_class, %keys, %values, @keynames, $key_count );
 
 # Flags indicating what each test driver supports
 sub supports_clear { 1 }
@@ -16,9 +16,10 @@ sub standard_keys_and_values : Test(startup) {
     my ($self) = @_;
 
     my ( $keys_ref, $values_ref ) = $self->set_standard_keys_and_values();
-    %keys     = %$keys_ref;
-    %values   = %$values_ref;
-    @keynames = keys(%keys);
+    %keys      = %$keys_ref;
+    %values    = %$values_ref;
+    @keynames  = keys(%keys);
+    $key_count = scalar(@keynames);
 }
 
 sub kvpair {
@@ -74,10 +75,15 @@ sub set_standard_keys_and_values {
         'arrayref' => 'arrayref',
         'hashref'  => 'hashref',
 
-        # These generate 'Wide character in print' warnings when logging about the gets/sets...
-        # not sure how to handle this...
-        #     'utf8_partial' => "abc\x{263A}def",
-        #     'utf8_all'     => "\x{263A}\x{263B}\x{263C}",
+        # Several problems with trying to handle unicode keys and values.
+        # * They generate 'Wide character in print' warnings when logging about the gets/sets
+        # * Causes metadata packing to break
+        # * Storable won't touch them
+        # not sure how to handle these. Maybe there's no way. Even if we automatically
+        # encoded all keys and values, what to do about complex values where wide strings
+        # might be lurking?
+        # 'utf8_partial' => "abc\x{263A}def",
+        # 'utf8_all' => "\x{263A}\x{263B}\x{263C}",
 
         # What should be done for empty key?
         #     'empty'        => '',
@@ -108,8 +114,9 @@ sub test_simple : Test(1) {
     is( $cache->get( $keys{medium} ), $values{medium} );
 }
 
-sub test_key_types : Test(55) {
+sub test_key_types : Tests {
     my $self = shift;
+    $self->num_tests( $key_count * 6 + 1 );
 
     my @keys_set;
     my $check_keys_set = sub {
@@ -398,8 +405,9 @@ sub test_not_in_cache : Test(3) {
     ok( !$cache->is_valid('not in cache') );
 }
 
-sub test_serialize : Test(9) {
+sub test_serialize : Tests {
     my $self = shift;
+    $self->num_tests($key_count);
 
     $self->set_some_keys($cache);
     foreach my $keyname (@keynames) {
@@ -497,8 +505,9 @@ sub test_multi_no_keys : Test(4) {
     lives_ok { $cache->remove_multi( [] ) } "remove_multi (no args)";
 }
 
-sub test_clear : Test(10) {
+sub test_clear : Tests {
     my $self = shift;
+    $self->num_tests( $key_count + 1 );
 
     if ( $self->supports_clear() ) {
         $self->set_some_keys($cache);
@@ -635,7 +644,7 @@ sub test_multiple_procs : Test(1) {
     # Having problems getting this to work at all on OS X Leopard;
     # skip for a while
     skip_until(
-        '2/15/08',
+        '3/15/08',
         1,
         sub {
 
