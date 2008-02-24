@@ -397,7 +397,8 @@ sub _log_set_result {
         $log->debug(
             sprintf(
                 "cache set for namespace='%s', key='%s', size=%d, driver='%s'",
-                $self->{namespace}, $key, length($value), $self->{short_driver_name}
+                $self->{namespace}, $key,
+                length($value),     $self->{short_driver_name}
             )
         );
     }

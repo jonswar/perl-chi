@@ -1,8 +1,7 @@
 package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
-use CHI::Util
-  qw(fast_catdir fast_catfile unique_id);
+use CHI::Util qw(fast_catdir fast_catfile unique_id);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
@@ -39,7 +38,8 @@ sub BUILD {
 
     # Calculate directory corresponding to our namespace
     $self->{path_to_namespace} =
-      catdir( $self->root_dir, $self->escape_for_filename( $self->{namespace} ) );
+      catdir( $self->root_dir,
+        $self->escape_for_filename( $self->{namespace} ) );
 }
 
 sub desc {

@@ -3,7 +3,7 @@ Revision history for CHI
 0.06  Feb  4, 2008
 
 - Fixed clear() in Memcached driver - reported by Justin Ellison
-- Added read_only and write_only flags
+- Add size to set logs
 
 0.05  Jan 30, 2008
 

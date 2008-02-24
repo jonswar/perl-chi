@@ -28,7 +28,8 @@ sub BUILD {
     mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
       if !-d $self->{root_dir};
     $self->{share_file} =
-      catfile( $self->{root_dir}, $self->escape_for_filename( $self->{namespace} ) );
+      catfile( $self->{root_dir},
+        $self->escape_for_filename( $self->{namespace} ) );
     my %fm_params = (
         raw_values => 1,
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
