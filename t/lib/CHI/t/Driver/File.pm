@@ -24,7 +24,7 @@ sub set_standard_keys_and_values {
 
     # keys have max length of 255 or so
     # but on windows xp, the full pathname is limited to 255 chars as well
-    $keys->{'large'} = scalar( 'ab' x ($^O eq 'MSWin32' ? 64 : 120) );
+    $keys->{'large'} = scalar( 'ab' x ( $^O eq 'MSWin32' ? 64 : 120 ) );
 
     return ( $keys, $values );
 }
@@ -33,8 +33,8 @@ sub test_path_to_key : Test(5) {
     my ($self) = @_;
 
     my $key;
-    my $cache = $self->new_cache(namespace => random_string(10));
-    my $log   = CHI::Test::Logger->new();
+    my $cache = $self->new_cache( namespace => random_string(10) );
+    my $log = CHI::Test::Logger->new();
     CHI->logger($log);
 
     $key = "\$20.00 plus 5% = \$25.00";
@@ -58,9 +58,13 @@ sub test_path_to_key : Test(5) {
     );
 
     # Full path is too long
-    my $max_path_length = ($^O eq 'MSWin32' ? 254 : 1023);
-    my $long_root_dir = fast_catdir($root_dir, scalar("a" x ($max_path_length - 60)));
-    $cache = $self->new_cache(root_dir => $long_root_dir, namespace => random_string(10));
+    my $max_path_length = ( $^O eq 'MSWin32' ? 254 : 1023 );
+    my $long_root_dir =
+      fast_catdir( $root_dir, scalar( "a" x ( $max_path_length - 60 ) ) );
+    $cache = $self->new_cache(
+        root_dir  => $long_root_dir,
+        namespace => random_string(10)
+    );
     $key = 'abcd' x 25;
     $log->clear();
     ok(
