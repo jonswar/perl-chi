@@ -614,29 +614,6 @@ sub test_busy_lock : Test(5) {
     is( $cache->get( $key, @bl ), $value, "hit after busy lock" );
 }
 
-sub read_only_test : Test(2) {
-    my $self = shift;
-
-    my ( $key, $value ) = $self->kvpair();
-    my $cache = $self->new_cache( read_only => 1 );
-    my $error_pattern = qr/error setting key 'medium' in .*: read-only cache/;
-
-    throws_ok( sub { $cache->set( $key, $value ) },
-        $error_pattern, "die - dies" );
-    ok( !defined( $cache->get($key) ), "die - miss" );
-}
-
-sub write_only_test : Test(1) {
-    my $self = shift;
-
-    my ( $key, $value ) = $self->kvpair();
-    my $cache = $self->new_cache( write_only => 1 );
-    my $error_pattern = qr/error getting key 'medium' in .*: write-only cache/;
-
-    $cache->set( $key, $value );
-    throws_ok( sub { $cache->get($key) }, $error_pattern, "die - dies" );
-}
-
 sub test_multiple_procs : Test(1) {
     my $self = shift;
     return "internal test only" unless $self->is_internal();
