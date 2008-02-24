@@ -1,0 +1,192 @@
+=head1 NAME
+
+CHI::Driver::Development -- Manual for developing new CHI drivers
+
+=head1 SYNOPSIS
+
+    package CHI::Driver::MyDriver;
+    use Moose;
+    use strict;
+    use warnings;
+
+    extends 'CHI::Driver';
+
+    has ...;
+
+    __PACKAGE__->meta->make_immutable();
+
+    sub fetch {
+        my ( $self, $key ) = @_;
+    
+    }
+    
+    sub store {
+        my ( $self, $key, $data ) = @_;
+    
+    }
+    
+    sub remove {
+        my ( $self, $key ) = @_;
+    
+    }
+    
+    sub clear {
+        my ($self) = @_;
+    
+    }
+
+    sub get_keys {
+        my ($self) = @_;
+    
+    }
+    
+    sub get_namespaces {
+        my ($self) = @_;
+    
+    }
+
+=head1 DESCRIPTION
+
+This document describes how to implement a new CHI driver.
+
+The easiest way to start is to look at existing drivers, such as
+L<CHI::Driver::Memory|CHI::Driver::Memory> and
+L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>.
+
+=head1 NAMING
+
+If you are going to publicly release your driver, call it 'CHI::Driver::I<something>' so
+that users can create it with
+
+    CHI->new(driver => 'I<something>');
+
+If it's an internal driver, you can call it whatever you like and create it like
+
+    CHI->new(driver_class => 'My::Internal::CHI::Driver');
+
+=head1 MOOSE
+
+CHI driver classes are Moose based, so you should read (or at least have available) the
+documentation for Moose before proceeding.
+
+All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
+
+=head1 NAMESPACE
+
+All cache handles have an assigned namespace that you can access with
+C<$self-E<gt>namespace>. You should use the namespace to partition your data store.
+That is, two cache objects with different namespaces should be able to access 
+the same key without any collision.
+
+Examples of how other drivers partition by namespace:
+* The Memory driver uses a separate sub-hash inside its main memory hash for each namespace.
+* The File driver uses a separate top-level directory for each namespace.
+* The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
+
+=head1 METHODS
+
+=head2 Required methods
+
+The following methods have no default implementation, and MUST be defined by your subclass:
+
+=over
+
+=item store ( $self, $key, $data, $expires_at, $options )
+
+Associate I<$data> with I<$key> in the namespace, overwriting any existing entry.  Called
+by L</set>. I<$data> will contain any necessary metadata, including expiration options, so
+you can just store it as a single block.
+
+The I<$expires_at> epoch value is provided in case you are working with an existing
+cache implementation (like memcached) that also has an interest in storing the
+expiration time for its own purposes. Normally, you can ignore this.
+
+<$options> contains the hash of options passed to L</set>, in case you want to implement
+driver-specific set options. Normally, you can ignore this.
+
+=item fetch ( $self, $key )
+
+Returns the data associated with I<$key> in the namespace. Called by L</"get">. The main
+CHI::Driver superclass will take care of extracting out metadata like expiration options
+and determining if the value has expired.
+
+=item remove ( $self, $key )
+
+Remove the data associated with the I<$key> in the namespace.
+
+=back
+
+=head2 Overridable methods
+
+The following methods have a default implementation, but MAY be overriden by your subclass:
+
+=over
+
+=item BUILD ( $self, $options )
+
+Define Moose's BUILD method if you want to process any options specific to your driver.
+
+=item clear ( $self )
+
+Override this if you want to provide an efficient method of clearing a namespace.
+The default implementation will iterate over all keys and call L</remove> for each.
+
+=item _serialize ( $value )
+
+=item _deserialize ( $serialized_value )
+
+Override these if you want to change the serialization method used for references. The
+default is Storable freeze/thaw.
+
+=item fetch_multi_arrayref ( $keys )
+
+Override this if you want to efficiently process multiple fetches. Return an array
+reference of data or undef corresponding to I<$keys>. The default will iterate over
+I<$keys> and call fetch for each.
+
+=item store_multi ( $key_data, $options )
+
+Override this if you want to efficiently process multiple stores. I<$key_data> is a hash
+of keys and data that should be stored. The default will iterate over I<$key_data> and
+call store for each pair.
+
+=back
+
+=head2 Optional methods
+
+The following methods have no default implementation, and MAY be defined by your subclass,
+but are not required for basic cache operations.
+
+=over
+
+=item get_keys ( $self )
+
+Return all keys in the namespace. It is acceptable to either include or omit expired keys.
+
+=item get_namespaces ( $self )
+
+Return namespaces associated with the cache. It is acceptable to either include or omit
+namespaces with no valid keys.
+
+=back
+
+=head1 AUTHOR
+
+Jonathan Swartz
+
+=head1 SEE ALSO
+
+L<CHI|CHI>, L<CHI::Driver|CHI::Driver>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (C) 2007 Jonathan Swartz.
+
+CHI is provided "as is" and without any express or implied warranties, including, without
+limitation, the implied warranties of merchantibility and fitness for a particular
+purpose.
+
+This program is free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+=cut
