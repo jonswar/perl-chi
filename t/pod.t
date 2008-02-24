@@ -1,11 +1,9 @@
 #!perl
 use strict;
 use warnings;
-use Test::More;
+use CHI::Test::InternalOnly;
 
-unless ( $ENV{CHI_INTERNAL_TESTS} ) {
-    plan skip_all => "internal test only";
-}
+use Test::More;
 
 # Ensure a recent version of Test::Pod
 my $min_tp = 1.22;
