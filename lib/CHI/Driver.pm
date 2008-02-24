@@ -222,7 +222,7 @@ sub set {
     }
 
     my $log = CHI->logger();
-    $self->_log_set_result( $log, $key ) if $log->is_debug;
+    $self->_log_set_result( $log, $key, $value ) if $log->is_debug;
 
     return $value;
 }
@@ -390,14 +390,14 @@ sub _log_get_result {
 }
 
 sub _log_set_result {
-    my ( $self, $log, $key ) = @_;
+    my ( $self, $log, $key, $value ) = @_;
 
     # if $log->is_debug - done in caller
     if ( !$self->is_subcache ) {
         $log->debug(
             sprintf(
-                "cache set for namespace='%s', key='%s', driver='%s'",
-                $self->{namespace}, $key, $self->{short_driver_name}
+                "cache set for namespace='%s', key='%s', size=%d, driver='%s'",
+                $self->{namespace}, $key, length($value), $self->{short_driver_name}
             )
         );
     }

@@ -548,7 +548,8 @@ sub test_logging : Test(6) {
     $log->contains_ok(
         qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
     $cache->set( $key, $value, 20 );
-    $log->contains_ok(qr/cache set for .* key='$key', driver='$driver'/);
+    my $length = length($value);
+    $log->contains_ok(qr/cache set for .* key='$key', size=$length, driver='$driver'/);
     $cache->get($key);
     $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
     local $CHI::Driver::Test_Time = $start_time + 40;
