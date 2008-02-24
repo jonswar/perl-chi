@@ -40,8 +40,7 @@ sub sig {
 my $cache = CHI->new(
     driver    => 'FastMmap',
     root_dir  => "$root/data/cache",
-    namespace => 'tidy'
-
+    namespace => 'tidy',
 );
 
 my $tidied = 0;
