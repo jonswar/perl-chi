@@ -1,0 +1,15 @@
+Notes for developers of CHI
+
+All code should pass unit tests before being checked in. This includes
+* tidy.t, which will check that code has been tidied (and will tidy it for you otherwise) according to ./perltidyrc
+* critic.t, which will check that code passes Perl::Critic according to ./perlcriticrc
+
+Some tests are internal only, meaning you will run them, but not end-users. These are
+marked with 'use CHI::Test::InternalOnly' in the case of .t files, or 'sub internal_only {
+1 }' in the case of Test::Class classes.
+
+You should install the following modules to ensure you can run the full suite of tests:
+* Perl::Tidy (latest)
+* Perl::Critic (latest)
+* Cache::FastMmap
+* Memcached

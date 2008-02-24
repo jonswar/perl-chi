@@ -10,6 +10,7 @@
 ^perltidyrc
 ^tmp
 ^wiki
+^README.DEVELOPERS
 ^VERSION
 
 # Backup files, etc.
