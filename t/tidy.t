@@ -13,8 +13,10 @@ use File::Basename;
 use File::Find;
 use File::Signature;
 use File::Slurp;
-use Perl::Tidy;
 use Test::More tests => 1;
+
+# Ensure a standard version of Perl::Tidy
+use Perl::Tidy 20071205;
 
 my $root   = dirname( dirname( realpath($0) ) );
 my $rcfile = "$root/perltidyrc";
