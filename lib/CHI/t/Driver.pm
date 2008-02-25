@@ -34,13 +34,13 @@ sub setup : Test(setup) {
     $cache_class = ref($cache);
 }
 
-sub testing_driver {
+sub testing_driver_class {
     my $self  = shift;
     my $class = ref($self);
 
     # By default, take the last part of the classname and use it as driver
-    my $driver = ( split( '::', $class ) )[-1];
-    return $driver;
+    my $driver_class = 'CHI::Driver::' . ( split( '::', $class ) )[-1];
+    return $driver_class;
 }
 
 sub new_cache {
@@ -53,7 +53,7 @@ sub new_cache_options {
     my $self = shift;
 
     return (
-        driver           => $self->testing_driver(),
+        driver_class     => $self->testing_driver_class(),
         expires_variance => 0,
         on_get_error     => 'die',
         on_set_error     => 'die'

@@ -83,6 +83,54 @@ Examples of how other drivers partition by namespace:
 * The File driver uses a separate top-level directory for each namespace.
 * The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
 
+=head1 TESTING
+
+CHI has a standard set of unit tests that should be used to ensure your driver is fully
+implementing the CHI API.
+
+To use CHI's tests (replacing I<MyDriver> with the name of your driver):
+
+=over
+
+=item *
+
+Install Test::Class, and add Test::Class to the build dependencies for your distribution.
+
+=item *
+
+Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your distribution containing:
+
+    package CHI::Driver::MyDriver::t::CHIDriverTests;
+    use strict;
+    use warnings;
+    use CHI::Test;
+    use base qw(CHI::t::Driver);
+
+    sub new_cache_options {
+        my $self = shift;
+        
+        return (
+            $self->SUPER::new_cache_options(),
+            driver_class => 'CHI::Driver::MyDriver',
+    
+            # Any other CHI->new parameters for your test driver
+        );
+    }
+
+    1;
+
+=item *
+
+Add a test script called I<t/CHI-driver-tests.t> to your distribution containing:
+
+    #!perl -w
+    use strict;
+    use warnings;
+    use CHI::Driver::MyDriver::t::CHIDriverTests;
+    CHI::Driver::MyDriver::t::CHIDriverTests->runtests;
+
+=back
+
 =head1 METHODS
 
 =head2 Required methods
