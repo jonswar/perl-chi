@@ -482,6 +482,10 @@ L<CHI::Driver::CacheCache|CHI::Driver::CacheCache> - CHI wrapper for Cache::Cach
 
 =for readme stop
 
+=head1 DEVELOPING NEW DRIVERS
+
+See L<CHI::Driver::Development|CHI::Driver::Development> for information on developing new drivers.
+
 =head1 LOGGING
 
 If given a logger object, CHI will log events at various levels - for example, a debug log
