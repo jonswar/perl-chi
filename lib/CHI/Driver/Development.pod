@@ -78,10 +78,23 @@ C<$self-E<gt>namespace>. You should use the namespace to partition your data sto
 That is, two cache objects with different namespaces should be able to access
 the same key without any collision.
 
-Examples of how other drivers partition by namespace:
-* The Memory driver uses a separate sub-hash inside its main memory hash for each namespace.
-* The File driver uses a separate top-level directory for each namespace.
-* The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
+Examples:
+
+=over
+
+=item *
+
+The Memory driver uses a separate sub-hash inside its main memory hash for each namespace.
+
+=item *
+
+The File driver uses a separate top-level directory for each namespace.
+
+=item *
+
+The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
+
+=back
 
 =head1 TESTING
 
@@ -128,6 +141,12 @@ Add a test script called I<t/CHI-driver-tests.t> to your distribution containing
     use warnings;
     use CHI::Driver::MyDriver::t::CHIDriverTests;
     CHI::Driver::MyDriver::t::CHIDriverTests->runtests;
+
+=item *
+
+You may need to override other methods in I<CHI::Driver::MyDriver::t::CHIDriverTests>,
+e.g. to skip tests that do not apply to your driver. See CHI::t::Driver::Memory
+and CHI::t::Driver::File in this distribution for examples.
 
 =back
 
@@ -184,7 +203,8 @@ The default implementation will iterate over all keys and call L</remove> for ea
 =item _deserialize ( $serialized_value )
 
 Override these if you want to change the serialization method used for references. The
-default is Storable freeze/thaw.
+default is Storable freeze/thaw. Warning: this will probably change to a serializer
+plugin model.
 
 =item fetch_multi_arrayref ( $keys )
 
