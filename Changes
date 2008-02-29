@@ -1,6 +1,6 @@
 Revision history for CHI
 
-0.06  Feb  4, 2008
+0.06  Feb 29, 2008
 
 - Created separate manual for developing drivers (CHI::Driver::Development)
 - Made standard CHI driver tests easily available to external drivers
