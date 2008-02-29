@@ -17,32 +17,32 @@ CHI::Driver::Development -- Manual for developing new CHI drivers
 
     sub fetch {
         my ( $self, $key ) = @_;
-    
+
     }
-    
+
     sub store {
         my ( $self, $key, $data ) = @_;
-    
+
     }
-    
+
     sub remove {
         my ( $self, $key ) = @_;
-    
+
     }
-    
+
     sub clear {
         my ($self) = @_;
-    
+
     }
 
     sub get_keys {
         my ($self) = @_;
-    
+
     }
-    
+
     sub get_namespaces {
         my ($self) = @_;
-    
+
     }
 
 =head1 DESCRIPTION
@@ -75,7 +75,7 @@ All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
 All cache handles have an assigned namespace that you can access with
 C<$self-E<gt>namespace>. You should use the namespace to partition your data store.
-That is, two cache objects with different namespaces should be able to access 
+That is, two cache objects with different namespaces should be able to access
 the same key without any collision.
 
 Examples of how other drivers partition by namespace:
@@ -108,11 +108,11 @@ Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your distribu
 
     sub new_cache_options {
         my $self = shift;
-        
+
         return (
             $self->SUPER::new_cache_options(),
             driver_class => 'CHI::Driver::MyDriver',
-    
+
             # Any other CHI->new parameters for your test driver
         );
     }
