@@ -6,9 +6,10 @@ all_from 'lib/CHI.pm';
 
 perl_version '5.006';
 
+build_requires 'Date::Parse' => 0;
 build_requires 'Test::Class' => 0;
-build_requires 'Test::Deep' => 0;
-build_requires 'Test::More' => 0;
+build_requires 'Test::Deep'  => 0;
+build_requires 'Test::More'  => 0;
 
 requires 'Data::UUID'                => 0;
 requires 'Digest::JHash'             => 0;
