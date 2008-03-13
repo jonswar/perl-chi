@@ -1,36 +1,10 @@
 package CHI::Test::Class;
-use CHI::Util qw(dump_one_line require_dynamic);
+use CHI::Util qw(require_dynamic);
 use Getopt::Long;
-use Module::Find qw(findallmod);
 use Module::Load::Conditional qw(can_load);
-use Test::More qw();
 use strict;
 use warnings;
 use base qw(Test::Class);
-
-sub load_tests {
-    my ($class) = @_;
-
-    my $test_class_pattern;
-    if ( defined( $test_class_pattern = $ENV{TEST_CLASS} ) ) {
-        $test_class_pattern =~ s{/}{::}g;
-    }
-    my @classes;
-    my @candidates = findallmod('CHI::t');
-
-    foreach my $class (@candidates) {
-        next
-          if defined($test_class_pattern) && $class !~ /$test_class_pattern/o;
-        require_dynamic($class);
-    }
-    if ( $ENV{TEST_STACK_TRACE} ) {
-
-        # Show entire stack trace when testing aborts with fatal error
-        $SIG{'__DIE__'}  = sub { Carp::confess(@_) };
-        $SIG{'__WARN__'} = sub { Carp::confess(@_) };
-    }
-    return @classes;
-}
 
 sub runtests {
     my ($class) = @_;
@@ -49,11 +23,10 @@ sub runtests {
     # Check for required modules
     #
     if ( my $required_modules = $class->required_modules ) {
-        unless ( can_load( modules => $required_modules ) ) {
-            $class->skip_all(
-                sprintf( 'one of required modules not installed: %s',
-                    dump_one_line($required_modules) )
-            );
+        while ( my ( $key, $value ) = each(%$required_modules) ) {
+            unless ( can_load( modules => { $key, $value } ) ) {
+                $class->skip_all("one of required modules not installed: $key");
+            }
         }
     }
 
@@ -61,12 +34,6 @@ sub runtests {
     #
     my $test_obj = $class->new();
     Test::Class::runtests($test_obj);
-}
-
-sub skip_all {
-    my ( $class, $reason ) = @_;
-
-    Test::More::plan( skip_all => $reason );
 }
 
 sub is_internal {
