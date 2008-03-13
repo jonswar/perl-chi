@@ -608,15 +608,15 @@ The latest source code is available at:
 
 =item *
 
-Integrate CHI with Mason, and create CHI plugins for Catalyst and CGI::Application
-
-=item *
-
 Perform cache benchmarks comparing both CHI and non-CHI cache implementations
 
 =item *
 
-Separate FastMmap and Memcached drivers into their own CPAN distributions
+Separate Memcached driver into its own CPAN distributions
+
+=item *
+
+Make serialization method flexible via Data::Serializer
 
 =item *
 
