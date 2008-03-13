@@ -3,6 +3,7 @@ use inc::Module::Install;
 name 'CHI';
 abstract 'Unified cache interface';
 all_from 'lib/CHI.pm';
+author 'Jonathan Swartz <swartz@pobox.com>';
 
 perl_version '5.006';
 
@@ -28,4 +29,3 @@ license 'perl';
 auto_install;
 
 WriteAll;
-
