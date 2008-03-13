@@ -1,6 +1,6 @@
 #!perl
 #
-# Tests that files are tidied, and tidies them if they are not
+# Tests that files pass critic
 # Uses cache so that files are only checked when modified
 #
 use strict;
@@ -28,7 +28,6 @@ find(
         no_chdir => 1
     },
     "$root/lib",
-    "$root/t/lib"
 );
 my $base_sig = join( '; ',
     map { File::Signature->new($_) } ( $rcfile, $INC{'Perl/Critic.pm'} ) );

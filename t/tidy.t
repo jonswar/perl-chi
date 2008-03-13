@@ -28,7 +28,6 @@ find(
         no_chdir => 1
     },
     "$root/lib",
-    "$root/t/lib"
 );
 my $base_sig = join( '; ',
     map { File::Signature->new($_) } ( $rcfile, $INC{'Perl/Tidy.pm'} ) );
