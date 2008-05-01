@@ -244,10 +244,9 @@ defaults in the cache constructor.
 
 =over
 
-=item expires_in [DURATION]
+=item expires_in [INT]
 
-Amount of time until this data expires, in the form of a L<duration expressions|/DURATION
-EXPRESSIONS> - e.g. "10 seconds" or "5 minutes".
+Amount of time (in seconds) until this data expires.
 
 =item expires_at [NUM]
 
