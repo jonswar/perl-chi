@@ -439,7 +439,8 @@ sub test_namespaces : Test(6) {
         $cache1a->dump_as_hash(),
         'cache1 and cache1a are same cache'
     );
-    cmp_deeply( [ $cache2->get_keys() ], [], 'cache2 empty after setting keys in cache1' );
+    cmp_deeply( [ $cache2->get_keys() ],
+        [], 'cache2 empty after setting keys in cache1' );
     $cache3->set( $keys{medium}, 'different' );
     is( $cache1->get('medium'), $values{medium}, 'cache1{medium} = medium' );
     is( $cache3->get('medium'), 'different',     'cache1{medium} = different' );

@@ -8,27 +8,28 @@ extends 'CHI::Driver';
 
 my $Default_Datastore = {};
 
-has 'datastore' =>
-  ( metaclass => 'Collection::Hash',
+has 'datastore' => (
+    metaclass => 'Collection::Hash',
     is        => 'ro',
     isa       => 'HashRef',
     default   => sub { $Default_Datastore },
     provides  => { keys => 'get_namespaces' },
-  );
+);
 
-has 'datastore_for_namespace' =>
-  ( metaclass => 'Collection::Hash',
+has 'datastore_for_namespace' => (
+    metaclass => 'Collection::Hash',
     is        => 'ro',
     isa       => 'HashRef',
     lazy      => 1,
     builder   => '_build_datastore_for_namespace',
-    provides  => { get    => 'fetch',
-                   set    => 'store',
-                   delete => 'remove',
-                   clear  => 'clear',
-                   keys   => 'get_keys',
-                 },
-  );
+    provides  => {
+        get    => 'fetch',
+        set    => 'store',
+        delete => 'remove',
+        clear  => 'clear',
+        keys   => 'get_keys',
+    },
+);
 
 __PACKAGE__->meta->make_immutable();
 

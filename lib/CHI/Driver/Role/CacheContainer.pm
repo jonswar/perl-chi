@@ -5,24 +5,24 @@ use Moose::Util::TypeConstraints;
 use strict;
 use warnings;
 
-subtype 'CacheObject'
-    => as 'Object'
-    => where { my $o = $_;
-               all { $o->can($_) }
-               qw( get set remove ) };
+subtype 'CacheObject' => as 'Object' => where {
+    my $o = $_;
+    all { $o->can($_) } qw( get set remove );
+};
 
 requires '_build_contained_cache';
 
-has '_contained_cache' =>
-  ( is      => 'rw',
+has '_contained_cache' => (
+    is      => 'rw',
     isa     => 'CacheObject',
     lazy    => 1,
     builder => '_build_contained_cache',
-    handles => { fetch  => 'get',
-                 store  => 'set',
-                 remove => 'remove',
-               },
-  );
+    handles => {
+        fetch  => 'get',
+        store  => 'set',
+        remove => 'remove',
+    },
+);
 
 # These are implemented as separate subs so they can be excluded by
 # consumers of the role.

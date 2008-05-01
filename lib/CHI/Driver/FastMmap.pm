@@ -10,7 +10,8 @@ use warnings;
 
 extends 'CHI::Driver';
 
-with 'CHI::Driver::Role::CacheContainer' => { excludes => [ qw( get_keys get_namespaces ) ] };
+with 'CHI::Driver::Role::CacheContainer' =>
+  { excludes => [qw( get_keys get_namespaces )] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'fm_cache'        => ( is => 'ro' );
@@ -38,7 +39,7 @@ sub _build_contained_cache {
         $self->escape_for_filename( $self->namespace ) );
 
     my %fm_params = (
-        raw_values  => 1,
+        raw_values => 1,
         share_file => $share_file,
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
           qw(init_file unlink_on_exit cache_size page_size num_pages)

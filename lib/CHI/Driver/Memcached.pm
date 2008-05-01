@@ -7,7 +7,8 @@ use warnings;
 
 extends 'CHI::Driver';
 
-with 'CHI::Driver::Role::CacheContainer' => { excludes => [ qw( clear get_keys get_namespaces ) ] };
+with 'CHI::Driver::Role::CacheContainer' =>
+  { excludes => [qw( clear get_keys get_namespaces )] };
 
 has 'compress_threshold' => ( is => 'ro' );
 has 'debug'              => ( is => 'ro' );
@@ -15,7 +16,8 @@ has 'memd'               => ( is => 'ro' );
 has 'no_rehash'          => ( is => 'ro' );
 has 'servers'            => ( is => 'ro' );
 
-__PACKAGE__->meta->alias_method( 'memd' => __PACKAGE__->can('_contained_cache') );
+__PACKAGE__->meta->alias_method(
+    'memd' => __PACKAGE__->can('_contained_cache') );
 
 __PACKAGE__->meta->make_immutable();
 
