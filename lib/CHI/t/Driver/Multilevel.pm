@@ -117,7 +117,7 @@ sub test_multilevel_auto_local_write : Test(5) {
     my $self = shift;
 
     $memory_cache->expires_in('5 sec');
-    is( $memory_cache->expires_in(), '5 sec', "set expires_in" );
+    is( $memory_cache->expires_in(), '5', "set expires_in" );
     $file_cache->set( $key, $value );
     ok( $memory_cache->is_empty(), "memory cache empty before file cache hit" );
     is( $cache->get($key), $value, "got hit from file cache" );

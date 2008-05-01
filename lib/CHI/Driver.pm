@@ -8,21 +8,26 @@ use Moose::Util::TypeConstraints;
 use strict;
 use warnings;
 
-# Call this when updating default set options
-my @trigger_set_options =
-  ( trigger => sub { $_[0]->_compute_default_set_options() } );
-
 type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)/ };
 
-has 'default_set_options' => ( is => 'ro' );
-has 'expires_at'          => ( is => 'rw', @trigger_set_options );
-has 'expires_in'          => ( is => 'rw', @trigger_set_options );
-has 'expires_variance'    => ( is => 'rw', @trigger_set_options );
+subtype Duration
+    => as 'Int'
+    => where { $_ > 0 };
+
+coerce 'Duration'
+    => from 'Str'
+    => via { parse_duration($_) };
+
+use constant Max_Time => 0xffffffff;
+
+has 'expires_at'          => ( is => 'rw', default => Max_Time );
+has 'expires_in'          => ( is => 'rw', isa => 'Duration', coerce => 1 );
+has 'expires_variance'    => ( is => 'rw', default => 0.0 );
 has 'is_subcache'         => ( is => 'rw' );
 has 'namespace'           => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error'        => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'short_driver_name'   => ( is => 'ro' );
+has 'short_driver_name'   => ( is => 'ro', builder => '_build_short_driver_name' );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -33,30 +38,15 @@ foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
       sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
 }
 
-use constant Max_Time => 0xffffffff;
-
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
 
-sub BUILD {
-    my ( $self, $params ) = @_;
-
-    $self->_compute_default_set_options();
-
-    ( $self->{short_driver_name} = ref($self) ) =~ s/^CHI::Driver:://;
-}
-
-sub _compute_default_set_options {
+sub _build_short_driver_name {
     my ($self) = @_;
 
-    $self->{default_set_options}->{expires_at} = $self->{expires_at}
-      || Max_Time;
-    $self->{default_set_options}->{expires_in} =
-      defined( $self->{expires_in} )
-      ? parse_duration( $self->{expires_in} )
-      : undef;
-    $self->{default_set_options}->{expires_variance} = $self->{expires_variance}
-      || 0.0;
+    ( my $name = ref($self) ) =~ s/^CHI::Driver:://;
+
+    return $name;
 }
 
 sub desc {
@@ -171,6 +161,13 @@ sub is_valid {
     }
 }
 
+sub _default_set_options {
+    my $self = shift;
+
+    return { map { $_ => $self->$_() }
+             qw( expires_at expires_in expires_variance ) };
+}
+
 sub set {
     my ( $self, $key, $value, $options ) = @_;
     croak "must specify key" unless defined($key);
@@ -179,7 +176,7 @@ sub set {
     # Fill in $options if not passed, copy if passed, and apply defaults.
     #
     if ( !defined($options) ) {
-        $options = $self->default_set_options;
+        $options = $self->_default_set_options;
     }
     else {
         if ( !ref($options) ) {
@@ -193,7 +190,7 @@ sub set {
                 $options = { expires_in => $options };
             }
         }
-        $options = { %{ $self->default_set_options }, %$options };
+        $options = { %{ $self->_default_set_options }, %$options };
     }
 
     # Determine early and final expiration times
