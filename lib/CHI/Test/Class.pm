@@ -17,7 +17,7 @@ sub runtests {
     # Check for internal_only
     #
     if ( $class->internal_only && !$class->is_internal ) {
-        $class->skip_all('internal test only');
+        $class->SKIP_ALL('internal test only');
     }
 
     # Check for required modules
@@ -25,7 +25,7 @@ sub runtests {
     if ( my $required_modules = $class->required_modules ) {
         while ( my ( $key, $value ) = each(%$required_modules) ) {
             unless ( can_load( modules => { $key, $value } ) ) {
-                $class->skip_all("one of required modules not installed: $key");
+                $class->SKIP_ALL("one of required modules not installed: $key");
             }
         }
     }
