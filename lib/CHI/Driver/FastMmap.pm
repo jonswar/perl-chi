@@ -8,11 +8,12 @@ use Moose;
 use strict;
 use warnings;
 
-extends 'CHI::Driver::Base::CacheContainer';
+extends 'CHI::Driver';
+
+with 'CHI::Driver::Role::CacheContainer' => { excludes => [ qw( get_keys get_namespaces ) ] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'fm_cache'        => ( is => 'ro' );
-has 'share_file'      => ( is => 'ro' );
 has 'root_dir'        => (
     is      => 'ro',
     isa     => 'Str',
@@ -25,24 +26,32 @@ __PACKAGE__->meta->make_immutable();
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    mkpath( $self->{root_dir}, 0, $self->{dir_create_mode} )
-      if !-d $self->{root_dir};
-    $self->{share_file} =
-      catfile( $self->{root_dir},
-        $self->escape_for_filename( $self->{namespace} ) );
+    mkpath( $self->root_dir, 0, $self->dir_create_mode )
+      if !-d $self->root_dir;
+}
+
+sub _build_contained_cache {
+    my ($self) = @_;
+
+    my $share_file =
+      catfile( $self->root_dir,
+        $self->escape_for_filename( $self->namespace ) );
+
     my %fm_params = (
-        raw_values => 1,
+        raw_values  => 1,
+        share_file => $share_file,
         map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
-          qw(init_file unlink_on_exit share_file cache_size page_size num_pages)
+          qw(init_file unlink_on_exit cache_size page_size num_pages)
     );
-    $self->{_contained_cache} = $self->{fm_cache} =
-      Cache::FastMmap->new(%fm_params);
+
+    return Cache::FastMmap->new(%fm_params);
+
 }
 
 sub get_keys {
     my ($self) = @_;
 
-    return $self->{_contained_cache}->get_keys(0);
+    return $self->_contained_cache->get_keys(0);
 }
 
 sub get_namespaces {

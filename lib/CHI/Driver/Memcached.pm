@@ -5,7 +5,9 @@ use Moose;
 use strict;
 use warnings;
 
-extends 'CHI::Driver::Base::CacheContainer';
+extends 'CHI::Driver';
+
+with 'CHI::Driver::Role::CacheContainer' => { excludes => [ qw( clear get_keys get_namespaces ) ] };
 
 has 'compress_threshold' => ( is => 'ro' );
 has 'debug'              => ( is => 'ro' );
@@ -13,22 +15,24 @@ has 'memd'               => ( is => 'ro' );
 has 'no_rehash'          => ( is => 'ro' );
 has 'servers'            => ( is => 'ro' );
 
+__PACKAGE__->meta->alias_method( 'memd' => __PACKAGE__->can('_contained_cache') );
+
 __PACKAGE__->meta->make_immutable();
 
-sub BUILD {
-    my ( $self, $params ) = @_;
+sub _build_contained_cache {
+    my ($self) = @_;
 
     my %mc_params =
       ( map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
           qw(compress_threshold debug namespace no_rehash servers) );
-    $self->{_contained_cache} = $self->{memd} =
-      Cache::Memcached->new( \%mc_params );
+
+    return Cache::Memcached->new( \%mc_params );
 }
 
 sub clear {
     my ($self) = @_;
 
-    $self->{_contained_cache}->flush_all();
+    $self->_contained_cache->flush_all();
 }
 
 # Memcached supports fast multiple get
@@ -38,7 +42,7 @@ sub get_multi_hashref {
     my ( $self, $keys ) = @_;
     croak "must specify keys" unless defined($keys);
 
-    my $keyvals = $self->{memd}->get_multi(@$keys);
+    my $keyvals = $self->_contained_cache->get_multi(@$keys);
     foreach my $key ( keys(%$keyvals) ) {
         if ( defined $keyvals->{$key} ) {
             $keyvals->{$key} = $self->get( $key, data => $keyvals->{$key} );
