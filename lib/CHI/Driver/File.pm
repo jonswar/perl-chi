@@ -18,8 +18,16 @@ extends 'CHI::Driver';
 has 'depth'            => ( is => 'ro', isa => 'Int', default => 2 );
 has 'dir_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'file_create_mode' => ( is => 'ro', isa => 'Int', default => oct(666) );
-has 'root_dir'         => ( is => 'ro', isa => 'Str' );
-has 'path_to_namespace' => ( is => 'ro' );
+has 'root_dir' =>
+  ( is      => 'ro',
+    isa     => 'Str',
+    default => catdir( tmpdir(), 'chi-driver-file' ),
+  );
+has 'path_to_namespace' =>
+  ( is      => 'ro',
+    lazy    => 1,
+    builder => '_build_path_to_namespace',
+  );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -32,14 +40,16 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     # Allow 'cache_root' for backward compatibility with Cache::Filecache
-    $self->{root_dir} ||=
-      ( delete( $self->{cache_root} )
-          || catdir( tmpdir(), "chi-driver-file" ) );
+    if ( my $root = delete $self->{cache_root} ) {
+        $self->set_root_dir($root);
+    }
+}
 
-    # Calculate directory corresponding to our namespace
-    $self->{path_to_namespace} =
-      catdir( $self->root_dir,
-        $self->escape_for_filename( $self->{namespace} ) );
+sub _build_path_to_namespace {
+    my $self = shift;
+
+    return catdir( $self->root_dir,
+                   $self->escape_for_filename( $self->namespace ) );
 }
 
 sub desc {
@@ -140,7 +150,7 @@ sub remove {
 sub clear {
     my ($self) = @_;
 
-    my $namespace_dir = $self->{path_to_namespace};
+    my $namespace_dir = $self->path_to_namespace;
     rmtree($namespace_dir);
     ## no critic (RequireCarping)
     die "could not remove '$namespace_dir'"
@@ -158,7 +168,7 @@ sub get_keys {
 sub _collect_keys_via_file_find {
     my ( $self, $filepaths, $wanted ) = @_;
 
-    my $namespace_dir = $self->{path_to_namespace};
+    my $namespace_dir = $self->path_to_namespace;
     return () if !-d $namespace_dir;
 
     find( { wanted => $wanted, no_chdir => 1 }, $namespace_dir );
@@ -188,7 +198,7 @@ my %hex_strings = map { ( $_, sprintf( "%x", $_ ) ) } ( 0x0 .. 0xf );
 sub path_to_key {
     my ( $self, $key, $dir_ref ) = @_;
 
-    my @paths = ( $self->{path_to_namespace} );
+    my @paths = ( $self->path_to_namespace );
 
     # Hash key to a 32-bit integer
     #
