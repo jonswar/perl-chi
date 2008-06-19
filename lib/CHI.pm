@@ -145,7 +145,7 @@ In a script, use the script's absolute path name:
 
 =item *
 
-In a web template, use the template name. For example, in Mason, $m-e<gt>cache will set
+In a web template, use the template name. For example, in Mason, $m-E<gt>cache will set
 the namespace to the current component path.
 
 =back
@@ -198,7 +198,7 @@ C<root_dir> and C<depth> options.
 
 =head1 INSTANCE METHODS
 
-The following methods can be called on any cache handle returned from CHI-E<gt>new(). They are implemented in the L<Cache::Driver|Cache::Driver> package.
+The following methods can be called on any cache handle returned from CHI-E<gt>new(). They are implemented in the L<CHI::Driver|CHI::Driver> package.
 
 =head2 Getting and setting
 
