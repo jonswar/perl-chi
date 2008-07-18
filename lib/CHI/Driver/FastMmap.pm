@@ -14,13 +14,22 @@ with 'CHI::Driver::Role::CacheContainer' =>
   { excludes => [qw( get_keys get_namespaces )] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
-has 'fm_cache'        => ( is => 'ro' );
+has 'cache_size'      => ( is => 'ro' );
+has 'page_size'       => ( is => 'ro' );
+has 'num_pages'       => ( is => 'ro' );
+has 'init_file'       => (
+    is => 'ro',
+    isa => 'Str',
+);
 has 'root_dir'        => (
     is      => 'ro',
     isa     => 'Str',
     default => catdir( tmpdir(), "chi-driver-fastmmap" )
 );
 has 'unlink_on_exit' => ( is => 'ro', isa => 'Int', default => 0 );
+
+__PACKAGE__->meta->alias_method(
+    'fm_cache' => __PACKAGE__->can('_contained_cache') );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -41,7 +50,7 @@ sub _build_contained_cache {
     my %fm_params = (
         raw_values => 1,
         share_file => $share_file,
-        map { exists( $self->{$_} ) ? ( $_, $self->{$_} ) : () }
+        map { defined $self->$_() ? ( $_ => $self->$_() ) : () }
           qw(init_file unlink_on_exit cache_size page_size num_pages)
     );
 
