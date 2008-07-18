@@ -1,6 +1,12 @@
 Revision history for CHI
 
-0.08  Mar 12, 2008
+0.08
+
+- Many internal changes to make greater use of Moose (Dave Rolsky).
+- The FastMmap driver was not actually making use of the init_file,
+  cache_size, page_size, or num_pages options. Reported by Mike
+  Astle. RT #35819. (Dave Rolsky)
+- The clear method did not work with the Memcached driver. RT #32859.
 
 0.07  Mar 12, 2008
 
