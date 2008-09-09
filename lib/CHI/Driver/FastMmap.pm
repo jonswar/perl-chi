@@ -18,10 +18,10 @@ has 'cache_size'      => ( is => 'ro' );
 has 'page_size'       => ( is => 'ro' );
 has 'num_pages'       => ( is => 'ro' );
 has 'init_file'       => (
-    is => 'ro',
+    is  => 'ro',
     isa => 'Str',
 );
-has 'root_dir'        => (
+has 'root_dir' => (
     is      => 'ro',
     isa     => 'Str',
     default => catdir( tmpdir(), "chi-driver-fastmmap" )

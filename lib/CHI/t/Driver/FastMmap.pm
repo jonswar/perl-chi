@@ -34,14 +34,16 @@ sub test_parameter_passthrough : Test(2) {
     my $cache = $self->new_cache( cache_size => '500k' );
 
     # The number gets munged by FastMmap so it's not equal to 500 * 1024
-    is( $cache->fm_cache()->{cache_size}, 589824,
+    is( $cache->fm_cache()->{cache_size},
+        589824,
         'cache_size parameter is passed to Cache::FastMmap constructor' );
 
     $cache = $self->new_cache( page_size => 5000, num_pages => 11 );
 
     # Same here, it won't be equal to 5000 * 11
     is( $cache->fm_cache()->{cache_size}, 45056,
-        'page_size and num_pages parameters are passed to Cache::FastMmap constructor' );
+        'page_size and num_pages parameters are passed to Cache::FastMmap constructor'
+    );
 }
 
 1;
