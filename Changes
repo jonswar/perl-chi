@@ -1,6 +1,6 @@
 Revision history for CHI
 
-0.08
+0.08  Sep  9, 2008
 
 - Many internal changes to make greater use of Moose (Dave Rolsky).
 - The FastMmap driver was not actually making use of the init_file,
