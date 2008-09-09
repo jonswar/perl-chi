@@ -624,7 +624,7 @@ sub test_multiple_procs : Test(1) {
     # Having problems getting this to work at all on OS X Leopard;
     # skip for a while
     skip_until(
-        '8/15/08',
+        '12/15/08',
         1,
         sub {
 
