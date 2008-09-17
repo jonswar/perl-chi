@@ -95,10 +95,8 @@ sub store {
 
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
 
-    # Generate a temporary filename using unique_id - faster than tempfile, as long as
-    # we don't need automatic removal
-    #
-    my $temp_file = fast_catfile( $dir, unique_id() );
+    my $temp_file = $self->_generate_temporary_filename( $dir, $file );
+    my $store_file = defined($temp_file) ? $temp_file : $file;
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
     #
@@ -106,35 +104,38 @@ sub store {
         my $write_fh;
         unless (
             sysopen(
-                $write_fh,    $temp_file,
+                $write_fh,    $store_file,
                 $Store_Flags, $self->{file_create_mode}
             )
           )
         {
-            croak "write_file '$temp_file' - sysopen: $!";
+            croak "write_file '$store_file' - sysopen: $!";
         }
         my $size_left = length($data);
         my $offset    = 0;
         do {
             my $write_cnt = syswrite( $write_fh, $data, $size_left, $offset );
             unless ( defined $write_cnt ) {
-                croak "write_file '$temp_file' - syswrite: $!";
+                croak "write_file '$store_file' - syswrite: $!";
             }
             $size_left -= $write_cnt;
             $offset += $write_cnt;
         } while ( $size_left > 0 );
     }
 
-    # Rename can fail in rare race conditions...try multiple times
-    #
-    for ( my $try = 0 ; $try < 3 ; $try++ ) {
-        last if ( rename( $temp_file, $file ) );
-    }
-    if ( -f $temp_file ) {
-        my $error = $!;
-        unlink($temp_file);
-        ## no critic (RequireCarping)
-        die "could not rename '$temp_file' to '$file': $error";
+    if ( defined($temp_file) ) {
+
+        # Rename can fail in rare race conditions...try multiple times
+        #
+        for ( my $try = 0 ; $try < 3 ; $try++ ) {
+            last if ( rename( $temp_file, $file ) );
+        }
+        if ( -f $temp_file ) {
+            my $error = $!;
+            unlink($temp_file);
+            ## no critic (RequireCarping)
+            die "could not rename '$temp_file' to '$file': $error";
+        }
     }
 }
 
@@ -181,6 +182,15 @@ sub _collect_keys_via_file_find {
         push( @keys, $key );
     }
     return @keys;
+}
+
+sub _generate_temporary_filename {
+    my ( $self, $dir, $file ) = @_;
+
+    # Generate a temporary filename using unique_id - faster than tempfile, as long as
+    # we don't need automatic removal
+    #
+    return fast_catfile( $dir, unique_id() );
 }
 
 sub get_namespaces {
