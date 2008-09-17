@@ -77,6 +77,41 @@ sub test_path_to_key : Test(5) {
     );
 }
 
+{
+
+    package CHI::t::Driver::File::NoTempDriver;
+    use base qw(CHI::Driver::File);
+
+    sub _generate_temporary_filename {
+        my ( $self, $dir, $file ) = @_;
+        return undef;
+    }
+}
+
+{
+
+    package CHI::t::Driver::File::BadTempDriver;
+    use base qw(CHI::Driver::File);
+
+    sub _generate_temporary_filename {
+        my ( $self, $dir, $file ) = @_;
+        return '/dir/does/not/exist';
+    }
+}
+
+# Test that we can override how temporary files are generated
+#
+sub test_generate_temporary_filename : Tests(2) {
+    my $self = shift;
+
+    $self->{cache} =
+      $self->new_cache( driver_class => 'CHI::t::Driver::File::NoTempDriver' );
+    $self->test_simple();
+    $self->{cache} =
+      $self->new_cache( driver_class => 'CHI::t::Driver::File::BadTempDriver' );
+    throws_ok { $self->test_simple() } qr/No such file or directory/;
+}
+
 sub test_creation_and_deletion : Test(8) {
     my $self = shift;
 
