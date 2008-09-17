@@ -30,7 +30,12 @@ sub new {
     }
     croak "missing required param 'driver' or 'driver_class'"
       unless defined $driver_class;
-    require_dynamic($driver_class);
+
+    # Load class if it hasn't been loaded or defined in-line already
+    #
+    unless ( $driver_class->can('fetch') ) {
+        require_dynamic($driver_class);
+    }
 
     return $driver_class->new(%params);
 }
