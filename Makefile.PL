@@ -20,8 +20,8 @@ requires 'Hash::MoreUtils'           => 0;
 requires 'List::MoreUtils'           => '0.13';
 requires 'Module::Find'              => '0.05';
 requires 'Module::Load::Conditional' => 0;
-requires 'Moose'                     => '0.56';
-requires 'MooseX::AttributeHelpers'  => '0.13';
+requires 'Moose'                     => '0.54';
+requires 'MooseX::AttributeHelpers'  => '0.08';
 requires 'Storable'                  => 0;
 requires 'Time::Duration::Parse'     => '0.03';
 
