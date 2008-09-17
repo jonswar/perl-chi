@@ -12,13 +12,16 @@ severity = 3
 [-Subroutines::RequireFinalReturn]
 [-NamingConventions::ProhibitAmbiguousNames]
 
+# Necessary for too many test classes - at some point would consider turning off just for test classes
+[-Modules::ProhibitMultiplePackages]
+
 # Jury's still out on these
 [-RegularExpressions::RequireExtendedFormatting]
 
 # Unfortunately, this will mistakenly hit on anon hash references
 [-ValuesAndExpressions::ProhibitCommaSeparatedStatements]
 
-# Exception needed for $CHI::Driver::TestTime
+# Exception needed for references to $CHI::Driver::TestTime
 [Variables::ProhibitPackageVars]
 packages = CHI::Driver
 
@@ -29,3 +32,4 @@ allow = refs
 # Default too short
 [RegularExpressions::ProhibitComplexRegexes]
 max_characters = 100
+
