@@ -28,11 +28,35 @@ has 'short_driver_name' =>
 
 __PACKAGE__->meta->make_immutable();
 
+# Given a hash of params, return the subset that are not in CHI's common parameters.
+#
+my %common_params =
+  map { ( $_, 1 ) } keys( %{ __PACKAGE__->meta->get_attribute_map } );
+
+sub non_common_constructor_params {
+    my ( $class, $params ) = @_;
+
+    return {
+        map { ( $_, $params->{$_} ) }
+          grep { !$common_params{$_} } keys(%$params)
+    };
+}
+
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
       sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
+}
+
+sub declare_unsupported_methods {
+    my ( $class, @methods ) = @_;
+
+    foreach my $method (@methods) {
+        no strict 'refs';
+        *{ $class . "::$method" } =
+          sub { croak "method '$method' not supported by '$class'" };
+    }
 }
 
 # To override time() for testing - must be writable in a dynamically scoped way from tests
