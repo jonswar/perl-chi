@@ -27,4 +27,11 @@ sub test_random_string : Tests(2) {
     );
 }
 
+sub test_non_common_constructor_params : Tests(1) {
+    my $params =
+      { map { ( $_, 1 ) } qw( foo expires_in bar baz on_get_error ) };
+    my $non_common_params = CHI::Driver->non_common_constructor_params($params);
+    cmp_deeply( $non_common_params, { map { ( $_, 1 ) } qw(foo bar baz) } );
+}
+
 1;
