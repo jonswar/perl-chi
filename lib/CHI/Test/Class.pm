@@ -14,6 +14,13 @@ sub runtests {
     GetOptions( 'm|method=s' => sub { $ENV{TEST_METHOD} = ".*" . $_[1] . ".*" },
     );
 
+    if ( $ENV{TEST_STACK_TRACE} ) {
+
+        # Show entire stack trace on fatal errors or warnings
+        $SIG{'__DIE__'}  = sub { Carp::confess(@_) };
+        $SIG{'__WARN__'} = sub { Carp::confess(@_) };
+    }
+
     # Check for internal_only
     #
     if ( $class->internal_only && !$class->is_internal ) {
