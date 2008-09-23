@@ -82,7 +82,7 @@ sub test_path_to_key : Test(5) {
     package CHI::t::Driver::File::NoTempDriver;
     use base qw(CHI::Driver::File);
 
-    sub _generate_temporary_filename {
+    sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;
         return undef;
     }
@@ -93,9 +93,9 @@ sub test_path_to_key : Test(5) {
     package CHI::t::Driver::File::BadTempDriver;
     use base qw(CHI::Driver::File);
 
-    sub _generate_temporary_filename {
+    sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;
-        return '/dir/does/not/exist';
+        return "/dir/does/not/exist/$file";
     }
 }
 
