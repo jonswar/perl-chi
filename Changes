@@ -1,8 +1,8 @@
 Revision history for CHI
 
-0.08  Sep 23, 2008
+** denotes an incompatible change
 
-0.08  Sep 9, 2008
+0.08  Sep 23, 2008
 
 - ** Move CHI::Driver::Memcached to its own distribution
 - Many internal changes to make greater use of Moose (Dave Rolsky).
