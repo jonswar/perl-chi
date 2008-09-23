@@ -1,12 +1,18 @@
 Revision history for CHI
 
+** denotes an incompatible change
+
 0.08  Sep 9, 2008
 
+- ** Move CHI::Driver::Memcached to its own distribution
 - Many internal changes to make greater use of Moose (Dave Rolsky).
+- Add serializer option, allowing control over how data is serialized/deserialized
 - The FastMmap driver was not actually making use of the init_file,
   cache_size, page_size, or num_pages options. Reported by Mike
   Astle. RT #35819. (Dave Rolsky)
 - The clear method did not work with the Memcached driver. RT #32859.
+- Allow suppression of renames in CHI::Driver::File by overriding
+  generate_temporary_filename
 
 0.07  Mar 12, 2008
 

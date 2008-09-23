@@ -5,6 +5,7 @@ use CHI::Test;
 use CHI::Test::Logger;
 use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
+use Module::Load::Conditional qw(check_install);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -436,6 +437,61 @@ sub test_serialize : Tests {
     }
 }
 
+{
+
+    package DummySerializer;
+    sub serialize   { }
+    sub deserialize { }
+}
+
+sub test_serializers : Tests {
+    my ($self) = @_;
+
+    my $cache1 = $self->new_cache();
+    isa_ok( $cache1->serializer, 'Data::Serializer' );
+    is( $cache1->serializer->serializer, 'Storable' );
+    my $cache2 = $self->new_cache();
+    is( $cache1->serializer, $cache2->serializer,
+        'same serializer returned from two objects' );
+
+    throws_ok(
+        sub {
+            $self->new_cache( serializer => bless( {}, 'IceCream' ) );
+        },
+        qr/Validation failed for 'Serializer'/,
+        "invalid serializer"
+    );
+    lives_ok(
+        sub { $self->new_cache( serializer => bless( {}, 'DummySerializer' ) ) }
+        ,
+        "valid dummy serializer"
+    );
+
+    my @variants = (
+        { serializer => 'Storable' },
+        { serializer => 'Data::Dumper' },
+        { serializer => 'YAML' },
+    );
+    @variants = grep { check_install( module => $_->{serializer} ) } @variants;
+    ok( scalar(@variants), "some variants ok" );
+    foreach my $variant (@variants) {
+        my $serializer = Data::Serializer->new(%$variant);
+        my $cache = $self->new_cache( serializer => $serializer );
+        is(
+            $cache->serializer->serializer,
+            $variant->{serializer},
+            "serializer = " . $variant->{serializer}
+        );
+        $self->{cache} = $cache;
+        $self->test_key_types();
+    }
+
+    my $initial_count        = 6;
+    my $test_key_types_count = $self->{key_count} * 6 + 1;
+    $self->num_tests(
+        $initial_count + scalar(@variants) * ( 1 + $test_key_types_count ) );
+}
+
 sub test_namespaces : Test(6) {
     my $self  = shift;
     my $cache = $self->{cache};
@@ -490,8 +546,9 @@ sub test_multi : Test(8) {
     my $self  = shift;
     my $cache = $self->{cache};
 
-    my @ordered_keys   = map { $self->{keys}->{$_} } @{ $self->{keynames} };
-    my @ordered_values = map { $self->{values}->{$_} } @{ $self->{keynames} };
+    my @ordered_keys = map { $self->{keys}->{$_} } @{ $self->{keynames} };
+    my @ordered_values =
+      map { $self->{values}->{$_} } @{ $self->{keynames} };
     my %ordered_key_values =
       map { ( $self->{keys}->{$_}, $self->{values}->{$_} ) }
       @{ $self->{keynames} };

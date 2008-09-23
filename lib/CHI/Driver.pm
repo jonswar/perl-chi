@@ -1,10 +1,12 @@
 package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
-use CHI::Util qw(parse_duration);
+use CHI::Util qw(parse_duration dp);
+use Data::Serializer;
 use List::MoreUtils qw(pairwise);
 use Moose;
 use Moose::Util::TypeConstraints;
+use Scalar::Util qw(blessed);
 use strict;
 use warnings;
 
@@ -13,6 +15,16 @@ type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)/ };
 subtype Duration => as 'Int' => where { $_ > 0 };
 
 coerce 'Duration' => from 'Str' => via { parse_duration($_) };
+
+my $default_serializer = Data::Serializer->new( serializer => 'Storable' );
+
+# Force these methods to be autoloaded, else the can() won't work
+#
+$default_serializer->deserialize( $default_serializer->serialize( [] ) );
+subtype Serializer => as 'Object' => where {
+    $_ eq $default_serializer
+      || ( blessed($_) && $_->can('serialize') && $_->can('deserialize') );
+};
 
 use constant Max_Time => 0xffffffff;
 
@@ -23,6 +35,8 @@ has 'is_subcache'  => ( is => 'rw' );
 has 'namespace'    => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
+has 'serializer' =>
+  ( is => 'rw', isa => 'Serializer', default => sub { $default_serializer } );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
 
@@ -99,7 +113,8 @@ sub get {
           if $log->is_debug;
         return undef;
     }
-    my $obj = CHI::CacheObject->unpack_from_data( $key, $data );
+    my $obj =
+      CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
 
     # Handle expire_if
     #
@@ -142,7 +157,8 @@ sub get_object {
     croak "must specify key" unless defined($key);
 
     my $data = $self->fetch($key) or return undef;
-    my $obj = CHI::CacheObject->unpack_from_data( $key, $data );
+    my $obj =
+      CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
     return $obj;
 }
 
@@ -232,7 +248,7 @@ sub set {
     #
     my $obj =
       CHI::CacheObject->new( $key, $value, $created_at, $early_expires_at,
-        $expires_at );
+        $expires_at, $self->serializer );
     eval { $self->_set_object( $key, $obj ) };
     if ( my $error = $@ ) {
         $self->_handle_error( $key, $error, 'setting', $self->on_set_error() );
