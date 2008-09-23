@@ -114,6 +114,7 @@ Cache::Cache implementation.
 =head1 CONSTRUCTOR
 
 To create a new cache handle, call CHI-E<gt>new. It takes the following common options.
+All are optional, except that either I<driver> or I<driver_class> must be passed.
 
 =over
 
@@ -139,14 +140,14 @@ Suggestions for easy namespace selection:
 
 In a class, use the class name:
 
-    CHI->new(namespace => __PACKAGE__, ...);
+    my $cache = CHI->new(namespace => __PACKAGE__, ...);
 
 =item *
 
 In a script, use the script's absolute path name:
 
     use Cwd qw(realpath);
-    CHI->new(namespace => realpath($0), ...);
+    my $cache = CHI->new(namespace => realpath($0), ...);
 
 =item *
 
@@ -156,6 +157,16 @@ the namespace to the current component path.
 =back
 
 Defaults to 'Default' if not specified.
+
+=item serializer [OBJECT]
+
+An object to use for serializing data before storing it in the cache, and deserializing
+data before retrieving it from the cache. Must be a L<Data::Serializer|Data::Serializer>
+object, or another object that implements I<serialize()> and I<deserialize()>. e.g.
+
+    my $cache = CHI->new(serializer => Data::Serializer->new(serializer => 'Data::Dumper', compress => 1);
+
+The default is to use plain Storable.
 
 =item expires_in [DURATION]
 
