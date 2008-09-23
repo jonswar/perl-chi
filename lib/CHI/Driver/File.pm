@@ -95,7 +95,7 @@ sub store {
 
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
 
-    my $temp_file = $self->_generate_temporary_filename( $dir, $file );
+    my $temp_file = $self->generate_temporary_filename( $dir, $file );
     my $store_file = defined($temp_file) ? $temp_file : $file;
 
     # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
@@ -184,7 +184,7 @@ sub _collect_keys_via_file_find {
     return @keys;
 }
 
-sub _generate_temporary_filename {
+sub generate_temporary_filename {
     my ( $self, $dir, $file ) = @_;
 
     # Generate a temporary filename using unique_id - faster than tempfile, as long as
@@ -279,10 +279,11 @@ CHI::Driver::File -- File-based cache using one file per entry in a multi-level 
 This cache driver stores data on the filesystem, so that it can be shared between
 processes on a single machine, or even on multiple machines if using NFS.
 
-Each item is stored in its own file. During a set, a temporary file is created and then
-atomically renamed to the proper file. While not the most efficient, it eliminates the
-need for locking (with multiple overlapping sets, the last one "wins") and makes this
-cache usable in environments like NFS where locking might normally be undesirable.
+Each item is stored in its own file. By default, during a set, a temporary file is created
+and then atomically renamed to the proper file. While not the most efficient, it
+eliminates the need for locking (with multiple overlapping sets, the last one "wins") and
+makes this cache usable in environments like NFS where locking might normally be
+undesirable.
 
 The base filename is the key itself, with unsafe characters replaced with an escape
 sequence similar to URI escaping. The filename length is capped at 255 characters, which
@@ -341,6 +342,13 @@ Returns the full path to the directory representing this cache's namespace, whet
 it has any entries.
 
 =back
+
+=head1 TEMPORARY FILE RENAME
+
+By default, during a set, a temporary file is created and then atomically renamed to the
+proper file.  This eliminates the need for locking. You can subclass and override method
+I<generate_temporary_filename> to either change the path of the temporary filename, or
+skip the temporary file and rename altogether by having it return undef.
 
 =head1 SEE ALSO
 
