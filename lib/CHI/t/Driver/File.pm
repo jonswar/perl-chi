@@ -109,7 +109,7 @@ sub test_generate_temporary_filename : Tests(2) {
     $self->test_simple();
     $self->{cache} =
       $self->new_cache( driver_class => 'CHI::t::Driver::File::BadTempDriver' );
-    throws_ok { $self->test_simple() } qr/No such file or directory/;
+    throws_ok { $self->test_simple() } qr/error setting key/;
 }
 
 sub test_creation_and_deletion : Test(8) {
