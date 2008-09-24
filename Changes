@@ -1,8 +1,10 @@
 Revision history for CHI
 
-0.09  Sep 23, 2008
-
 ** denotes an incompatible change
+
+0.081  Sep 24, 2008
+
+- Fix t/Driver/File.pm test so it does not depend on specific OS error message
 
 0.08  Sep 23, 2008
 
