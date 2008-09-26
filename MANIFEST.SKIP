@@ -1,5 +1,6 @@
 ^bench
 ^bin
+^cp\.yml
 ^data
 ^dist
 ^docs
