@@ -10,7 +10,7 @@ use Scalar::Util qw(blessed);
 use strict;
 use warnings;
 
-type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)/ };
+type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)$/ };
 
 subtype Duration => as 'Int' => where { $_ > 0 };
 
