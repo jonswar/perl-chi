@@ -205,13 +205,13 @@ sub test_expires_shortly : Test(18) {
         my ($set_option) = @_;
         my ( $key, $value ) = $self->kvpair();
         my $desc = "set_option = " . dump_one_line($set_option);
+        my $start_time = time();
         is( $cache->set( $key, $value, $set_option ), $value, "set ($desc)" );
         is( $cache->get($key), $value, "hit ($desc)" );
-        my $start_time = time();
         is_between(
             $cache->get_expires_at($key),
             $start_time + 1,
-            $start_time + 3,
+            $start_time + 5,
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
@@ -593,12 +593,13 @@ sub test_multi_no_keys : Test(4) {
 sub test_clear : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
-    $self->num_tests( $self->{key_count} + 1 );
+    $self->num_tests( $self->{key_count} + 2 );
 
     if ( $self->supports_clear() ) {
         $self->set_some_keys($cache);
         $cache->clear();
         cmp_deeply( [ $cache->get_keys ], [], "get_keys after clear" );
+        is( scalar($cache->get_keys), 0, "scalar(get_keys) = 0 after clear" );
         while ( my ( $keyname, $key ) = each( %{ $self->{keys} } ) ) {
             ok( !defined $cache->get($key),
                 "key '$keyname' no longer defined after clear" );
