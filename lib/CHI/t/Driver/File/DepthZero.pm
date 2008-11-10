@@ -23,7 +23,8 @@ sub test_default_depth : Test(2) {
 
     my $cache = $self->new_cache();
     is( $cache->depth, 0 );
-    is(dirname($cache->path_to_key('foo')), $cache->path_to_namespace, "data files are one level below namespace");
+    is( dirname( $cache->path_to_key('foo') ),
+        $cache->path_to_namespace, "data files are one level below namespace" );
 }
 
 1;

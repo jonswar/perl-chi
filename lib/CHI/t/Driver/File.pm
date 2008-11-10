@@ -148,14 +148,15 @@ sub test_creation_and_deletion : Test(7) {
 sub test_root_dir_does_not_exist : Test(4) {
     my $self = shift;
 
-    my $parent_dir = tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 );
-    my $non_existent_root = fast_catdir($parent_dir, unique_id());
-    ok(!-d $non_existent_root, "$non_existent_root does not exist");
+    my $parent_dir =
+      tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 );
+    my $non_existent_root = fast_catdir( $parent_dir, unique_id() );
+    ok( !-d $non_existent_root, "$non_existent_root does not exist" );
     my $cache = $self->new_cache( root_dir => $non_existent_root );
-    ok(!defined($cache->get('foo')), 'miss');
-    $cache->set('foo', 5);
-    is($cache->get('foo'), 5, 'hit');
-    ok(-d $non_existent_root, "$non_existent_root exists after set");
+    ok( !defined( $cache->get('foo') ), 'miss' );
+    $cache->set( 'foo', 5 );
+    is( $cache->get('foo'), 5, 'hit' );
+    ok( -d $non_existent_root, "$non_existent_root exists after set" );
 }
 
 1;
