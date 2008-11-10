@@ -11,7 +11,7 @@ use strict;
 my $content = "a" x 100000;
 my $file = "content.txt";
 
-sub write_binary_file {
+sub syswrite_binary_file {
     my $buf = $content;
     my $write_fh;
     unless ( sysopen( $write_fh, $file, O_WRONLY | O_CREAT | O_BINARY ) ) {
@@ -36,8 +36,9 @@ sub write_binary_file {
     truncate( $write_fh, $length );
 }
 
-timethese(5000, {
-    'write_binary_file' => \&write_binary_file,
+timethese(1000, {
+    'syswrite_binary_file' => \&syswrite_binary_file,
     'write_slurp'  => sub { write_file($file, { bin_mode => ':raw' }, $content) },
-    'write_open' => sub { open(my $fh, ">$file"); binmode($fh); print $fh $content },
+    'write_print' => sub { open(my $fh, ">$file"); binmode($fh); $fh->print($content) },
+    'write_print_with_localized_glob' => sub { local *write_fh; open(*write_fh, ">$file"); binmode(*write_fh); print *write_fh $content },
          });
