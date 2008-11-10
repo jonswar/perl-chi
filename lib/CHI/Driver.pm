@@ -7,6 +7,7 @@ use List::MoreUtils qw(pairwise);
 use Moose;
 use Moose::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
+use Time::Duration;
 use strict;
 use warnings;
 
@@ -256,7 +257,11 @@ sub set {
     }
 
     my $log = CHI->logger();
-    $self->_log_set_result( $log, $key, $value ) if $log->is_debug;
+    if ( $log->is_debug ) {
+        my $log_expires_in =
+          defined($expires_at) ? ( $expires_at - $created_at ) : undef;
+        $self->_log_set_result( $log, $key, $value, $log_expires_in );
+    }
 
     return $value;
 }
@@ -307,6 +312,11 @@ sub get_multi_arrayref {
     croak "must specify keys" unless defined($keys);
 
     return [ map { scalar( $self->get($_) ) } @$keys ];
+}
+
+sub get_multi_array {
+    my $self = shift;
+    return @{ $self->get_multi_arrayref(@_) };
 }
 
 sub get_multi_hashref {
@@ -424,15 +434,20 @@ sub _log_get_result {
 }
 
 sub _log_set_result {
-    my ( $self, $log, $key, $value ) = @_;
+    my ( $self, $log, $key, $value, $expires_in ) = @_;
 
     # if $log->is_debug - done in caller
     if ( !$self->is_subcache ) {
         $log->debug(
             sprintf(
-                "cache set for namespace='%s', key='%s', size=%d, driver='%s'",
-                $self->{namespace}, $key,
-                length($value),     $self->{short_driver_name}
+                "cache set for namespace='%s', key='%s', size=%d, expires='%s', driver='%s'",
+                $self->{namespace},
+                $key,
+                length($value),
+                Time::Duration::concise(
+                    Time::Duration::duration_exact($expires_in)
+                ),
+                $self->{short_driver_name}
             )
         );
     }
