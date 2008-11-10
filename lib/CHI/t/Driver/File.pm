@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Util qw(random_string);
-use CHI::Util qw(fast_catdir);
+use CHI::Util qw(fast_catdir unique_id);
 use File::Basename;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
@@ -112,11 +112,17 @@ sub test_generate_temporary_filename : Tests(2) {
     throws_ok { $self->test_simple() } qr/error setting key/;
 }
 
-sub test_creation_and_deletion : Test(8) {
+sub test_default_depth : Test(1) {
     my $self = shift;
 
     my $cache = $self->new_cache();
     is( $cache->depth, 2 );
+}
+
+sub test_creation_and_deletion : Test(7) {
+    my $self = shift;
+
+    my $cache = $self->new_cache();
 
     my ( $key, $value ) = $self->kvpair();
     my $cache_file    = $cache->path_to_key($key);
@@ -139,4 +145,18 @@ sub test_creation_and_deletion : Test(8) {
         "namespace dir '$namespace_dir' does not exist after clear" );
 }
 
+sub test_root_dir_does_not_exist : Test(4) {
+    my $self = shift;
+
+    my $parent_dir = tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 );
+    my $non_existent_root = fast_catdir($parent_dir, unique_id());
+    ok(!-d $non_existent_root, "$non_existent_root does not exist");
+    my $cache = $self->new_cache( root_dir => $non_existent_root );
+    ok(!defined($cache->get('foo')), 'miss');
+    $cache->set('foo', 5);
+    is($cache->get('foo'), 5, 'hit');
+    ok(-d $non_existent_root, "$non_existent_root exists after set");
+}
+
 1;
+
