@@ -61,7 +61,8 @@ sub _build_contained_cache {
 sub get_keys {
     my ($self) = @_;
 
-    return $self->_contained_cache->get_keys(0);
+    my @keys = $self->_contained_cache->get_keys(0);
+    return @keys;
 }
 
 sub get_namespaces {

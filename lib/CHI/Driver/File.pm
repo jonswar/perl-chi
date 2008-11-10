@@ -95,6 +95,9 @@ sub store {
 
     mkpath( $dir, 0, $self->{dir_create_mode} ) if !-d $dir;
 
+    # Possibly generate a temporary file - if generate_temporary_filename returns undef,
+    # store to the destination file directly
+    #
     my $temp_file = $self->generate_temporary_filename( $dir, $file );
     my $store_file = defined($temp_file) ? $temp_file : $file;
 
@@ -163,7 +166,8 @@ sub get_keys {
 
     my @filepaths;
     my $wanted = sub { push( @filepaths, $_ ) if -f && /\.dat$/ };
-    return $self->_collect_keys_via_file_find( \@filepaths, $wanted );
+    my @keys = $self->_collect_keys_via_file_find( \@filepaths, $wanted );
+    return @keys;
 }
 
 sub _collect_keys_via_file_find {
@@ -304,7 +308,7 @@ L<CHI|general constructor options/constructor>.
 
 The location in the filesystem that will hold the root of the cache.  Defaults to a
 directory called 'chi-driver-file' under the OS default temp directory (e.g. '/tmp'
-on UNIX).
+on UNIX). This directory will be created as needed on the first cache set.
 
 For backward compatibility with Cache::FileCache, this can also be specified as C<cache_root>.
 
