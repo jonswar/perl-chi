@@ -444,9 +444,11 @@ sub _log_set_result {
                 $self->{namespace},
                 $key,
                 length($value),
-                Time::Duration::concise(
+                defined($expires_in)
+                ? Time::Duration::concise(
                     Time::Duration::duration_exact($expires_in)
-                ),
+                  )
+                : 'never',
                 $self->{short_driver_name}
             )
         );
