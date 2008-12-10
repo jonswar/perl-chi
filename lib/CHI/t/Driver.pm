@@ -492,7 +492,7 @@ sub test_serializers : Tests {
         $initial_count + scalar(@variants) * ( 1 + $test_key_types_count ) );
 }
 
-sub test_namespaces : Test(6) {
+sub test_namespaces : Test(12) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -523,8 +523,12 @@ sub test_namespaces : Test(6) {
     );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
 
-    # Have to figure out proper behavior of get_namespaces - whether it automatically includes new or now-empty namespaces
-    # cmp_set([$cache1->get_namespaces()], [$cache->namespace(), $ns1, $ns2, $ns3], "get_namespaces");
+    # get_namespaces may or may not automatically include empty namespaces
+    cmp_deeply([$cache1->get_namespaces()], supersetof($ns1, $ns3), "get_namespaces contains $ns1 and $ns3");
+
+    foreach my $c ($cache0, $cache1, $cache1a, $cache2, $cache3) {
+        cmp_deeply([$cache->get_namespaces()], [$c->get_namespaces()], 'get_namespaces the same regardless of which cache asks');
+    }
 }
 
 sub test_persist : Test(1) {
