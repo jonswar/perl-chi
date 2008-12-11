@@ -14,13 +14,6 @@ with 'CHI::Driver::Role::CacheContainer' =>
   { excludes => [qw( get_keys get_namespaces )] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
-has 'cache_size'      => ( is => 'ro' );
-has 'page_size'       => ( is => 'ro' );
-has 'num_pages'       => ( is => 'ro' );
-has 'init_file'       => (
-    is  => 'ro',
-    isa => 'Str',
-);
 has 'root_dir' => (
     is      => 'ro',
     isa     => 'Str',
@@ -38,24 +31,18 @@ sub BUILD {
 
     mkpath( $self->root_dir, 0, $self->dir_create_mode )
       if !-d $self->root_dir;
+    $self->{fm_params} =
+        {
+            raw_values => 1,
+            share_file => catfile( $self->root_dir, $self->escape_for_filename( $self->namespace ) . ".dat"),
+            %{ $self->non_common_constructor_params($params) },
+        };
 }
 
 sub _build_contained_cache {
     my ($self) = @_;
 
-    my $share_file =
-      catfile( $self->root_dir,
-        $self->escape_for_filename( $self->namespace ) );
-
-    my %fm_params = (
-        raw_values => 1,
-        share_file => $share_file,
-        map { defined $self->$_() ? ( $_ => $self->$_() ) : () }
-          qw(init_file unlink_on_exit cache_size page_size num_pages)
-    );
-
-    return Cache::FastMmap->new(%fm_params);
-
+    return Cache::FastMmap->new( %{ $self->{fm_params} } );
 }
 
 sub get_keys {
@@ -68,10 +55,11 @@ sub get_keys {
 sub get_namespaces {
     my ($self) = @_;
 
-    my @contents = read_dir( $self->root_dir() );
+    my $root_dir = $self->root_dir;
+    my @contents = read_dir( $root_dir );
     my @namespaces =
-      map { $self->unescape_for_filename($_) }
-      grep { -f catdir( $self->root_dir(), $_ ) } @contents;
+      map { $self->unescape_for_filename(substr($_, 0, -4)) }
+      grep { /\.dat$/ } @contents;
     return @namespaces;
 }
 
@@ -106,9 +94,6 @@ automatically, we pass the C<raw_values> flag.
 
 =head1 CONSTRUCTOR OPTIONS
 
-When using this driver, the following options can be passed to CHI->new() in addition to the
-L<CHI|general constructor options/constructor>.
-    
 =over
 
 =item root_dir
@@ -127,18 +112,11 @@ Indicates whether L<Cache::FastMmap|Cache::FastMmap> should remove the cache whe
 object is destroyed. We default this to 0 to conform to the CHI API (unlike Cache::FastMmap, 
 which defaults it to 1 if the cache files doesn't already exist).
 
-=item cache_size
-
-=item page_size
-
-=item num_pages
-
-=item init_file
-
-These options are passed directly to L<Cache::FastMmap>.
-
 =back
 
+Any other constructor options L<not recognized by CHI|CHI/constructor> are passed along to
+L<Cache::FastMmap-E<gt>new>.
+    
 =head1 METHODS
 
 =over
