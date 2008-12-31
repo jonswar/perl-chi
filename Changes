@@ -5,6 +5,13 @@ Revision history for CHI
 0.09  Dec 30, 2008
 
 - Moved source to git
+- Added Null driver
+- Fixed main docs regarding Memcached driver
+- Changed FastMmap driver to pass all unrecognized options onto Cache::FastMmap, to better handle future FastMmap versions
+- Fixed small get_keys bug in File driver
+- Added expires time to set logs
+- Added get_multi_array alongside get_multi_arrayref
+- Added test for get_namespaces
 
 0.081  Sep 24, 2008
 
