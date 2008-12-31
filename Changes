@@ -4,6 +4,8 @@ Revision history for CHI
 
 0.09  Sep 24, 2008
 
+- Moved source to git
+
 0.081  Sep 24, 2008
 
 - Fix t/Driver/File.pm test so it does not depend on specific OS error message
