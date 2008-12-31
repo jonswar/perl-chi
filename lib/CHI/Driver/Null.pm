@@ -4,12 +4,13 @@ use strict;
 use warnings;
 
 extends 'CHI::Driver';
+__PACKAGE__->meta->make_immutable();
 
-sub fetch { undef }
-sub store { undef }
-sub remove { undef }
-sub clear { undef }
-sub get_keys { return () }
+sub fetch          { undef }
+sub store          { undef }
+sub remove         { undef }
+sub clear          { undef }
+sub get_keys       { return () }
 sub get_namespaces { return () }
 
 1;

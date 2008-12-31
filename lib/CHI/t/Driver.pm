@@ -524,10 +524,18 @@ sub test_namespaces : Test(12) {
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
 
     # get_namespaces may or may not automatically include empty namespaces
-    cmp_deeply([$cache1->get_namespaces()], supersetof($ns1, $ns3), "get_namespaces contains $ns1 and $ns3");
+    cmp_deeply(
+        [ $cache1->get_namespaces() ],
+        supersetof( $ns1, $ns3 ),
+        "get_namespaces contains $ns1 and $ns3"
+    );
 
-    foreach my $c ($cache0, $cache1, $cache1a, $cache2, $cache3) {
-        cmp_deeply([$cache->get_namespaces()], [$c->get_namespaces()], 'get_namespaces the same regardless of which cache asks');
+    foreach my $c ( $cache0, $cache1, $cache1a, $cache2, $cache3 ) {
+        cmp_deeply(
+            [ $cache->get_namespaces() ],
+            [ $c->get_namespaces() ],
+            'get_namespaces the same regardless of which cache asks'
+        );
     }
 }
 
@@ -645,7 +653,7 @@ sub test_logging : Test(6) {
         qr/cache set for .* key='$key', size=$length, expires='1m20s', driver='$driver'/
     );
     $cache->get($key);
-    $log->contains_ok( qr/cache get for .* key='$key', driver='$driver': HIT/ );
+    $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
     local $CHI::Driver::Test_Time = $start_time + 120;
     $cache->get($key);
     $log->contains_ok(
@@ -718,7 +726,7 @@ sub test_multiple_procs : Test(1) {
     # Having problems getting this to work at all on OS X Leopard;
     # skip for a while
     skip_until(
-        '12/15/08',
+        '3/15/09',
         1,
         sub {
 

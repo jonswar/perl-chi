@@ -31,12 +31,14 @@ sub BUILD {
 
     mkpath( $self->root_dir, 0, $self->dir_create_mode )
       if !-d $self->root_dir;
-    $self->{fm_params} =
-        {
-            raw_values => 1,
-            share_file => catfile( $self->root_dir, $self->escape_for_filename( $self->namespace ) . ".dat"),
-            %{ $self->non_common_constructor_params($params) },
-        };
+    $self->{fm_params} = {
+        raw_values => 1,
+        share_file => catfile(
+            $self->root_dir,
+            $self->escape_for_filename( $self->namespace ) . ".dat"
+        ),
+        %{ $self->non_common_constructor_params($params) },
+    };
 }
 
 sub _build_contained_cache {
@@ -56,9 +58,9 @@ sub get_namespaces {
     my ($self) = @_;
 
     my $root_dir = $self->root_dir;
-    my @contents = read_dir( $root_dir );
+    my @contents = read_dir($root_dir);
     my @namespaces =
-      map { $self->unescape_for_filename(substr($_, 0, -4)) }
+      map { $self->unescape_for_filename( substr( $_, 0, -4 ) ) }
       grep { /\.dat$/ } @contents;
     return @namespaces;
 }
