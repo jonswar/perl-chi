@@ -198,19 +198,13 @@ Define Moose's BUILD method if you want to process any options specific to your 
 Override this if you want to provide an efficient method of clearing a namespace.
 The default implementation will iterate over all keys and call L</remove> for each.
 
-=item _serialize ( $value )
-
-=item _deserialize ( $serialized_value )
-
-Override these if you want to change the serialization method used for references. The
-default is Storable freeze/thaw. Warning: this will probably change to a serializer
-plugin model.
-
 =item fetch_multi_arrayref ( $keys )
 
 Override this if you want to efficiently process multiple fetches. Return an array
 reference of data or undef corresponding to I<$keys>. The default will iterate over
 I<$keys> and call fetch for each.
+
+Overriding this method will affect fetch_multi_array and fetch_multi_hash as well.
 
 =item store_multi ( $key_data, $options )
 

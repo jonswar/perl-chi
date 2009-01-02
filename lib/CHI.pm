@@ -164,7 +164,7 @@ An object to use for serializing data before storing it in the cache, and deseri
 data before retrieving it from the cache. Must be a L<Data::Serializer|Data::Serializer>
 object, or another object that implements I<serialize()> and I<deserialize()>. e.g.
 
-    my $cache = CHI->new(serializer => Data::Serializer->new(serializer => 'Data::Dumper', compress => 1);
+    my $cache = CHI->new(serializer => Data::Serializer->new(serializer => 'Data::Dumper', compress => 1));
 
 The default is to use plain Storable.
 
@@ -615,9 +615,10 @@ Bugs and feature requests will be tracked at RT:
 
     http://rt.cpan.org/NoAuth/Bugs.html?Dist=CHI
 
-The latest source code is available at:
+The latest source code can be browsed and fetched at:
 
-    http://code.google.com/p/perl-cache/wiki/Source
+    http://github.com/jonswar/perl-chi/tree/master
+    git clone git://github.com/jonswar/perl-chi.git
 
 =head1 TODO
 
