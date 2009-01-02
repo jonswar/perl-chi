@@ -20,12 +20,25 @@ sub new_cache_options {
     return ( $self->SUPER::new_cache_options(), root_dir => $root_dir );
 }
 
-sub test_fm_cache : Test(1) {
+sub test_fm_cache : Test(4) {
     my ($self) = @_;
 
-    my $cache = $self->new_cache();
+    # Create brand new cache and check defaults
+    my $cache =
+      $self->new_cache( root_dir =>
+          tempdir( "chi-driver-fastmmap-XXXX", TMPDIR => 1, CLEANUP => 1 ) );
 
-    isa_ok( $cache->fm_cache(), 'Cache::FastMmap' );
+    my $fm_cache = $cache->fm_cache();
+    isa_ok( $fm_cache, 'Cache::FastMmap' );
+
+    my %defaults = (
+        unlink_on_exit => 0,
+        empty_on_exit  => 0,
+        raw_values     => 1,
+    );
+    while ( my ( $key, $value ) = each(%defaults) ) {
+        is( $fm_cache->{$key} || 0, $value, "$key = $value by default" );
+    }
 }
 
 sub test_parameter_passthrough : Test(2) {

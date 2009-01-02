@@ -19,7 +19,6 @@ has 'root_dir' => (
     isa     => 'Str',
     default => catdir( tmpdir(), "chi-driver-fastmmap" )
 );
-has 'unlink_on_exit' => ( is => 'ro', isa => 'Int', default => 0 );
 
 __PACKAGE__->meta->alias_method(
     'fm_cache' => __PACKAGE__->can('_contained_cache') );
@@ -32,8 +31,9 @@ sub BUILD {
     mkpath( $self->root_dir, 0, $self->dir_create_mode )
       if !-d $self->root_dir;
     $self->{fm_params} = {
-        raw_values => 1,
-        share_file => catfile(
+        raw_values     => 1,
+        unlink_on_exit => 0,
+        share_file     => catfile(
             $self->root_dir,
             $self->escape_for_filename( $self->namespace ) . ".dat"
         ),
@@ -91,8 +91,11 @@ This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is v
 and can be used to share data between processes on a single host, though not between hosts.
 
 To support namespaces, this driver takes a directory parameter rather than a file, and
-creates one Cache::FastMMap file for each namespace. Because CHI handles serialization
-automatically, we pass the C<raw_values> flag.
+creates one Cache::FastMMap file for each namespace.
+
+Because CHI handles serialization automatically, we pass the C<raw_values> flag as 1; and
+to conform to the CHI API, we pass C<unlink_on_exit> as 0, so that all cache files are
+permanent.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -107,12 +110,6 @@ on UNIX).
 =item dir_create_mode
 
 Permissions mode to use when creating directories. Defaults to 0775.
-
-=item unlink_on_exit
-
-Indicates whether L<Cache::FastMmap|Cache::FastMmap> should remove the cache when the
-object is destroyed. We default this to 0 to conform to the CHI API (unlike Cache::FastMmap, 
-which defaults it to 1 if the cache files doesn't already exist).
 
 =back
 
