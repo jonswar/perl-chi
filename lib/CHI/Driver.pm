@@ -26,6 +26,8 @@ subtype Serializer => as 'Object' => where {
     $_ eq $default_serializer
       || ( blessed($_) && $_->can('serialize') && $_->can('deserialize') );
 };
+coerce 'Serializer' => from 'Str' =>
+  via { Data::Serializer->new( serializer => $_ ) };
 
 use constant Max_Time => 0xffffffff;
 
@@ -36,8 +38,12 @@ has 'is_subcache'  => ( is => 'rw' );
 has 'namespace'    => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'serializer' =>
-  ( is => 'rw', isa => 'Serializer', default => sub { $default_serializer } );
+has 'serializer' => (
+    is      => 'rw',
+    isa     => 'Serializer',
+    coerce  => 1,
+    default => sub { $default_serializer }
+);
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
 
