@@ -2,6 +2,8 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
+0.10  Jan  2, 2009
+
 0.091 Jan 2, 2009
 
 - Ensure that unlink_on_exit=0 is being passed to FastMmap
