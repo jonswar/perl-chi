@@ -2,7 +2,13 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.09  Jan 2, 2009
+0.091 Jan 2, 2009
+
+- Ensure that unlink_on_exit=0 is being passed to FastMmap
+- Allow serializer to be passed as a simple string
+- Documentation fixes
+
+0.09  Dec 30, 2008
 
 - Moved source to git
 - Added Null driver
