@@ -62,13 +62,18 @@ sub test_parameter_passthrough : Test(2) {
 sub test_value_too_large : Tests(2) {
     my ($self) = @_;
 
-    my $cache = $self->new_cache( page_size => '4k', num_pages => 11, on_set_error => 'die' );
+    my $cache = $self->new_cache(
+        page_size    => '4k',
+        num_pages    => 11,
+        on_set_error => 'die'
+    );
     my %values;
     $values{small} = 'x' x 3 x 1024;
     $values{large} = 'x' x 10 x 1024;
-    $cache->set('small', $values{small});
-    is($cache->get('small'), $values{small}, "got small");
-    throws_ok { $cache->set('large', $values{large}) } qr/error setting key 'large'.*fastmmap set failed/;
+    $cache->set( 'small', $values{small} );
+    is( $cache->get('small'), $values{small}, "got small" );
+    throws_ok { $cache->set( 'large', $values{large} ) }
+    qr/error setting key 'large'.*fastmmap set failed/;
 }
 
 1;

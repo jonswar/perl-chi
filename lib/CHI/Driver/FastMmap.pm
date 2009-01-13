@@ -67,11 +67,12 @@ sub get_namespaces {
 
 # Capture set failures
 sub store {
-    my $self = shift;
+    my $self   = shift;
     my $result = $self->_contained_cache->set(@_);
-    if (!$result) {
-        my ($key, $value) = @_;
-        die sprintf("fastmmap set failed - value too large? (%d bytes)", length($value));
+    if ( !$result ) {
+        my ( $key, $value ) = @_;
+        croak sprintf( "fastmmap set failed - value too large? (%d bytes)",
+            length($value) );
     }
 }
 
