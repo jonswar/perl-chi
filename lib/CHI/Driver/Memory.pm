@@ -1,6 +1,5 @@
 package CHI::Driver::Memory;
 use Moose;
-use MooseX::AttributeHelpers;
 use strict;
 use warnings;
 
@@ -8,35 +7,52 @@ extends 'CHI::Driver';
 
 my $Default_Datastore = {};
 
-has 'datastore' => (
-    metaclass => 'Collection::Hash',
-    is        => 'ro',
-    isa       => 'HashRef',
-    default   => sub { $Default_Datastore },
-    provides  => { keys => 'get_namespaces' },
-);
-
-has 'datastore_for_namespace' => (
-    metaclass => 'Collection::Hash',
-    is        => 'ro',
-    isa       => 'HashRef',
-    lazy      => 1,
-    builder   => '_build_datastore_for_namespace',
-    provides  => {
-        get    => 'fetch',
-        set    => 'store',
-        delete => 'remove',
-        clear  => 'clear',
-        keys   => 'get_keys',
-    },
-);
+has 'datastore' => ( is => 'ro', isa => 'HashRef', default => sub { $Default_Datastore } );
 
 __PACKAGE__->meta->make_immutable();
 
-sub _build_datastore_for_namespace {
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    $self->{datastore}->{ $self->namespace } ||= {};
+    $self->{datastore_for_namespace} = $self->{datastore}->{ $self->namespace };
+}
+
+sub fetch {
+    my ( $self, $key ) = @_;
+
+    return $self->{datastore_for_namespace}->{$key};
+}
+
+sub store {
+    my ( $self, $key, $data ) = @_;
+
+    $self->{datastore_for_namespace}->{$key} = $data;
+}
+
+sub remove {
+    my ( $self, $key ) = @_;
+
+    delete $self->{datastore_for_namespace}->{$key};
+}
+
+sub clear {
     my ($self) = @_;
 
-    return $self->datastore->{ $self->namespace } ||= {};
+    $self->{datastore_for_namespace} =
+      $self->{datastore}->{ $self->namespace } = {};
+}
+
+sub get_keys {
+    my ($self) = @_;
+
+    return keys( %{ $self->{datastore_for_namespace} } );
+}
+
+sub get_namespaces {
+    my ($self) = @_;
+
+    return keys( %{ $self->{datastore} } );
 }
 
 1;

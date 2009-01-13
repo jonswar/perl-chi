@@ -19,13 +19,18 @@ has '_contained_cache' => (
     builder => '_build_contained_cache',
     handles => {
         fetch  => 'get',
-        store  => 'set',
         remove => 'remove',
     },
 );
 
 # These are implemented as separate subs so they can be excluded by
 # consumers of the role.
+sub store {
+    my $self = shift;
+
+    return $self->_contained_cache->set(@_);
+}
+
 sub clear {
     my $self = shift;
 
