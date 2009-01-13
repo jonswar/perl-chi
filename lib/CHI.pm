@@ -339,7 +339,8 @@ Remove the data associated with the I<$key> from the cache.
 
 =item expire( $key )
 
-If I<$key> exists, expire it by setting its expiration time into the past.
+If I<$key> exists, expire it by setting its expiration time into the past. Does not necessarily
+remove the data.
 
 =item expire_if ( $key, $code )
 
