@@ -11,7 +11,7 @@ use warnings;
 extends 'CHI::Driver';
 
 with 'CHI::Driver::Role::CacheContainer' =>
-  { excludes => [qw( get_keys get_namespaces )] };
+  { excludes => [qw( get_keys get_namespaces store )] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'root_dir' => (
@@ -63,6 +63,16 @@ sub get_namespaces {
       map { $self->unescape_for_filename( substr( $_, 0, -4 ) ) }
       grep { /\.dat$/ } @contents;
     return @namespaces;
+}
+
+# Capture set failures
+sub store {
+    my $self = shift;
+    my $result = $self->_contained_cache->set(@_);
+    if (!$result) {
+        my ($key, $value) = @_;
+        die sprintf("fastmmap set failed - value too large? (%d bytes)", length($value));
+    }
 }
 
 1;
