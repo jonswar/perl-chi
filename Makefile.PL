@@ -24,6 +24,7 @@ requires 'Module::Load::Conditional' => 0;
 requires 'Moose'                     => '0.54';
 requires 'MooseX::AttributeHelpers'  => '0.08';
 requires 'Storable'                  => 0;
+requires 'Time::Duration'            => '1.06';
 requires 'Time::Duration::Parse'     => '0.03';
 
 license 'perl';
