@@ -25,22 +25,22 @@ CHI::Driver::Development -- Manual for developing new CHI drivers
 
     }
 
-    sub remove {
+    sub _remove {
         my ( $self, $key ) = @_;
 
     }
 
-    sub clear {
+    sub _clear {
         my ($self) = @_;
 
     }
 
-    sub get_keys {
+    sub _get_keys {
         my ($self) = @_;
 
     }
 
-    sub get_namespaces {
+    sub _get_namespaces {
         my ($self) = @_;
 
     }
@@ -177,9 +177,9 @@ Returns the data associated with I<$key> in the namespace. Called by L</"get">. 
 CHI::Driver superclass will take care of extracting out metadata like expiration options
 and determining if the value has expired.
 
-=item remove ( $self, $key )
+=item _remove ( $self, $key )
 
-Remove the data associated with the I<$key> in the namespace.
+Remove the data associated with the I<$key> in the namespace. This is called by remove().
 
 =back
 
@@ -193,16 +193,17 @@ The following methods have a default implementation, but MAY be overriden by you
 
 Define Moose's BUILD method if you want to process any options specific to your driver.
 
-=item clear ( $self )
+=item _clear ( $self )
 
-Override this if you want to provide an efficient method of clearing a namespace.
-The default implementation will iterate over all keys and call L</remove> for each.
+Override this if you want to provide an efficient method of clearing a namespace.  This is
+called by clear(). The default implementation will iterate over all keys and call
+remove() for each.
 
 =item fetch_multi_arrayref ( $keys )
 
 Override this if you want to efficiently process multiple fetches. Return an array
 reference of data or undef corresponding to I<$keys>. The default will iterate over
-I<$keys> and call fetch for each.
+I<$keys> and call fetch() for each.
 
 Overriding this method will affect fetch_multi_array and fetch_multi_hash as well.
 
@@ -221,14 +222,15 @@ but are not required for basic cache operations.
 
 =over
 
-=item get_keys ( $self )
+=item _get_keys ( $self )
 
-Return all keys in the namespace. It is acceptable to either include or omit expired keys.
+Return all keys in the namespace. It is acceptable to either include or omit expired
+keys. This is called by get_keys().
 
-=item get_namespaces ( $self )
+=item _get_namespaces ( $self )
 
 Return namespaces associated with the cache. It is acceptable to either include or omit
-namespaces with no valid keys.
+namespaces with no valid keys. This is called by get_namespaces().
 
 =back
 
