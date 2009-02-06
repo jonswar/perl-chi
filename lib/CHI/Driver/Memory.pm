@@ -31,26 +31,26 @@ sub store {
     $self->{datastore_for_namespace}->{$key} = $data;
 }
 
-sub remove {
+sub _remove {
     my ( $self, $key ) = @_;
 
     delete $self->{datastore_for_namespace}->{$key};
 }
 
-sub clear {
+sub _clear {
     my ($self) = @_;
 
     $self->{datastore_for_namespace} =
       $self->{datastore}->{ $self->namespace } = {};
 }
 
-sub get_keys {
+sub _get_keys {
     my ($self) = @_;
 
     return keys( %{ $self->{datastore_for_namespace} } );
 }
 
-sub get_namespaces {
+sub _get_namespaces {
     my ($self) = @_;
 
     return keys( %{ $self->{datastore} } );

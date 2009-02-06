@@ -11,7 +11,7 @@ use warnings;
 extends 'CHI::Driver';
 
 with 'CHI::Driver::Role::CacheContainer' =>
-  { excludes => [qw( get_keys get_namespaces store )] };
+  { excludes => [qw( _get_keys _get_namespaces store )] };
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'root_dir' => (
@@ -47,14 +47,14 @@ sub _build_contained_cache {
     return Cache::FastMmap->new( %{ $self->{fm_params} } );
 }
 
-sub get_keys {
+sub _get_keys {
     my ($self) = @_;
 
     my @keys = $self->_contained_cache->get_keys(0);
     return @keys;
 }
 
-sub get_namespaces {
+sub _get_namespaces {
     my ($self) = @_;
 
     my $root_dir = $self->root_dir;

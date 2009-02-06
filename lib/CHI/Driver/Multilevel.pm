@@ -80,19 +80,19 @@ sub store {
     $self->do_for_each_subcache( sub { $_[0]->store( $key, $data ) } );
 }
 
-sub remove {
+sub _remove {
     my ( $self, $key ) = @_;
 
     $self->do_for_each_subcache( sub { $_[0]->remove($key) } );
 }
 
-sub clear {
+sub _clear {
     my ($self) = @_;
 
     $self->do_for_each_subcache( sub { $_[0]->clear() } );
 }
 
-sub get_keys {
+sub _get_keys {
     my ($self) = @_;
 
     my @keys;
@@ -100,7 +100,7 @@ sub get_keys {
     return uniq(@keys);
 }
 
-sub get_namespaces {
+sub _get_namespaces {
     my ($self) = @_;
 
     my @namespaces;

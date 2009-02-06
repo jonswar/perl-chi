@@ -142,7 +142,7 @@ sub store {
     }
 }
 
-sub remove {
+sub _remove {
     my ( $self, $key ) = @_;
 
     my $file = $self->path_to_key($key) or return undef;
@@ -151,7 +151,7 @@ sub remove {
     die "could not unlink '$file'" if -f $file;
 }
 
-sub clear {
+sub _clear {
     my ($self) = @_;
 
     my $namespace_dir = $self->path_to_namespace;
@@ -161,7 +161,7 @@ sub clear {
       if -d $namespace_dir;
 }
 
-sub get_keys {
+sub _get_keys {
     my ($self) = @_;
 
     my @filepaths;
@@ -197,7 +197,7 @@ sub generate_temporary_filename {
     return fast_catfile( $dir, unique_id() );
 }
 
-sub get_namespaces {
+sub _get_namespaces {
     my ($self) = @_;
 
     my @contents = read_dir( $self->root_dir() );

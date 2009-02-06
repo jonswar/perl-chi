@@ -31,19 +31,19 @@ sub store {
     return $self->_contained_cache->set(@_);
 }
 
-sub clear {
+sub _clear {
     my $self = shift;
 
     return $self->_contained_cache->clear(@_);
 }
 
-sub get_keys {
+sub _get_keys {
     my $self = shift;
 
     return $self->_contained_cache->get_keys(@_);
 }
 
-sub get_namespaces {
+sub _get_namespaces {
     my $self = shift;
 
     return $self->_contained_cache->get_namespaces(@_);
