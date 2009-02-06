@@ -1,5 +1,6 @@
 package CHI::Driver;
 use Carp;
+use Carp::Assert;
 use CHI::CacheObject;
 use CHI::Util qw(parse_duration dp);
 use Data::Serializer;
@@ -30,6 +31,9 @@ coerce 'Serializer' => from 'Str' =>
   via { Data::Serializer->new( serializer => $_ ) };
 
 use constant Max_Time => 0xffffffff;
+use constant Reserved_Key_Prefix =>
+  '_CHI_RESERVED_';    # XXX could use a better name
+use constant Size_Key => Reserved_Key_Prefix . 'SIZE';
 
 has 'expires_at'       => ( is => 'rw', default => Max_Time );
 has 'expires_in'       => ( is => 'rw', isa     => 'Duration', coerce => 1 );
@@ -46,6 +50,10 @@ has 'serializer' => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
+has 'max_size'              => ( is => 'rw', isa => 'Int',  default => undef );
+has 'is_size_aware'         => ( is => 'ro', isa => 'Bool', default => undef );
+has 'size_reduction_factor' => ( is => 'rw', isa => 'Num',  default => 0.8 );
+has 'ejection_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -64,7 +72,7 @@ sub non_common_constructor_params {
 }
 
 # These methods must be implemented by subclass
-foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
+foreach my $method (qw(fetch store _remove _get_keys _get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
       sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
@@ -82,6 +90,13 @@ sub declare_unsupported_methods {
 
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
+
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    # Turn on is_size_aware automatically if max_size is defined
+    $self->{is_size_aware} ||= defined( $self->{max_size} );
+}
 
 sub _build_short_driver_name {
     my ($self) = @_;
@@ -251,17 +266,29 @@ sub set {
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 
+    # If size-aware and item exists, record its size so we can subtract it below
+    #
+    my $size_aware = $self->is_size_aware();
+    my $size_delta = 0;
+    if ($size_aware) {
+        if ( my $data = $self->fetch($key) ) {
+            $size_delta = -1 * length($data);
+        }
+    }
+
     # Pack into data, and store
     #
     my $obj =
       CHI::CacheObject->new( $key, $value, $created_at, $early_expires_at,
         $expires_at, $self->serializer );
-    eval { $self->_set_object( $key, $obj ) };
+    my $object_size = eval { $self->_set_object( $key, $obj ) };
     if ( my $error = $@ ) {
         $self->_handle_error( $key, $error, 'setting', $self->on_set_error() );
         return;
     }
 
+    # Log the set
+    #
     my $log = CHI->logger();
     if ( $log->is_debug ) {
         my $log_expires_in =
@@ -269,7 +296,60 @@ sub set {
         $self->_log_set_result( $log, $key, $value, $log_expires_in );
     }
 
+    # If size-aware, add to size and reduce size if over the maximum
+    #
+    if ($size_aware) {
+        $size_delta += $object_size;
+        my $namespace_size = $self->_add_to_size($size_delta);
+        if ( defined( $self->max_size ) && $namespace_size > $self->max_size ) {
+            $self->reduce_to_size(
+                $self->max_size * $self->size_reduction_factor );
+        }
+    }
+
     return $value;
+}
+
+sub remove {
+    my ( $self, $key ) = @_;
+
+    my $size_delta;
+    if ( $self->is_size_aware() && ( my $data = $self->fetch($key) ) ) {
+        $size_delta = -1 * length($data);
+    }
+    $self->_remove($key);
+    if ($size_delta) {
+        $self->_add_to_size($size_delta);
+    }
+}
+
+sub get_keys {
+    my ($self) = @_;
+
+    # Call driver _get_keys, then filter out reserved CHI keys
+    return grep { index( $_, Reserved_Key_Prefix ) == -1 } $self->_get_keys();
+}
+
+sub get_namespaces {
+    my ($self) = @_;
+
+    # Reserved for filtering of some kind
+    return $self->_get_namespaces();
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->_clear();
+    if ( $self->is_size_aware() ) {
+        $self->_set_size(0);
+    }
+}
+
+sub _clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub expire {
@@ -352,12 +432,6 @@ sub remove_multi {
     }
 }
 
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
-}
-
 sub purge {
     my ($self) = @_;
 
@@ -423,6 +497,7 @@ sub _set_object {
 
     my $data = $obj->pack_to_data();
     $self->store( $key, $data );
+    return length($data);
 }
 
 sub _log_get_result {
@@ -475,6 +550,84 @@ sub _handle_error {
         /^warn$/   && do { carp $msg };
         /^die$/    && do { croak $msg };
     }
+}
+
+sub get_size {
+    my ($self) = @_;
+
+    return $self->is_size_aware ? ( $self->get(Size_Key) || 0 ) : undef;
+}
+
+sub _set_size {
+    my ( $self, $new_size ) = @_;
+
+    my $obj =
+      CHI::CacheObject->new( Size_Key, $new_size, time(), Max_Time, Max_Time,
+        $self->serializer );
+    $self->_set_object( Size_Key, $obj );
+}
+
+sub _add_to_size {
+    my ( $self, $incr ) = @_;
+
+    # Non-atomic, so may be inaccurate over time
+    my $new_size = ( $self->get(Size_Key) || 0 ) + $incr;
+    $self->_set_size($new_size);
+    return $new_size;
+}
+
+sub reduce_to_size {
+    my ( $self, $ceiling ) = @_;
+
+    # Get an iterator that produces keys in the order they should be removed
+    #
+    my $ejection_iterator = $self->_get_ejection_iterator_for_policy();
+
+    # Remove keys until we are under $ceiling
+    #
+    my $size = $self->get_size();
+    while ( $size > $ceiling ) {
+        if ( defined( my $key = $ejection_iterator->() ) ) {
+            if ( my $data = $self->fetch($key) ) {
+                $self->_remove($key);
+                $size -= length($data);
+            }
+        }
+        else {
+            affirm { $self->is_empty() } if DEBUG;
+            last;
+        }
+    }
+    $self->_set_size($size);
+}
+
+sub _get_ejection_iterator_for_policy {
+    my ($self) = @_;
+
+    my $ejection_sub =
+      sprintf( "ejection_iterator_%s", $self->ejection_policy );
+    if ( $self->can($ejection_sub) ) {
+        return $self->$ejection_sub();
+    }
+    else {
+        ## no critic (RequireCarping)
+        die sprintf( "cannot get ejection iterator for policy '%s' ('%s')",
+            $self->ejection_policy, $ejection_sub );
+    }
+}
+
+sub ejection_iterator_arbitrary {
+    my ($self) = @_;
+
+    return $self->get_keys_iterator();
+}
+
+sub get_keys_iterator {
+    my ($self) = @_;
+
+    my @keys = $self->get_keys();
+    my $iterator = sub { shift(@keys) };
+    return $iterator;
 }
 
 1;
