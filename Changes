@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.10  Jan  2, 2009
 
+- Handle value-too-large errors in FastMmap driver
+- Revert Memory driver implementation to more readable and illustrative form
+
 0.091 Jan 2, 2009
 
 - Ensure that unlink_on_exit=0 is being passed to FastMmap
