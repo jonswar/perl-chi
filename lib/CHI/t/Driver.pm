@@ -696,7 +696,7 @@ sub test_size_awareness : Test(100) {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
 
-    ok(!$self->{cache}->is_size_aware(), "not size aware by default");
+    ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
     ok(
         !defined( $self->{cache}->get_size() ),
         "get_size returns undef for non-size-aware"
@@ -720,7 +720,7 @@ sub test_max_size : Test(21) {
     my $self = shift;
 
     my $cache = $self->new_cache( max_size => 99 );
-    ok($cache->is_size_aware, "is size aware when max_size specified");
+    ok( $cache->is_size_aware, "is size aware when max_size specified" );
     my $value_20 = 'x' x 6;
 
     for ( my $i = 0 ; $i < 5 ; $i++ ) {
