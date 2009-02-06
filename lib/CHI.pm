@@ -212,7 +212,8 @@ die - call die() with an appropriate message
 
 =item *
 
-I<coderef> - call this code reference with three arguments: an appropriate message, the key, and the original raw error message
+I<coderef> - call this code reference with three arguments: an appropriate message, the
+key, and the original raw error message
 
 =back
 
@@ -223,7 +224,8 @@ C<root_dir> and C<depth> options.
 
 =head1 INSTANCE METHODS
 
-The following methods can be called on any cache handle returned from CHI-E<gt>new(). They are implemented in the L<CHI::Driver|CHI::Driver> package.
+The following methods can be called on any cache handle returned from CHI-E<gt>new(). They
+are implemented in the L<CHI::Driver|CHI::Driver> package.
 
 =head2 Getting and setting
 
@@ -231,8 +233,9 @@ The following methods can be called on any cache handle returned from CHI-E<gt>n
 
 =item get( $key, [option =E<gt> value, ...] )
 
-Returns the data associated with I<$key>. If I<$key> does not exist or has expired, returns undef.
-Expired items are not automatically removed and may be examined with L</get_object> or L</get_expires_at>.
+Returns the data associated with I<$key>. If I<$key> does not exist or has expired,
+returns undef.  Expired items are not automatically removed and may be examined with
+L</get_object> or L</get_expires_at>.
 
 I<$key> may be followed by one or more name/value parameters:
 
@@ -242,8 +245,8 @@ I<$key> may be followed by one or more name/value parameters:
 
 If I<$key> exists and has not expired, call code reference with the
 L<CHI::CacheObject|CHI::CacheObject> as a single parameter. If code returns a true value,
-expire the data. For example, to expire the cache if I<$file> has changed since
-the value was computed:
+expire the data. For example, to expire the cache if I<$file> has changed since the value
+was computed:
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
@@ -373,9 +376,9 @@ does not exist or it has no expiration time.
 
 =item get_object( $key )
 
-Returns a L<CHI::CacheObject|CHI::CacheObject> object containing data about the entry associated with
-I<$key>, or undef if no such key exists. The object will be returned even if the entry
-has expired, as long as it has not been removed.
+Returns a L<CHI::CacheObject|CHI::CacheObject> object containing data about the entry
+associated with I<$key>, or undef if no such key exists. The object will be returned even
+if the entry has expired, as long as it has not been removed.
 
 =back
 
@@ -389,7 +392,21 @@ Remove all entries from the namespace.
 
 =item get_keys( )
 
-Returns a list of keys in the namespace. This may or may not include expired keys, depending on the driver.
+Returns a list of keys in the namespace. This may or may not include expired keys,
+depending on the driver.
+
+=item get_keys_iterator( )
+
+Returns a subroutine which, when called repeatedly, returns one key at a time until all
+keys have been returned, and returns undef thereafter. e.g.
+
+    my $iterator = $cache->get_keys_iterator();
+    while (defined(my $key = $iterator->())) {
+        # do something with $key
+    }
+
+By default this simply calls L</get_keys> and iterates over it, but some drivers may be
+able to do this more efficiently.
 
 =item is_empty( )
 
@@ -403,7 +420,8 @@ number of keys and the driver.
 
 =item get_namespaces( )
 
-Returns a list of namespaces associated with the cache. This may or may not include empty namespaces, depending on the driver.
+Returns a list of namespaces associated with the cache. This may or may not include empty
+namespaces, depending on the driver.
 
 =back
 
@@ -411,7 +429,8 @@ Returns a list of namespaces associated with the cache. This may or may not incl
 
 The methods in this section process multiple keys and/or values at once. By default these
 are implemented with the obvious map operations, but some cache drivers
-(e.g. L<Cache::Memcached|Cache::Memcached>) can override them with more efficient implementations.
+(e.g. L<Cache::Memcached|Cache::Memcached>) can override them with more efficient
+implementations.
 
 =over
 
@@ -473,6 +492,27 @@ e.g. the following are all valid duration expressions:
     1 hour
 
 =for readme continue
+
+=head1 SIZE AWARENESS
+
+If L</is_size_aware> or L</max_size> are passed to the constructor, the cache will be
+I<size aware> - that is, it will keep track of its own size (in bytes) as items are added
+and removed. You can get a cache's size with L</get_size>.
+
+Size aware caches generally have to do an extra write for each set and remove, in order to
+keep track of their size.
+
+If a cache's size rises above its L</max_size>, items are ejected until the cache size is
+sufficiently below the max size. (See L</reduce_size_factor> for how to fine-tune this.)
+
+The order in which items are ejected is controlled with L</ejection_policy>. The available
+policies differ with each driver, e.g. some drivers may provide 'LRU'.  The default
+ejection_policy is 'arbitrary', which ejects items in an arbitrary order.
+
+Some drivers - for example, L<CHI::Driver::FastMmap|FastMmap> and
+L<CHI::Driver::Memcached|Memcached> - implement their own size-awareness and item ejection
+algorithms. It probably makes little sense to turn on CHI's size awareness for these
+drivers.
 
 =head1 AVAILABILITY OF DRIVERS
 
