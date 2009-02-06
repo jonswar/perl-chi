@@ -1,3 +1,54 @@
+STORING META-INFORMATION
+
+Need the ability to store meta-information about each namespace. Size is initial example,
+but there might be others later, e.g. signature of structural params (like depth) to
+signal when an object has been created with incompatible params.
+
+First option is to store in keys, e.g. _CHI_RESERVED_SIZE and _CHI_RESERVED_PARAMS.
+Problem is that these get reflected in get_keys. So we can wrap get_keys() just as we
+wrapped remove() and clear(), call _get_keys() and then grep out _CHI_RESERVED keys.
+But this now imposes a cost on every get_keys call regardless of whether they are
+using metadata - the grep will copy the entire list.
+
+Another option is to store in a parallel namespace, e.g. _CHI_RESERVED. Several problems:
+* How do we know the structural params (e.g. root_dir) to use when creating the cache for
+this? We have to separate those out from the less crucial ones.
+* Have to combine namespace and meta-key name in key.
+* get_namespaces must be filtered, though not as big a deal.
+
+Given the very small number of metadata keys (1 or 2, at least initially), and given that
+get_keys is arbitrary order, could we use a more efficient filtering algorithm than grep?
+Replace each found metadata key with the final key? Will this even matter?
+- Benchmarked - ~/perl/bench/listfilter.pl - replace algorithm about three times faster
+than grep.
+
+But don't prematurely optimize. USE GREP FIRST and make a note to optimize later!
+
+SIZE AWARENESS
+
+Behavior:
+* If a cache is size aware, it keeps track of its own size. By default in key _CHI_RESERVED_SIZE.
+* A cache is size aware if either is_size_aware or max_size are passed to the constructor.
+* If a cache's size rises above its max_size, items are ejected until the cache size is
+less than max_size x reduce_size_factor.
+* Ejection is based on ejection_policy, which defaults to 'random'.
+
+WRAPPING REMOVE, CLEAR
+
+There is now a reason to wrap remove() and clear() (size-aware support). We should have
+known this would happen. In general, should not require driver subclasses to respond
+directly to core public methods: remove, clear, get_keys, get_namespaces. Instead, have
+them define the underline versions: _remove, _clear etc.
+
+Could try to have CHI->new return a CHI object with a driver property, rather than
+returning a driver directly, so that we can wrap calls to remove(), clear(), etc. CHI
+object delegates everything to driver, including isa() and can(). But delegation is hard,
+because Driver methods call other methods via $self - so $self would still have to be CHI
+object - making inheritance not work right, etc. Remember the problems with Module::Pluggable.
+
+Fortunately, any driver out there which defines remove(), etc., will still work - just
+won't have size-aware support or whatever.
+
 MASON INTEGRATION
 
 Ideally we would incorporate the extra features from Mason's BaseCache such that we could eliminate
