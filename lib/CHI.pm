@@ -440,6 +440,17 @@ Returns a hash reference containing all the non-expired keys and values in the c
 
 =head2 Property accessors
 
+=item short_driver_name( )
+
+Returns the name of the driver class, minus the CHI::Driver:: prefix, if any. e.g.
+
+    CHI->new(driver=>'File')->short_driver_name
+       => File
+    CHI->new(driver_class=>'CHI::Driver::File')->short_driver_name
+       => File
+    CHI->new(driver_class=>'My::Driver::File')->short_driver_name
+       => My::Driver::File
+
 There is a read-only accessor for C<namespace>, and read/write accessors for
 C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set_error>.
 
