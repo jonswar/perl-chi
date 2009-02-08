@@ -123,19 +123,11 @@ sub get {
     my $obj =
       CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
 
-    # Handle expire_if
-    #
-    if ( defined( my $code = $params{expire_if} ) ) {
-        my $retval = $code->($obj);
-        if ($retval) {
-            $self->expire($key);
-            return undef;
-        }
-    }
-
     # Check if expired
     #
-    if ( $obj->is_expired() ) {
+    my $is_expired = $obj->is_expired()
+      || ( defined( $params{expire_if} ) && $params{expire_if}->($obj) );
+    if ($is_expired) {
         $self->_log_get_result( $log, $key, "MISS (expired)" )
           if $log->is_debug;
 

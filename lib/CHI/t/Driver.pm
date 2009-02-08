@@ -349,7 +349,7 @@ sub test_expires_conditionally : Test(24) {
                     "get result ($desc)"
                 );
             }
-            if ($expect_expire) {
+            if ($expect_expire && $separate_call) {
                 ok( !defined $cache->get($key),
                     "miss after expire_if ($desc)" );
                 ok( !$cache->is_valid($key),

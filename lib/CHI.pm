@@ -242,8 +242,8 @@ I<$key> may be followed by one or more name/value parameters:
 
 If I<$key> exists and has not expired, call code reference with the
 L<CHI::CacheObject|CHI::CacheObject> as a single parameter. If code returns a true value,
-expire the data. For example, to expire the cache if I<$file> has changed since
-the value was computed:
+C<get> returns undef as if the item were expired. For example, to treat the cache as
+expired if I<$file> has changed since the value was computed:
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
@@ -339,15 +339,9 @@ Remove the data associated with the I<$key> from the cache.
 
 =item expire( $key )
 
-If I<$key> exists, expire it by setting its expiration time into the past. Does not necessarily
-remove the data.
-
-=item expire_if ( $key, $code )
-
-If I<$key> exists, call code reference I<$code> with the L<CHI::CacheObject|CHI::CacheObject> as a single
-parameter. If I<$code> returns a true value, expire the data. e.g.
-
-    $cache->expire_if('foo', sub { $_[0]->created_at < (stat($file))[9] });
+If I<$key> exists, expire it by setting its expiration time into the past. Does not
+necessarily remove the data. Since this involves essentially setting the value again,
+C<remove> may be more efficient for some drivers.
 
 =back
 
@@ -448,6 +442,12 @@ Returns a hash reference containing all the non-expired keys and values in the c
 
 There is a read-only accessor for C<namespace>, and read/write accessors for
 C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set_error>.
+
+=head2 Deprecated methods
+
+The following methods are deprecated and will be removed in a later version.
+
+=item expire_if
 
 =head1 DURATION EXPRESSIONS
 

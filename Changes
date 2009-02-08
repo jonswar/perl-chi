@@ -2,7 +2,13 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.10  Jan  2, 2009
+0.10  Jan 2, 2009
+
+- Revert Memory driver implementation to more readable and illustrative form
+- Handle value-too-large errors in FastMmap driver
+- Change expire_if option to simply return undef, without actually expiring the item
+- Deprecate expire_if method - this can easily be done manually, and it now differs
+  deceptively from the expire_if option to get()
 
 0.091 Jan 2, 2009
 
