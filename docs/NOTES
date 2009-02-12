@@ -59,14 +59,14 @@ In fact, Multilevel could implement some reasonable behavior (similar to what it
 Changes to Driver:
 . Add chi_root_class, the factory class that created this driver (e.g. 'CHI'), so that
   it can be used to create other caches
+. Add obj_ref to both get and set, if it exists it is populated with the cache object
 * Add l1_cache and mirror_to_cache (or clone_to_cache) options
-* Add obj_ref to both get and set, if it exists it is populated with the cache object
 
-Changes to Multilevel (or creation of Paired):
-* No longer a CHI::Driver subclass - delegates everything
-* Add primary_index and primary_subcache
-* Delegate can() and isa() to primary_subcache
-* Add AUTOLOAD, can() and isa() that delegates to primary_subcache
+Paired:
+. No longer a CHI::Driver subclass - delegates everything
+. Add primary_index and primary_subcache
+. Delegate can() and isa() to primary_subcache
+. Add AUTOLOAD, can() and isa() that delegates to primary_subcache
 * Add disable_logging to Driver.pm, possibly make this the default for secondary caches (but useful nonetheless)
 
 Is Multilevel now an inappropriate name? Should it be CHI::Driver::Paired? We could leave Multilevel alone and deprecate it.
