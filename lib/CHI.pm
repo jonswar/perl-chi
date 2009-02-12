@@ -37,7 +37,7 @@ sub new {
         require_dynamic($driver_class);
     }
 
-    return $driver_class->new(%params);
+    return $driver_class->new( chi_root_class => $class, %params );
 }
 
 1;

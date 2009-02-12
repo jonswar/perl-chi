@@ -31,14 +31,15 @@ coerce 'Serializer' => from 'Str' =>
 
 use constant Max_Time => 0xffffffff;
 
-has 'expires_at'       => ( is => 'rw', default => Max_Time );
-has 'expires_in'       => ( is => 'rw', isa     => 'Duration', coerce => 1 );
+has 'chi_root_class' => ( is => 'ro' );
+has 'expires_at'     => ( is => 'rw', default => Max_Time );
+has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'is_subcache'  => ( is => 'rw' );
-has 'namespace'    => ( is => 'ro', isa => 'Str', default => 'Default' );
+has 'is_subcache' => ( is => 'rw' );
+has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'serializer' => (
+has 'serializer'   => (
     is      => 'rw',
     isa     => 'Serializer',
     coerce  => 1,
