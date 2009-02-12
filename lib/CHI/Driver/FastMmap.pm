@@ -1,4 +1,5 @@
 package CHI::Driver::FastMmap;
+use Carp;
 use Cache::FastMmap;
 use CHI::Util qw(dp);
 use File::Path qw(mkpath);
@@ -71,8 +72,10 @@ sub store {
     my $result = $self->_contained_cache->set(@_);
     if ( !$result ) {
         my ( $key, $value ) = @_;
-        croak sprintf( "fastmmap set failed - value too large? (%d bytes)",
-            length($value) );
+        croak(
+            sprintf( "fastmmap set failed - value too large? (%d bytes)",
+                length($value) )
+        );
     }
 }
 
