@@ -823,6 +823,17 @@ sub test_multiple_procs : Test(1) {
     );
 }
 
+{ package My::CHI; use Moose; extends 'CHI'; }
+
+sub test_driver_properties : Tests(2) {
+    my $self  = shift;
+    my $cache = $self->{cache};
+
+    is( $cache->chi_root_class, 'CHI', 'chi_root_class=CHI' );
+    my $cache2 = My::CHI->new( $self->new_cache_options() );
+    is( $cache2->chi_root_class, 'My::CHI', 'chi_root_class=My::CHI' );
+}
+
 sub test_missing_params : Tests(13) {
     my $self  = shift;
     my $cache = $self->{cache};
