@@ -25,7 +25,7 @@ sub BUILD {
     foreach my $subcache (@$subcaches) {
         if ( ref($subcache) eq 'HASH' ) {
             my $subcache_options = $subcache;
-            my $chi_class = 'CHI';    # TODO: make this work with CHI subclasses
+            my $chi_class        = $self->chi_root_class;    # e.g. 'CHI'
             $subcache = $chi_class->new( %subparams, %$subcache_options );
             if (
                 my ($option) =
@@ -142,7 +142,7 @@ CHI::Driver::Multilevel -- Use several caches chained together
 
     use CHI;
 
-    my $cache = CHI->new(
+    my $cache = vCHI->new(
         driver => 'Multilevel',
         subcaches => [
             { driver => 'Memory' },
