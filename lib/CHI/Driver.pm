@@ -123,6 +123,9 @@ sub get {
     }
     my $obj =
       CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
+    if ( defined( my $obj_ref = $params{obj_ref} ) ) {
+        $$obj_ref = $obj;
+    }
 
     # Check if expired
     #
@@ -249,6 +252,9 @@ sub set {
     my $obj =
       CHI::CacheObject->new( $key, $value, $created_at, $early_expires_at,
         $expires_at, $self->serializer );
+    if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
+        $$obj_ref = $obj;
+    }
     eval { $self->_set_object( $key, $obj ) };
     if ( my $error = $@ ) {
         $self->_handle_error( $key, $error, 'setting', $self->on_set_error() );
