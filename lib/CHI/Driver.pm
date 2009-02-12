@@ -36,10 +36,11 @@ has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
 has 'is_subcache' => ( is => 'rw' );
-has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
+has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
+has 'no_logging'   => ( is => 'ro', isa => 'Bool' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'serializer'   => (
+has 'serializer' => (
     is      => 'rw',
     isa     => 'Serializer',
     coerce  => 1,
@@ -102,11 +103,19 @@ sub desc {
     );
 }
 
+my $null_logger = CHI::NullLogger->new();
+
+sub logger {
+    my ($self) = @_;
+
+    return $self->no_logging ? $null_logger : $CHI::Logger;
+}
+
 sub get {
     my ( $self, $key, %params ) = @_;
     croak "must specify key" unless defined($key);
 
-    my $log = CHI->logger();
+    my $log = $self->logger();
 
     # Fetch cache object
     #
@@ -261,7 +270,7 @@ sub set {
         return;
     }
 
-    my $log = CHI->logger();
+    my $log = $self->logger();
     if ( $log->is_debug ) {
         my $log_expires_in =
           defined($expires_at) ? ( $expires_at - $created_at ) : undef;
@@ -465,7 +474,7 @@ sub _handle_error {
     for ($on_error) {
         ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
         /^log$/
-          && do { my $log = CHI->logger; $log->error($msg) };
+          && do { my $log = $self->logger; $log->error($msg) };
         /^ignore$/ && do { };
         /^warn$/   && do { carp $msg };
         /^die$/    && do { croak $msg };

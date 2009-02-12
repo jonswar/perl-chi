@@ -627,7 +627,7 @@ sub test_clear : Tests {
     }
 }
 
-sub test_logging : Test(6) {
+sub test_logging : Test(8) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -662,6 +662,12 @@ sub test_logging : Test(6) {
     $cache->get($key);
     $log->contains_ok(
         qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
+    $log->empty_ok();
+
+    my $cache2 = $self->new_cache( no_logging => 1 );
+    $cache2->get($key);
+    $log->empty_ok();
+    $cache2->set( $key, $value, 80 );
     $log->empty_ok();
 }
 

@@ -216,6 +216,10 @@ I<coderef> - call this code reference with three arguments: an appropriate messa
 
 =back
 
+=item no_logging
+
+If set to true, all get and set logging for this cache will be supressed.
+
 =back    
 
 Some drivers will take additional constructor options. For example, the File driver takes
