@@ -1,7 +1,135 @@
+REDOING MULTI-LEVEL CACHE API
+
+Multilevel caches are a nice clean concept, but difficult to use and conceptualize in practice, especially when trying to add to an existing cache (very common).
+* The multilevel driver doesn't know how to handle the methods of its parts, e.g. file or memcached specific methods
+* The multilevel driver has a different ref() and driver() than the original, which can break existing code
+* Hard to create specific multilevel behavior, e.g. level-one versus backup versus clone-to caches.
+
+So let's see if this API is better.
+
+  my $cache = CHI->new(driver => 'Memcached',
+                       servers => \@servers,
+                       l1_cache => { driver => 'Memory', max_size => '10m' });
+
+How does this cache handle...
+- get, get_object: does a get on l1 first, returns if defined. Otherwise do a get on primary, and if defined, set in l1 with the same expiration time.
+- set, set_object: sets the value in both
+- remove, clear: calls on both
+- get_keys, get_namespaces: calls on primary only, as l1 is presumed to have a subset of the keys in primary
+- all other methods - call on primary as usual
+
+  my $cache = CHI->new(driver => 'File',
+                       root_dir => '/mnt/cache',
+                       mirror_to_cache => { driver=>'File', root_dir=>'/mnt/cache.new');
+
+How does this cache handle...
+- set, set_object: sets the value in both
+- remove, clear: calls on both
+- get_keys, get_namespaces: calls on primary only, as clone is presumed to be write-only
+- all other methods - call on primary as usual
+
+Now, it still might be cleaner to implement the new API using the multilevel driver in the background. That way we don't have to litter Driver.pm with a whole bunch of conditionals. Ideally, then, we'd delegate can() and isa() to the primary class.
+
+   if (my $sub_params = delete($params{l1_cache})) {
+       return CHI::Driver::Multilevel->new
+          (driver=>'Multilevel', subcaches=>{ $sub_params, \%params},
+           primary_index=>1);
+   }
+   if (my $sub_params = delete($params{backup_cache})) {
+       return CHI::Driver::Multilevel->new
+          (driver=>'Multilevel', subcaches=>{ $sub_params, \%params},
+           primary_index=>0);
+   }
+   if (my $sub_params = delete($params{mirror_to_cache})) {
+       return CHI::Driver::Multilevel->new
+          (driver=>'Multilevel', subcaches => { \%params, $sub_params },
+           primary_index=>0, no_secondary_reads = 1);  # or secondary_is_write_only, or only_primary_reads
+   }
+   if (my $sub_params = delete($params{mirror_from_cache})) {
+       return CHI::Driver::Multilevel->new
+          (driver=>'Multilevel', subcaches => { $sub_params, \%params },
+           primary_index=>1, no_secondary_writes = 1); # or secondary_is_read_only, or only_primary_reads
+   }
+
+where primary_index indicates which subcache the 'other' methods should be delegated to,
+and the order of subcaches determines which subcache is read first.
+
+In fact, Multilevel could implement some reasonable behavior (similar to what it does now), and then we could have Multilevel *subclasses* that implement l1, clone, etc. Might be too much, but worth a try, instead of hardcoding a bunch of settings into Driver.pm.
+
+Changes to Driver:
+. Add chi_root_class, the factory class that created this driver (e.g. 'CHI'), so that
+  it can be used to create other caches
+* Add l1_cache and mirror_to_cache (or clone_to_cache) options
+* Add obj_ref to both get and set, if it exists it is populated with the cache object
+
+Changes to Multilevel (or creation of Paired):
+* No longer a CHI::Driver subclass - delegates everything
+* Add primary_index and primary_subcache
+* Delegate can() and isa() to primary_subcache
+* Add AUTOLOAD, can() and isa() that delegates to primary_subcache
+* Add disable_logging to Driver.pm, possibly make this the default for secondary caches (but useful nonetheless)
+
+Is Multilevel now an inappropriate name? Should it be CHI::Driver::Paired? We could leave Multilevel alone and deprecate it.
+
+STORING META-INFORMATION
+
+Need the ability to store meta-information about each namespace. Size is initial example,
+but there might be others later, e.g. signature of structural params (like depth) to
+signal when an object has been created with incompatible params.
+
+First option is to store in keys, e.g. _CHI_RESERVED_SIZE.  Problem is that these get
+reflected in get_keys. So we can wrap get_keys() just as we wrapped remove() and clear(),
+call _get_keys() and then grep out _CHI_RESERVED keys.  But this now imposes a cost on
+every get_keys call regardless of whether they are using metadata - the grep will copy the
+entire list. (Though we can use a more efficient replacement algorithm -
+~/perl/bench/listfilter.pl).
+
+Another option is to store in a parallel namespace, e.g. _CHI_RESERVED. Several problems:
+* How do we know the structural params (e.g. root_dir) to use when creating the cache for
+this? We have to separate those out from the less crucial ones.
+* Have to combine namespace and meta-key name in key.
+* get_namespaces must be filtered instead of get_keys - perhaps not as big a deal
+* Each cache object has to have a second cache object attached to it - have to memoize to avoid cost
+
+SIZE AWARENESS
+
+Behavior:
+* If a cache is size aware, it keeps track of its own size. By default in key _CHI_RESERVED_SIZE.
+* A cache is size aware if either is_size_aware or max_size are passed to the constructor.
+* If a cache's size rises above its max_size, items are ejected until the cache size is
+less than max_size x reduce_size_factor.
+* Ejection is based on ejection_policy, which defaults to 'random'.
+
+WRAPPING REMOVE, CLEAR
+
+There is now a reason to wrap remove(), clear(), and get_keys() (size-aware support - see
+above). We probably could have expected this to happen.
+
+In general, should not require driver subclasses to respond directly to core public
+methods: remove, clear, get_keys, get_namespaces. Instead, have them define the underline
+versions: _remove, _clear etc. But underline versions are supposed to be for package-internal
+methods - don't like to overload this standard. Also, where do we draw the line? Should
+we likewise create an underscore version for get_namespaces, etc., on the assumption that
+we'll need to wrap that too?
+
+Could try to have CHI->new return a CHI object with a driver property, rather than
+returning a driver directly, so that we can wrap calls to remove(), clear(), etc. CHI
+object delegates everything to driver, including isa() and can(). But delegation is hard,
+because Driver methods call other methods via $self - so $self would still have to be CHI
+object - making inheritance not work right, etc. Remember the problems with Module::Pluggable.
+
+Fortunately, any driver out there which defines remove(), etc., will still work - just
+won't have size-aware support or whatever.
+
+Another solution: Have CHI.pm use Sub::Prepend or similar on any driver class the first
+time it is used. e.g. the first time someone says CHI->new(driver => 'File'), we wrap the
+appropriate File methods. Driver subclass could optionally specify, via class data, which methods
+not to wrap.
+
 MASON INTEGRATION
 
-Ideally we would incorporate the extra features from Mason's BaseCache such that we could eliminate
-BaseCache and have $m->cache return a vanilla CHI handle.
+Ideally we would incorporate the extra features from Mason's BaseCache such that we could
+eliminate BaseCache and have $m->cache return a vanilla CHI handle.
 
 Feature gap:
 . expire method
@@ -39,7 +167,10 @@ Other possible names: Composite, Chained
         ],
     );
 
-get: do a get from each subcache in turn. on a hit from subcache N, write the value into the subcache 0..N-1 (using the subcache's default set options). Then return the value. Note that this means a set may occur into subcaches 0..N-1 with a later expire time than subcache N.
+get: do a get from each subcache in turn. on a hit from subcache N, write the value into
+the subcache 0..N-1 (using the subcache's default set options). Then return the
+value. Note that this means a set may occur into subcaches 0..N-1 with a later expire time
+than subcache N.
 
 get_object, get_expires_at: ugh...return the first one, I guess, and don't do any writing.
 
