@@ -719,6 +719,29 @@ sub test_busy_lock : Test(5) {
     is( $cache->get( $key, @bl ), $value, "hit after busy lock" );
 }
 
+sub test_obj_ref : Tests(8) {
+    my $self  = shift;
+    my $cache = $self->{cache};
+    my $obj;
+    my ( $key, $value ) = ( 'medium', [ a => 5, b => 6 ] );
+
+    my $validate_obj = sub {
+        my $obj = shift;
+        isa_ok( $obj, 'CHI::CacheObject' );
+        is( $obj->key, $key, "keys match" );
+        cmp_deeply( $obj->value, $value, "values match" );
+    };
+
+    $cache->get( $key, obj_ref => \$obj );
+    ok( !defined($obj), "obj not defined on miss" );
+    $cache->set( $key, $value, { obj_ref => \$obj } );
+    $validate_obj->($obj);
+    undef $obj;
+    ok( !defined($obj), "obj not defined before get" );
+    $cache->get( $key, obj_ref => \$obj );
+    $validate_obj->($obj);
+}
+
 sub test_multiple_procs : Test(1) {
     my $self = shift;
     return "internal test only" unless $self->is_internal();
