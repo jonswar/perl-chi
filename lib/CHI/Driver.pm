@@ -422,36 +422,32 @@ sub _log_get_result {
     my ( $self, $log, $key, $msg ) = @_;
 
     # if $log->is_debug - done in caller
-    if ( !$self->is_subcache ) {
-        $log->debug(
-            sprintf(
-                "cache get for namespace='%s', key='%s', driver='%s': %s",
-                $self->{namespace}, $key, $self->{short_driver_name}, $msg
-            )
-        );
-    }
+    $log->debug(
+        sprintf(
+            "cache get for namespace='%s', key='%s', driver='%s': %s",
+            $self->{namespace}, $key, $self->{short_driver_name}, $msg
+        )
+    );
 }
 
 sub _log_set_result {
     my ( $self, $log, $key, $value, $expires_in ) = @_;
 
     # if $log->is_debug - done in caller
-    if ( !$self->is_subcache ) {
-        $log->debug(
-            sprintf(
-                "cache set for namespace='%s', key='%s', size=%d, expires='%s', driver='%s'",
-                $self->{namespace},
-                $key,
-                length($value),
-                defined($expires_in)
-                ? Time::Duration::concise(
-                    Time::Duration::duration_exact($expires_in)
-                  )
-                : 'never',
-                $self->{short_driver_name}
-            )
-        );
-    }
+    $log->debug(
+        sprintf(
+            "cache set for namespace='%s', key='%s', size=%d, expires='%s', driver='%s'",
+            $self->{namespace},
+            $key,
+            length($value),
+            defined($expires_in)
+            ? Time::Duration::concise(
+                Time::Duration::duration_exact($expires_in)
+              )
+            : 'never',
+            $self->{short_driver_name}
+        )
+    );
 }
 
 sub _handle_error {
