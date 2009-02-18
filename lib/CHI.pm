@@ -1,6 +1,7 @@
 package CHI;
 use 5.006;
 use Carp;
+use CHI::Driver::Paired;
 use CHI::NullLogger;
 use CHI::Util qw(require_dynamic);
 use strict;
@@ -21,6 +22,17 @@ sub logger {
 sub new {
     my ( $class, %params ) = @_;
 
+    # First look for params like l1_cache and mirror_to_cache that trigger
+    # the creation of a paired cache
+    #
+    if ( my $paired_cache =
+        CHI::Driver::Paired->check_for_paired_cache_alias( $class, \%params ) )
+    {
+        return $paired_cache;
+    }
+
+    # Determine driver class
+    #
     my $driver_class;
     if ( my $driver = delete( $params{driver} ) ) {
         $driver_class = "CHI::Driver::$driver";
@@ -271,7 +283,7 @@ L</expires_variance> for another technique.
 
 =item set( $key, $data, [$expires_in | "now" | "never" | options] )
 
-Associates I<$data> with I<$key> in the cache, overwriting any existing entry.
+Associates I<$data> with I<$key> in the cache, overwriting any existing entry. Returns I<$data>.
 
 The third argument to C<set> is optional, and may be either a scalar or a hash reference.
 If it is a scalar, it may be the string "now", the string "never", or else a duration
