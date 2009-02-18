@@ -1,9 +1,19 @@
+MORE ON PAIRED CACHES
+
+Say we have a file cache with a l1 memory cache. Do a set with expires_variance. Both the caches should have the same expires and early expires time. And if possible, we should pick the same random # for them, so that they either both expire or both don't expire.
+
+Also we have to make sure to override every external write API method in Paired.pm, because otherwise it will forward to the primary subcache and won't get applied to secondary. For example, multi_set() and expire().
+
+Also make sure to handle get_object and set_object.
+
+Paired.pm should in fact be a subclass of Driver, to handle some methods (e.g. is_valid, compute, get_multi_*, set_multi, expire) that layer on other driver methods by default.
+
 REDOING MULTI-LEVEL CACHE API
 
 Multilevel caches are a nice clean concept, but difficult to use and conceptualize in practice, especially when trying to add to an existing cache (very common).
 * The multilevel driver doesn't know how to handle the methods of its parts, e.g. file or memcached specific methods
 * The multilevel driver has a different ref() and driver() than the original, which can break existing code
-* Hard to create specific multilevel behavior, e.g. level-one versus backup versus clone-to caches.
+* Hard to create specific multilevel behavior, e.g. level-one versus backup versus mirror-to caches.
 
 So let's see if this API is better.
 
@@ -25,51 +35,60 @@ How does this cache handle...
 How does this cache handle...
 - set, set_object: sets the value in both
 - remove, clear: calls on both
-- get_keys, get_namespaces: calls on primary only, as clone is presumed to be write-only
+- get_keys, get_namespaces: calls on primary only, as mirror is presumed to be write-only
 - all other methods - call on primary as usual
 
 Now, it still might be cleaner to implement the new API using the multilevel driver in the background. That way we don't have to litter Driver.pm with a whole bunch of conditionals. Ideally, then, we'd delegate can() and isa() to the primary class.
 
+In CHI.pm:
    if (my $sub_params = delete($params{l1_cache})) {
-       return CHI::Driver::Multilevel->new
-          (driver=>'Multilevel', subcaches=>{ $sub_params, \%params},
-           primary_index=>1);
-   }
-   if (my $sub_params = delete($params{backup_cache})) {
-       return CHI::Driver::Multilevel->new
-          (driver=>'Multilevel', subcaches=>{ $sub_params, \%params},
-           primary_index=>0);
+       return CHI::Driver::Paired->new
+          (subcaches => { $sub_params, \%params}, primary_index => 1);
    }
    if (my $sub_params = delete($params{mirror_to_cache})) {
-       return CHI::Driver::Multilevel->new
-          (driver=>'Multilevel', subcaches => { \%params, $sub_params },
-           primary_index=>0, no_secondary_reads = 1);  # or secondary_is_write_only, or only_primary_reads
+       return CHI::Driver::Paired->new
+          (subcaches => { \%params, $sub_params },
+           primary_index=>0, no_distribute_reads = 1);  # or secondary_is_write_only, or only_primary_reads
+   }
+
+   # Maybe these later...
+   if (my $sub_params = delete($params{backup_cache})) {
+       return CHI::Driver::Paired->new
+          (subcaches => { $sub_params, \%params},
+           primary_index=>0);
    }
    if (my $sub_params = delete($params{mirror_from_cache})) {
-       return CHI::Driver::Multilevel->new
-          (driver=>'Multilevel', subcaches => { $sub_params, \%params },
+       return CHI::Driver::Paired->new
+          (subcaches => { $sub_params, \%params },
            primary_index=>1, no_secondary_writes = 1); # or secondary_is_read_only, or only_primary_reads
    }
 
 where primary_index indicates which subcache the 'other' methods should be delegated to,
 and the order of subcaches determines which subcache is read first.
 
-In fact, Multilevel could implement some reasonable behavior (similar to what it does now), and then we could have Multilevel *subclasses* that implement l1, clone, etc. Might be too much, but worth a try, instead of hardcoding a bunch of settings into Driver.pm.
+In fact, Multilevel could implement some reasonable behavior (similar to what it does now), and then we could have Multilevel *subclasses* that implement l1, mirror, etc. Might be too much, but worth a try, instead of hardcoding a bunch of settings into Driver.pm.
 
 Changes to Driver:
 . Add chi_root_class, the factory class that created this driver (e.g. 'CHI'), so that
   it can be used to create other caches
 . Add obj_ref to both get and set, if it exists it is populated with the cache object
-* Add l1_cache and mirror_to_cache (or clone_to_cache) options
+. Add l1_cache and mirror_to_cache options
 
 Paired:
 . No longer a CHI::Driver subclass - delegates everything
 . Add primary_index and primary_subcache
 . Delegate can() and isa() to primary_subcache
 . Add AUTOLOAD, can() and isa() that delegates to primary_subcache
-* Add disable_logging to Driver.pm, possibly make this the default for secondary caches (but useful nonetheless)
+* Test - similar to Multilevel, hopefully simpler
+* Document
+. Add disable_logging to Driver.pm, possibly make this the default for secondary caches (but useful nonetheless)
 
-Is Multilevel now an inappropriate name? Should it be CHI::Driver::Paired? We could leave Multilevel alone and deprecate it.
+Other:
+* Make l1_cache(), mirror_to_cache() options work as accessors
+
+**Don't** try to make Paired a clean external API. Treat it like an internal class right
+now, solely to support l1_cache and mirror_to_cache. Later, we can clean up the API, as well
+as adding other aliases.
 
 STORING META-INFORMATION
 
