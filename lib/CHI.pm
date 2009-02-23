@@ -22,15 +22,6 @@ sub logger {
 sub new {
     my ( $class, %params ) = @_;
 
-    # First look for params like l1_cache and mirror_to_cache that trigger
-    # the creation of a paired cache
-    #
-    if ( my $paired_cache =
-        CHI::Driver::Paired->check_for_paired_cache_alias( $class, \%params ) )
-    {
-        return $paired_cache;
-    }
-
     # Determine driver class
     #
     my $driver_class;
