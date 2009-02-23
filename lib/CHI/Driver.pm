@@ -261,8 +261,8 @@ sub set {
       ? $time + parse_duration( $options->{expires_in} )
       : $options->{expires_at};
     my $early_expires_at =
-      ( $expires_at == Max_Time )
-      ? Max_Time
+        defined( $options->{early_expires_at} ) ? $options->{early_expires_at}
+      : ( $expires_at == Max_Time )             ? Max_Time
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 
