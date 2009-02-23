@@ -5,7 +5,16 @@ use CHI::Test;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver::Paired);
 
-my $root_dir;
+my ( $root_dir, $cache, $l1_cache, @keys, @values );
+
+sub setup_l1_cache : Test(setup) {
+    my $self = shift;
+    $cache    = $self->new_cache();
+    $cache    = $self->{cache};
+    $l1_cache = $cache->l1_cache;
+    @keys     = map { "key$_" } ( 0 .. 2 );
+    @values   = map { "value$_" } ( 0 .. 2 );
+}
 
 sub new_cache_options {
     my $self = shift;
@@ -21,11 +30,7 @@ sub new_cache_options {
 }
 
 sub test_basic : Tests(8) {
-    my ($self)   = @_;
-    my $cache    = $self->{cache};
-    my $l1_cache = $cache->l1_cache;
-    my ( $key, $value ) = $self->kvpair();
-    my $value2 = $value . "2";
+    my ($self) = @_;
 
     isa_ok( $cache,    'CHI::Driver::File' );
     isa_ok( $cache,    'CHI::Driver::Paired' );
@@ -33,18 +38,46 @@ sub test_basic : Tests(8) {
 
     # Get on cache should populate l1 cache
     #
-    $cache->primary_subcache->set( $key, $value );
-    ok( !$l1_cache->get($key), "l1 miss after primary set" );
-    is( $cache->get($key),    $value, "primary hit after primary set" );
-    is( $l1_cache->get($key), $value, "l1 hit after primary get" );
+    $cache->set( $keys[0], $values[0] );
+    $l1_cache->clear();
+    ok( !$l1_cache->get( $keys[0] ), "l1 miss after clear" );
+    is( $cache->get( $keys[0] ), $values[0], "primary hit after primary set" );
+    is( $l1_cache->get( $keys[0] ), $values[0], "l1 hit after primary get" );
 
     # Primary cache should be reading l1 cache first
     #
-    $l1_cache->set( $key, $value2 );
-    is( $cache->get($key), $value2,
-        "got new value set explicitly in l1 cache" );
-    $l1_cache->remove($key);
-    is( $cache->get($key), $value, "got old value again" );
+    $l1_cache->set( $keys[0], $values[1] );
+    is( $cache->get( $keys[0] ),
+        $values[1], "got new value set explicitly in l1 cache" );
+    $l1_cache->remove( $keys[0] );
+    is( $cache->get( $keys[0] ), $values[0], "got old value again" );
+
+    $cache->clear();
+}
+
+sub test_multi : Tests(3) {
+
+    # get_multi_* - one from l1 cache, one from primary cache, one miss
+    #
+    $cache->set( $keys[0], $values[0] );
+    $cache->set( $keys[1], $values[0] );
+    $l1_cache->remove( $keys[0] );
+    $l1_cache->set( $keys[1], $values[1] );
+    cmp_deeply(
+        $cache->get_multi_arrayref( [ $keys[0], $keys[1], $keys[2] ] ),
+        [ $values[0], $values[1], undef ],
+        "get_multi_arrayref"
+    );
+    cmp_deeply(
+        [ $cache->get_multi_array( [ $keys[0], $keys[1], $keys[2] ] ) ],
+        [ $values[0], $values[1], undef ],
+        "get_multi_array"
+    );
+    cmp_deeply(
+        [ $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ) ],
+        { $keys[0] => $values[0], $keys[1] => $values[1], $keys[2] => undef },
+        "get_multi_array"
+    );
 }
 
 1;

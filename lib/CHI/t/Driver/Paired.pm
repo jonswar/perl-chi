@@ -1,6 +1,7 @@
 package CHI::t::Driver::Paired;
 use strict;
 use warnings;
+use CHI::Test;
 use base qw(CHI::t::Driver);
 
 my ( $cache, $secondary_cache, $key, $value, $key2, $value2 );
@@ -40,6 +41,8 @@ sub test_set_and_remove : Tests(100) {
         $cache->set_multi( { $key => $value, $key2 => $value2 } );
         confirm_caches_populated("$desc: after set_multi");
         $remove_code->();
+
+        confirm_caches_empty("$desc: before return");
     };
     $test_remove_method->(
         'remove', sub { $cache->remove($key); $cache->remove($key2) }
