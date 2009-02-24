@@ -182,6 +182,10 @@ and determining if the value has expired.
 
 Remove the data associated with the I<$key> in the namespace.
 
+=item clear ( $self )
+
+Remove all data associated with the namespace.
+
 =back
 
 =head2 Overridable methods
@@ -193,11 +197,6 @@ The following methods have a default implementation, but MAY be overriden by you
 =item BUILD ( $self, $options )
 
 Define Mouse's BUILD method if you want to process any options specific to your driver.
-
-=item clear ( $self )
-
-Override this if you want to provide an efficient method of clearing a namespace.
-The default implementation will iterate over all keys and call L</remove> for each.
 
 =item fetch_multi_arrayref ( $keys )
 
