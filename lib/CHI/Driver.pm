@@ -3,6 +3,8 @@ use Carp;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
+use Data::Serializer;
+use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(pairwise);
 use Module::Load::Conditional qw(can_load);
 use Mouse;
@@ -35,11 +37,14 @@ has 'chi_root_class' => ( is => 'ro' );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'is_subcache' => ( is => 'rw' );
-has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
+has 'is_subcache'      => ( is => 'rw' );
+has 'l1_cache'         => ( is => 'ro' );
+has 'mirror_to_cache'  => ( is => 'ro' );
+has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
+has 'no_logging'   => ( is => 'ro', isa => 'Bool' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'serializer'   => (
+has 'serializer' => (
     is      => 'rw',
     isa     => 'Serializer',
     coerce  => 1,
@@ -47,6 +52,7 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
+has 'subcaches' => ( is => 'ro' );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -54,6 +60,16 @@ __PACKAGE__->meta->make_immutable();
 #
 my %common_params =
   map { ( $_, 1 ) } keys( %{ __PACKAGE__->meta->get_attribute_map } );
+
+# List of parameter keys that initialize a subcache
+#
+my @subcache_keys = qw(l1_cache mirror_to_cache);
+
+# List of parameters that are automatically inherited by a subcache
+#
+my @subcache_inherited_param_keys = (
+    qw(expires_at expires_in expires_variance namespace on_get_error on_set_error)
+);
 
 sub non_common_constructor_params {
     my ( $class, $params ) = @_;
@@ -65,7 +81,7 @@ sub non_common_constructor_params {
 }
 
 # These methods must be implemented by subclass
-foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
+foreach my $method (qw(clear fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
       sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
@@ -104,6 +120,25 @@ sub _build_data_serializer {
     }
 }
 
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    # Create subcaches as necessary (l1_cache, mirror_to_cache)
+    #
+    foreach my $subcache_key (@subcache_keys) {
+        if ( my $subcache_params = $params->{$subcache_key} ) {
+            my $chi_root_class = $self->chi_root_class;
+            my %inherited_params =
+              slice_exists( $params, @subcache_inherited_param_keys );
+            my $subcache =
+              $chi_root_class->new( %inherited_params, %$subcache_params );
+            $subcache->{is_subcache} = 1;
+            $self->{$subcache_key} = $subcache;
+            push( @{ $self->{subcaches} }, $subcache );
+        }
+    }
+}
+
 sub desc {
     my $self = shift;
 
@@ -124,8 +159,15 @@ sub logger {
 sub get {
     my ( $self, $key, %params ) = @_;
     croak "must specify key" unless defined($key);
+    my $l1_cache = $self->{l1_cache};
 
-    my $log = $self->logger();
+    # Consult l1 cache first if present
+    #
+    if ( defined($l1_cache) ) {
+        if ( defined( my $result = $l1_cache->get( $key, %params ) ) ) {
+            return $result;
+        }
+    }
 
     # Fetch cache object
     #
@@ -135,6 +177,7 @@ sub get {
         return;
     }
 
+    my $log = $self->logger();
     if ( !defined $data ) {
         $self->_log_get_result( $log, $key, "MISS (not in cache)" )
           if $log->is_debug;
@@ -168,8 +211,20 @@ sub get {
         return undef;
     }
 
-    # Success
+    # Success - write back to l1 cache if present, and return result
     #
+    if ( defined($l1_cache) ) {
+
+        # ** Should call store directly if caches are object-compatible
+        $l1_cache->set(
+            $key,
+            $obj->value,
+            {
+                expires_at       => $obj->expires_at,
+                early_expires_at => $obj->early_expires_at
+            }
+        );
+    }
     $self->_log_get_result( $log, $key, "HIT" ) if $log->is_debug;
     return $obj->value;
 }
@@ -287,6 +342,8 @@ sub set {
         $self->_log_set_result( $log, $key, $value, $log_expires_in );
     }
 
+    $self->call_method_on_subcaches( 'set', @_ );
+
     return $value;
 }
 
@@ -301,6 +358,8 @@ sub expire {
         $obj->set_expires_at($expires_at);
         $self->_set_object( $key, $obj );
     }
+
+    $self->call_method_on_subcaches( 'expire', @_ );
 }
 
 sub expire_if {
@@ -370,12 +429,6 @@ sub remove_multi {
     }
 }
 
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
-}
-
 sub purge {
     my ($self) = @_;
 
@@ -433,6 +486,19 @@ sub is_empty {
 
         $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
         $str;
+    }
+}
+
+sub call_method_on_subcaches {
+    my $self      = shift;
+    my $subcaches = $self->subcaches;
+    return unless $subcaches;
+
+    my $method = shift;
+    shift;    # eliminate second copy of self
+
+    foreach my $subcache (@$subcaches) {
+        $subcache->$method(@_);
     }
 }
 
