@@ -14,16 +14,16 @@ sub new_cache_options {
       tempdir( "chi-driver-paired-XXXX", TMPDIR => 1, CLEANUP => 1 );
     return (
         $self->SUPER::new_cache_options(),
-        driver   => 'File',
-        depth    => 2,
-        root_dir => $root_dir,
+        driver          => 'File',
+        depth           => 2,
+        root_dir        => $root_dir,
         mirror_to_cache => { driver => 'File', depth => 3 },
     );
 }
 
 sub test_basic : Tests(2) {
-    my ($self)       = @_;
-    my $cache   = $self->{cache};
+    my ($self)          = @_;
+    my $cache           = $self->{cache};
     my $mirror_to_cache = $cache->mirror_to_cache;
     my ( $key, $value ) = $self->kvpair();
 
@@ -31,9 +31,12 @@ sub test_basic : Tests(2) {
     # mirror keys from regular cache
     #
     $cache->set( $key, $value );
+    $mirror_to_cache->remove($key);
+    $cache->get($key);
+    ok( !$mirror_to_cache->get($key), "key not in mirror_to_cache" );
+
     $mirror_to_cache->set( $key2, $value2 );
-    ok( !$cache->get($key2), "key2 not in cache");
-    ok( !$mirror_to_cache->get($key), "key not in mirror_to_cache");
+    ok( !$cache->get($key2), "key2 not in cache" );
 }
 
 1;
