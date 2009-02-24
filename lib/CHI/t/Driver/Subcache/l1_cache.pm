@@ -1,9 +1,9 @@
-package CHI::t::Driver::Paired::l1_cache;
+package CHI::t::Driver::Subcache::l1_cache;
 use strict;
 use warnings;
 use CHI::Test;
 use File::Temp qw(tempdir);
-use base qw(CHI::t::Driver::Paired);
+use base qw(CHI::t::Driver::Subcache);
 
 my ( $root_dir, $cache, $l1_cache, @keys, @values );
 
