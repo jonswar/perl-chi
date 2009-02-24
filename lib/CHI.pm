@@ -1,7 +1,6 @@
 package CHI;
 use 5.006;
 use Carp;
-use CHI::Driver::Paired;
 use CHI::NullLogger;
 use CHI::Util qw(require_dynamic);
 use strict;
