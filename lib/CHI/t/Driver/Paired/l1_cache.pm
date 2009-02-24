@@ -29,11 +29,10 @@ sub new_cache_options {
     );
 }
 
-sub test_basic : Tests(8) {
+sub test_basic : Tests(7) {
     my ($self) = @_;
 
     isa_ok( $cache,    'CHI::Driver::File' );
-    isa_ok( $cache,    'CHI::Driver::Paired' );
     isa_ok( $l1_cache, 'CHI::Driver::Memory' );
 
     # Get on cache should populate l1 cache
@@ -74,9 +73,9 @@ sub test_multi : Tests(3) {
         "get_multi_array"
     );
     cmp_deeply(
-        [ $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ) ],
+        $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ),
         { $keys[0] => $values[0], $keys[1] => $values[1], $keys[2] => undef },
-        "get_multi_array"
+        "get_multi_hashref"
     );
 }
 
