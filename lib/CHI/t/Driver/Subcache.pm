@@ -1,4 +1,4 @@
-package CHI::t::Driver::Paired;
+package CHI::t::Driver::Subcache;
 use strict;
 use warnings;
 use CHI::Test;

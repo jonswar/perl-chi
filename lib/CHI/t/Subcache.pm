@@ -1,4 +1,4 @@
-package CHI::t::Paired;
+package CHI::t::Subcache;
 use CHI::Test;
 use base qw(CHI::Test::Class);
 use strict;
