@@ -10,6 +10,7 @@ use Module::Load::Conditional qw(can_load);
 use Mouse;
 use Mouse::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
+use Sub::Prepend qw(prepend);
 use Time::Duration;
 use strict;
 use warnings;
@@ -124,9 +125,13 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     # Create subcaches as necessary (l1_cache, mirror_to_cache)
+    # ** Eventually might allow existing caches to be passed
     #
     foreach my $subcache_key (@subcache_keys) {
         if ( my $subcache_params = $params->{$subcache_key} ) {
+            affirm {
+                !blessed($subcache_params) && ref($subcache_params) eq 'HASH';
+            };
             my $chi_root_class = $self->chi_root_class;
             my %inherited_params =
               slice_exists( $params, @subcache_inherited_param_keys );
@@ -136,6 +141,17 @@ sub BUILD {
             $self->{$subcache_key} = $subcache;
             push( @{ $self->{subcaches} }, $subcache );
         }
+    }
+}
+
+sub wrap_subclass_methods {
+    my ( $class, $subclass ) = @_;
+
+    foreach my $method qw(clear) {
+        my $full_subclass_method = join( '::', $subclass, $method );
+        my $prepend_method       = "_prepend_$method";
+        my $prepend_code         = \&$prepend_method;
+        prepend( $full_subclass_method, $prepend_code );
     }
 }
 
