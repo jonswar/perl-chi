@@ -29,7 +29,7 @@ sub new_cache_options {
     );
 }
 
-sub test_basic : Tests(7) {
+sub test_basic : Tests(9) {
     my ($self) = @_;
 
     isa_ok( $cache,    'CHI::Driver::File' );
@@ -52,6 +52,8 @@ sub test_basic : Tests(7) {
     is( $cache->get( $keys[0] ), $values[0], "got old value again" );
 
     $cache->clear();
+    ok( !$cache->get( $keys[0] ),    "miss after clear" );
+    ok( !$l1_cache->get( $keys[0] ), "miss after clear" );
 }
 
 sub test_multi : Tests(3) {
