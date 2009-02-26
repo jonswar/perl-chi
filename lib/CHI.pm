@@ -444,6 +444,8 @@ Returns a hash reference containing all the non-expired keys and values in the c
 
 =head2 Property accessors
 
+=over
+
 =item short_driver_name( )
 
 Returns the name of the driver class, minus the CHI::Driver:: prefix, if any. e.g.
@@ -458,11 +460,13 @@ Returns the name of the driver class, minus the CHI::Driver:: prefix, if any. e.
 There is a read-only accessor for C<namespace>, and read/write accessors for
 C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set_error>.
 
+=back
+
 =head2 Deprecated methods
 
-The following methods are deprecated and will be removed in a later version.
+The following methods are deprecated and will be removed in a later version:
 
-=item expire_if
+    expire_if
 
 =head1 DURATION EXPRESSIONS
 

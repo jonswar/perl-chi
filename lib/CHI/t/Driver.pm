@@ -663,12 +663,6 @@ sub test_logging : Test(8) {
     $log->contains_ok(
         qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
     $log->empty_ok();
-
-    my $cache2 = $self->new_cache( no_logging => 1 );
-    $cache2->get($key);
-    $log->empty_ok();
-    $cache2->set( $key, $value, 80 );
-    $log->empty_ok();
 }
 
 sub test_cache_object : Test(6) {
@@ -748,7 +742,8 @@ sub test_obj_ref : Tests(8) {
     $validate_obj->($obj);
 }
 
-{ package My::CHI; use Moose; extends 'CHI'; __PACKAGE__->meta->make_immutable }
+## no critic
+{ package My::CHI; use Moose; extends 'CHI' }
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;

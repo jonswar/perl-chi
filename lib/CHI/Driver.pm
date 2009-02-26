@@ -36,11 +36,10 @@ has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
 has 'is_subcache' => ( is => 'rw' );
-has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
-has 'no_logging'   => ( is => 'ro', isa => 'Bool' );
+has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'serializer' => (
+has 'serializer'   => (
     is      => 'rw',
     isa     => 'Serializer',
     coerce  => 1,
@@ -109,7 +108,7 @@ sub logger {
     my ($self) = @_;
 
     ## no critic (ProhibitPackageVars)
-    return $self->no_logging ? $null_logger : $CHI::Logger;
+    return $CHI::Logger;
 }
 
 sub get {
@@ -438,32 +437,36 @@ sub _log_get_result {
     my ( $self, $log, $key, $msg ) = @_;
 
     # if $log->is_debug - done in caller
-    $log->debug(
-        sprintf(
-            "cache get for namespace='%s', key='%s', driver='%s': %s",
-            $self->{namespace}, $key, $self->{short_driver_name}, $msg
-        )
-    );
+    if ( !$self->is_subcache ) {
+        $log->debug(
+            sprintf(
+                "cache get for namespace='%s', key='%s', driver='%s': %s",
+                $self->{namespace}, $key, $self->{short_driver_name}, $msg
+            )
+        );
+    }
 }
 
 sub _log_set_result {
     my ( $self, $log, $key, $value, $expires_in ) = @_;
 
     # if $log->is_debug - done in caller
-    $log->debug(
-        sprintf(
-            "cache set for namespace='%s', key='%s', size=%d, expires='%s', driver='%s'",
-            $self->{namespace},
-            $key,
-            length($value),
-            defined($expires_in)
-            ? Time::Duration::concise(
-                Time::Duration::duration_exact($expires_in)
-              )
-            : 'never',
-            $self->{short_driver_name}
-        )
-    );
+    if ( !$self->is_subcache ) {
+        $log->debug(
+            sprintf(
+                "cache set for namespace='%s', key='%s', size=%d, expires='%s', driver='%s'",
+                $self->{namespace},
+                $key,
+                length($value),
+                defined($expires_in)
+                ? Time::Duration::concise(
+                    Time::Duration::duration_exact($expires_in)
+                  )
+                : 'never',
+                $self->{short_driver_name}
+            )
+        );
+    }
 }
 
 sub _handle_error {

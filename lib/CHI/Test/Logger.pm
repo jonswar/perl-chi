@@ -46,8 +46,15 @@ sub clear {
 
 sub empty_ok {
     my ($self) = @_;
+    my $tb = Test::Builder->new();
 
-    cmp_deeply( $self->{msgs}, [] );
+    if ( !@{ $self->{msgs} } ) {
+        $tb->ok( 1, "log is empty" );
+    }
+    else {
+        $tb->ok( 0,
+            "log is not empty; contains " . dump_one_line( $self->{msgs} ) );
+    }
 }
 
 1;
