@@ -1,3 +1,7 @@
+SWITCHING TO MOUSE/MOOSE::ANY
+
+Have gotten several comments about Moose being a heavy dependency on CHI. Realized that, with the limited feature set we use, we could get away with using Mouse and Moose::Any, leaving the choice to the application of whether to incur Moose's cost.
+
 MORE ON PAIRED CACHES
 
 Say we have a file cache with a l1 memory cache. Do a set with expires_variance. Both the caches should have the same expires and early expires time. And if possible, we should pick the same random # for them, so that they either both expire or both don't expire.
