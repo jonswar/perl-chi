@@ -748,7 +748,7 @@ sub test_obj_ref : Tests(8) {
     $validate_obj->($obj);
 }
 
-{ package My::CHI; use Moose; extends 'CHI'; }
+{ package My::CHI; use Moose; extends 'CHI'; __PACKAGE__->meta->make_immutable }
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;
