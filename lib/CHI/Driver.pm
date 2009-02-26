@@ -108,6 +108,7 @@ my $null_logger = CHI::NullLogger->new();
 sub logger {
     my ($self) = @_;
 
+    ## no critic (ProhibitPackageVars)
     return $self->no_logging ? $null_logger : $CHI::Logger;
 }
 
