@@ -1,5 +1,5 @@
 # Default serializer class, so that we don't have to depend on Data::Serializer.
-# Recommend use Data::Serializer for other serializers.
+# Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::Storable;
 use Mouse;
