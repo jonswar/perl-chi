@@ -26,6 +26,7 @@ subtype Serializer => as 'Object' => where {
     $_ eq $default_serializer
       || ( blessed($_) && $_->can('serialize') && $_->can('deserialize') );
 };
+coerce 'Serializer' => from 'HashRef' => via { Data::Serializer->new(%$_) };
 coerce 'Serializer' => from 'Str' =>
   via { Data::Serializer->new( serializer => $_ ) };
 

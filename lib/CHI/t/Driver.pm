@@ -447,6 +447,15 @@ sub test_serialize : Tests {
 sub test_serializers : Tests {
     my ($self) = @_;
 
+    my @variants = (qw(Storable Data::Dumper YAML));
+    @variants = grep { check_install( module => $_ ) } @variants;
+    ok( scalar(@variants), "some variants ok" );
+
+    my $initial_count        = 6;
+    my $test_key_types_count = $self->{key_count} * 6 + 1;
+    my $test_count =
+      $initial_count + scalar(@variants) * 3 * ( 1 + $test_key_types_count );
+
     my $cache1 = $self->new_cache();
     isa_ok( $cache1->serializer, 'Data::Serializer' );
     is( $cache1->serializer->serializer,
@@ -468,28 +477,21 @@ sub test_serializers : Tests {
         "valid dummy serializer"
     );
 
-    my @variants = (qw(Storable Data::Dumper YAML));
-    @variants = grep { check_install( module => $_ ) } @variants;
-    ok( scalar(@variants), "some variants ok" );
-    foreach my $mode (qw(string object)) {
+    foreach my $mode (qw(string hash object)) {
         foreach my $variant (@variants) {
             my $serializer_param = (
-                  $mode eq 'string'
-                ? $variant
+                  $mode eq 'string' ? $variant
+                : $mode eq 'hash' ? { serializer => $variant }
                 : Data::Serializer->new( serializer => $variant )
             );
             my $cache = $self->new_cache( serializer => $serializer_param );
             is( $cache->serializer->serializer,
-                $variant, "serializer = " . $variant );
+                $variant, "serializer = $variant, mode = $mode" );
             $self->{cache} = $cache;
             $self->test_key_types();
+            $self->num_tests($test_count);
         }
     }
-
-    my $initial_count        = 6;
-    my $test_key_types_count = $self->{key_count} * 6 + 1;
-    $self->num_tests( $initial_count +
-          scalar(@variants) * 2 * ( 1 + $test_key_types_count ) );
 }
 
 sub test_namespaces : Test(12) {
