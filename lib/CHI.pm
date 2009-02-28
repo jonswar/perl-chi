@@ -164,20 +164,26 @@ An object to use for serializing data before storing it in the cache, and deseri
 data before retrieving it from the cache.
 
 If this is a string, a L<Data::Serializer|Data::Serializer> object will be created, with
-the string passed as the 'serializer' option. Common options include 'Storable',
-'Data::Dumper', and 'YAML'. If this is a hashref, L<Data::Serializer|Data::Serializer-E<gt>new>
-will be called with the hash. You will need to ensure Data::Serializer is installed to
-use these options.
+the string passed as the 'serializer' option and raw=1. Common options include 'Storable',
+'Data::Dumper', and 'YAML'. If this is a hashref,
+L<Data::Serializer|Data::Serializer-E<gt>new> will be called with the hash. You will need
+to ensure Data::Serializer is installed to use these options.
 
 Otherwise, this must be a L<Data::Serializer|Data::Serializer> object or another object
 that implements I<serialize()> and I<deserialize()>.
 
 e.g.
 
+    # Serialize using raw Data::Dumper
     my $cache = CHI->new(serializer => 'Data::Dumper');
+
+    # Serialize using Data::Dumper, compressed and (per Data::Serializer defaults) hex-encoded
     my $cache = CHI->new(serializer => { serializer => 'Data::Dumper', compress => 1 });
 
-The default is to use plain Storable.
+    # Serialize using custom object
+    my $cache = CHI->new(serializer => My::Custom::Serializer->new())
+
+The default is to use raw Storable.
 
 =item expires_in [DURATION]
 

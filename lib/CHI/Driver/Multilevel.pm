@@ -21,7 +21,8 @@ sub BUILD {
 
     my $subcaches = $self->{subcaches};
     my %subparams =
-      slice_exists( $_[0], 'namespace', 'on_get_error', 'on_set_error' );
+      slice_exists( $_[0], 'namespace', 'on_get_error', 'on_set_error',
+        'serializer' );
     foreach my $subcache (@$subcaches) {
         if ( ref($subcache) eq 'HASH' ) {
             my $subcache_options = $subcache;
@@ -30,7 +31,7 @@ sub BUILD {
             if (
                 my ($option) =
                 grep { defined( $subcache_options->{$_} ) }
-                qw(expires_at expires_in expires_variance)
+                qw(expires_at expires_in expires_variance serializer)
               )
             {
                 croak "expiration option '$option' not supported in subcache";
