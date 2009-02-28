@@ -1,34 +1,32 @@
-package CHI::Driver::Role::CacheContainer;
-use List::MoreUtils qw( all );
-use Mouse::Role;
+package CHI::Driver::Base::CacheContainer;
+use Mouse;
 use Mouse::Util::TypeConstraints;
+use List::MoreUtils qw( all );
 use strict;
 use warnings;
 
-subtype 'CacheObject' => as 'Object' => where {
-    my $o = $_;
-    all { $o->can($_) } qw( get set remove );
-};
+extends 'CHI::Driver';
 
-requires '_build_contained_cache';
+has '_contained_cache' => ( is => 'ro' );
 
-has '_contained_cache' => (
-    is      => 'ro',
-    isa     => 'CacheObject',
-    lazy    => 1,
-    builder => '_build_contained_cache',
-    handles => {
-        fetch  => 'get',
-        remove => 'remove',
-    },
-);
+__PACKAGE__->meta->make_immutable();
 
-# These are implemented as separate subs so they can be excluded by
-# consumers of the role.
+sub fetch {
+    my ( $self, $key ) = @_;
+
+    return $self->_contained_cache->get($key);
+}
+
 sub store {
     my $self = shift;
 
     return $self->_contained_cache->set(@_);
+}
+
+sub remove {
+    my ( $self, $key ) = @_;
+
+    $self->_contained_cache->remove($key);
 }
 
 sub clear {
@@ -48,9 +46,6 @@ sub get_namespaces {
 
     return $self->_contained_cache->get_namespaces(@_);
 }
-
-no Mouse::Role;
-no Mouse::Util::TypeConstraints;
 
 1;
 
