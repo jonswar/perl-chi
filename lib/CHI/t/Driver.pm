@@ -5,7 +5,7 @@ use CHI::Test;
 use CHI::Test::Logger;
 use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
-use Module::Load::Conditional qw(check_install);
+use Module::Load::Conditional qw(can_load check_install);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -447,26 +447,29 @@ sub test_serialize : Tests {
 sub test_serializers : Tests {
     my ($self) = @_;
 
+    return 'Data::Serializer not installed'
+      unless can_load( modules => { 'Data::Serializer' => undef } );
+    require Data::Serializer;
+
+    my @modes    = (qw(string hash object));
     my @variants = (qw(Storable Data::Dumper YAML));
     @variants = grep { check_install( module => $_ ) } @variants;
     ok( scalar(@variants), "some variants ok" );
 
-    my $initial_count        = 6;
+    my $initial_count        = 5;
     my $test_key_types_count = $self->{key_count} * 6 + 1;
-    my $test_count =
-      $initial_count + scalar(@variants) * 3 * ( 1 + $test_key_types_count );
+    my $test_count           = $initial_count +
+      scalar(@variants) * scalar(@modes) * ( 1 + $test_key_types_count );
 
     my $cache1 = $self->new_cache();
-    isa_ok( $cache1->serializer, 'Data::Serializer' );
-    is( $cache1->serializer->serializer,
-        'Storable', 'default serializer is storable' );
+    isa_ok( $cache1->serializer, 'CHI::Serializer::Storable' );
     my $cache2 = $self->new_cache();
     is( $cache1->serializer, $cache2->serializer,
         'same serializer returned from two objects' );
 
     throws_ok(
         sub {
-            $self->new_cache( serializer => bless( {}, 'IceCream' ) );
+            $self->new_cache( serializer => [1] );
         },
         qr/Validation failed for 'Serializer'/,
         "invalid serializer"
@@ -477,7 +480,7 @@ sub test_serializers : Tests {
         "valid dummy serializer"
     );
 
-    foreach my $mode (qw(string hash object)) {
+    foreach my $mode (@modes) {
         foreach my $variant (@variants) {
             my $serializer_param = (
                   $mode eq 'string' ? $variant

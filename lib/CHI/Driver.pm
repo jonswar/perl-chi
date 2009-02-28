@@ -1,8 +1,8 @@
 package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
+use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
-use Data::Serializer;
 use List::MoreUtils qw(pairwise);
 use Mouse;
 use Mouse::Util::TypeConstraints;
@@ -17,15 +17,12 @@ subtype Duration => as 'Int' => where { $_ > 0 };
 
 coerce 'Duration' => from 'Str' => via { parse_duration($_) };
 
-my $default_serializer = Data::Serializer->new( serializer => 'Storable' );
+my $default_serializer = CHI::Serializer::Storable->new();
 
 # Force these methods to be autoloaded, else the can() won't work
 #
 $default_serializer->deserialize( $default_serializer->serialize( [] ) );
-subtype Serializer => as 'Object' => where {
-    $_ eq $default_serializer
-      || ( blessed($_) && $_->can('serialize') && $_->can('deserialize') );
-};
+subtype Serializer  => as 'Object';
 coerce 'Serializer' => from 'HashRef' => via { Data::Serializer->new(%$_) };
 coerce 'Serializer' => from 'Str' =>
   via { Data::Serializer->new( serializer => $_ ) };
