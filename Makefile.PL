@@ -12,14 +12,12 @@ build_requires 'Test::Class' => 0;
 build_requires 'Test::Deep'  => 0;
 build_requires 'Test::More'  => 0;
 
-requires 'Data::Serializer'          => '0.43';
 requires 'Data::UUID'                => 0;
 requires 'Digest::JHash'             => 0;
 requires 'File::Slurp'               => 0;
 requires 'File::Spec'                => '0.80';
 requires 'Hash::MoreUtils'           => 0;
 requires 'List::MoreUtils'           => '0.13';
-requires 'Module::Find'              => '0.05';
 requires 'Module::Load::Conditional' => 0;
 requires 'Mouse'                     => '0.15';
 requires 'Storable'                  => 0;
