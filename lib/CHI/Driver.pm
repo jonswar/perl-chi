@@ -27,6 +27,7 @@ $default_serializer = CHI::Serializer::Storable->new();
 #
 $default_serializer->deserialize( $default_serializer->serialize( [] ) );
 subtype Serializer  => as 'Object';
+coerce 'Serializer' => from 'HashRef' => via { Data::Serializer->new(%$_) };
 coerce 'Serializer' => from 'Str' =>
   via { Data::Serializer->new( serializer => $_, raw => 1 ) };
 
