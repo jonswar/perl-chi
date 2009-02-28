@@ -5,7 +5,7 @@ CHI::Driver::Development -- Manual for developing new CHI drivers
 =head1 SYNOPSIS
 
     package CHI::Driver::MyDriver;
-    use Moose;
+    use Mouse;
     use strict;
     use warnings;
 

@@ -9,7 +9,7 @@ use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use Moose;
+use Mouse;
 use strict;
 use warnings;
 

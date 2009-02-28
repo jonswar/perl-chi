@@ -743,7 +743,7 @@ sub test_obj_ref : Tests(8) {
 }
 
 ## no critic
-{ package My::CHI; use Moose; extends 'CHI' }
+{ package My::CHI; use Mouse; extends 'CHI' }
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;

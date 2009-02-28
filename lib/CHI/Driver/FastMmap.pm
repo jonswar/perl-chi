@@ -5,14 +5,11 @@ use CHI::Util qw(dp);
 use File::Path qw(mkpath);
 use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use Moose;
+use Mouse;
 use strict;
 use warnings;
 
-extends 'CHI::Driver';
-
-with 'CHI::Driver::Role::CacheContainer' =>
-  { excludes => [qw( get_keys get_namespaces store )] };
+extends 'CHI::Driver::Base::CacheContainer';
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'root_dir' => (
@@ -20,9 +17,6 @@ has 'root_dir' => (
     isa     => 'Str',
     default => catdir( tmpdir(), "chi-driver-fastmmap" )
 );
-
-__PACKAGE__->meta->alias_method(
-    'fm_cache' => __PACKAGE__->can('_contained_cache') );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -40,12 +34,18 @@ sub BUILD {
         ),
         %{ $self->non_common_constructor_params($params) },
     };
+    $self->{_contained_cache} = $self->_build_contained_cache;
 }
 
 sub _build_contained_cache {
     my ($self) = @_;
 
     return Cache::FastMmap->new( %{ $self->{fm_params} } );
+}
+
+sub fm_cache {
+    my $self = shift;
+    return $self->_contained_cache(@_);
 }
 
 sub get_keys {

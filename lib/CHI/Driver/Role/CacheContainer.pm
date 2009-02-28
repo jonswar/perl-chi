@@ -1,7 +1,7 @@
 package CHI::Driver::Role::CacheContainer;
 use List::MoreUtils qw( all );
-use Moose::Role;
-use Moose::Util::TypeConstraints;
+use Mouse::Role;
+use Mouse::Util::TypeConstraints;
 use strict;
 use warnings;
 
@@ -13,7 +13,7 @@ subtype 'CacheObject' => as 'Object' => where {
 requires '_build_contained_cache';
 
 has '_contained_cache' => (
-    is      => 'rw',
+    is      => 'ro',
     isa     => 'CacheObject',
     lazy    => 1,
     builder => '_build_contained_cache',
@@ -49,8 +49,8 @@ sub get_namespaces {
     return $self->_contained_cache->get_namespaces(@_);
 }
 
-no Moose::Role;
-no Moose::Util::TypeConstraints;
+no Mouse::Role;
+no Mouse::Util::TypeConstraints;
 
 1;
 

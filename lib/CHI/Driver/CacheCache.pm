@@ -2,18 +2,22 @@ package CHI::Driver::CacheCache;
 use Cache::Cache;
 use Carp;
 use CHI::Util qw(require_dynamic);
-use Moose;
+use Mouse;
 use strict;
 use warnings;
 
-extends 'CHI::Driver';
-
-with 'CHI::Driver::Role::CacheContainer';
+extends 'CHI::Driver::Base::CacheContainer';
 
 has 'cc_class'   => ( is => 'ro', isa => 'Str',     required => 1 );
 has 'cc_options' => ( is => 'ro', isa => 'HashRef', required => 1 );
 
 __PACKAGE__->meta->make_immutable();
+
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    $self->{_contained_cache} = $self->_build_contained_cache;
+}
 
 sub _build_contained_cache {
     my ($self) = @_;

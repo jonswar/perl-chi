@@ -3,7 +3,7 @@ use Carp;
 use CHI::Util qw(dp);
 use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(uniq);
-use Moose;
+use Mouse;
 use strict;
 use warnings;
 
