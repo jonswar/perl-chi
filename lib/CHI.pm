@@ -165,15 +165,16 @@ data before retrieving it from the cache.
 
 If this is a string, a L<Data::Serializer|Data::Serializer> object will be created, with
 the string passed as the 'serializer' option. Common options include 'Storable',
-'Data::Dumper', and 'YAML'.
+'Data::Dumper', and 'YAML'. If this is a hashref, L<Data::Serializer|Data::Serializer-E<gt>new>
+will be called with the hash.
 
-Otherwise, this must be a L<Data::Serializer|Data::Serializer> object, or another object
+Otherwise, this must be a L<Data::Serializer|Data::Serializer> object or another object
 that implements I<serialize()> and I<deserialize()>.
 
 e.g.
 
     my $cache = CHI->new(serializer => 'Data::Dumper');
-    my $cache = CHI->new(serializer => Data::Serializer->new(serializer => 'Data::Dumper', compress => 1));
+    my $cache = CHI->new(serializer => { serializer => 'Data::Dumper', compress => 1 });
 
 The default is to use plain Storable.
 
