@@ -12,6 +12,7 @@ Revision history for CHI
 - Change expire_if option to simply return undef, without actually expiring the item
 - Deprecate expire_if method - this can easily be done manually, and it now differs
   deceptively from the expire_if option to get()
+- Allow serializer to be passed as a hashref
 
 0.091 Jan 2, 2009
 
