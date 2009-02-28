@@ -1,9 +1,8 @@
 package CHI::Driver::FastMmap;
 use Carp;
 use Cache::FastMmap;
-use CHI::Util qw(dp);
+use CHI::Util qw(read_dir);
 use File::Path qw(mkpath);
-use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use Mouse;
 use strict;

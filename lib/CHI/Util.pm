@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
   fast_catdir
   fast_catfile
   parse_duration
+  read_dir
   require_dynamic
   unique_id
 );
@@ -38,6 +39,16 @@ sub dump_one_line {
 
     return Data::Dumper->new( [$value] )->Indent(0)->Sortkeys(1)->Quotekeys(0)
       ->Terse(1)->Dump();
+}
+
+# Simplified read_dir cribbed from File::Slurp
+sub read_dir {
+    my ($dir) = @_;
+
+    ## no critic (RequireInitializationForLocalVars)
+    local *DIRH;
+    opendir( DIRH, $dir ) or croak "cannot open '$dir': $!";
+    return grep { $_ ne "." && $_ ne ".." } readdir(DIRH);
 }
 
 sub require_dynamic {

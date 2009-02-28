@@ -1,13 +1,12 @@
 package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
-use CHI::Util qw(fast_catdir fast_catfile unique_id);
+use CHI::Util qw(fast_catdir fast_catfile unique_id read_dir);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
-use File::Slurp qw(read_dir);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use Mouse;
 use strict;
