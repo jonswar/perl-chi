@@ -64,10 +64,11 @@ If it's an internal driver, you can call it whatever you like and create it like
 
     CHI->new(driver_class => 'My::Internal::CHI::Driver');
 
-=head1 MOOSE
+=head1 MOUSE
 
-CHI driver classes are Moose based, so you should read (or at least have available) the
-documentation for Moose before proceeding.
+CHI driver classes are L<Mouse|Mouse> based. Since Mouse plays well with L<Moose|Moose>
+and standard OO classes, you can choose what to use in your driver, though we recommend
+Mouse or Moose for consistency and clarity.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
@@ -191,7 +192,7 @@ The following methods have a default implementation, but MAY be overriden by you
 
 =item BUILD ( $self, $options )
 
-Define Moose's BUILD method if you want to process any options specific to your driver.
+Define Mouse's BUILD method if you want to process any options specific to your driver.
 
 =item clear ( $self )
 
