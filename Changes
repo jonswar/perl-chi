@@ -19,7 +19,6 @@ Revision history for CHI
 - Allow serializer to be passed as a hashref
 - Fix bug when specifying serializer with multilevel driver
 
-
 0.091 Jan 2, 2009
 
 - Ensure that unlink_on_exit=0 is being passed to FastMmap
