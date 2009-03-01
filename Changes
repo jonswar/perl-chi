@@ -2,6 +2,8 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
+0.11  Feb 28, 2009
+
 0.10  Feb 28, 2009
 
 - Switch to Mouse instead of Moose, to reduce install dependencies and overhead. Eliminate
