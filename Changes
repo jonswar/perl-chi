@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.10  Jan 2, 2009
+0.10  Feb 28, 2009
 
 - Switch to Mouse instead of Moose, to reduce install dependencies and overhead. Eliminate
   Moose-isms as needed. Eventually may switch to Any::Moose but want to get comfortable
