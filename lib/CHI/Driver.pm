@@ -103,8 +103,6 @@ sub desc {
     );
 }
 
-my $null_logger = CHI::NullLogger->new();
-
 sub logger {
     my ($self) = @_;
 
