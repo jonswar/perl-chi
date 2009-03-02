@@ -9,7 +9,8 @@ use Module::Load::Conditional qw(can_load check_install);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
-sub supports_clear { 1 }
+sub supports_clear          { 1 }
+sub supports_get_namespaces { 1 }
 
 sub standard_keys_and_values : Test(startup) {
     my ($self) = @_;
@@ -528,19 +529,30 @@ sub test_namespaces : Test(12) {
     );
     is( $cache3->get('medium'), 'different', 'cache1{medium} = different' );
 
-    # get_namespaces may or may not automatically include empty namespaces
-    cmp_deeply(
-        [ $cache1->get_namespaces() ],
-        supersetof( $ns1, $ns3 ),
-        "get_namespaces contains $ns1 and $ns3"
-    );
+    if ( $self->supports_get_namespaces() ) {
 
-    foreach my $c ( $cache0, $cache1, $cache1a, $cache2, $cache3 ) {
+        # get_namespaces may or may not automatically include empty namespaces
         cmp_deeply(
-            [ $cache->get_namespaces() ],
-            [ $c->get_namespaces() ],
-            'get_namespaces the same regardless of which cache asks'
+            [ $cache1->get_namespaces() ],
+            supersetof( $ns1, $ns3 ),
+            "get_namespaces contains $ns1 and $ns3"
         );
+
+        foreach my $c ( $cache0, $cache1, $cache1a, $cache2, $cache3 ) {
+            cmp_deeply(
+                [ $cache->get_namespaces() ],
+                [ $c->get_namespaces() ],
+                'get_namespaces the same regardless of which cache asks'
+            );
+        }
+    }
+    else {
+        throws_ok(
+            sub { $cache1->get_namespaces() },
+            qr/not supported/,
+            "get_namespaces not supported"
+        );
+      SKIP: { skip "get_namespaces not supported", 5 }
     }
 }
 
