@@ -17,19 +17,18 @@ subtype Duration => as 'Int' => where { $_ > 0 };
 
 coerce 'Duration' => from 'Str' => via { parse_duration($_) };
 
-use Data::Serializer;
-
-my $default_serializer = Data::Serializer->new();
-
-$default_serializer = CHI::Serializer::Storable->new();
+my $default_serializer = CHI::Serializer::Storable->new();
 
 # Force these methods to be autoloaded, else the can() won't work
 #
 $default_serializer->deserialize( $default_serializer->serialize( [] ) );
 subtype Serializer  => as 'Object';
-coerce 'Serializer' => from 'HashRef' => via { Data::Serializer->new(%$_) };
-coerce 'Serializer' => from 'Str' =>
-  via { Data::Serializer->new( serializer => $_, raw => 1 ) };
+coerce 'Serializer' => from 'HashRef' =>
+  via { require Data::Serializer; Data::Serializer->new(%$_) };
+coerce 'Serializer' => from 'Str' => via {
+    require Data::Serializer;
+    Data::Serializer->new( serializer => $_, raw => 1 );
+};
 
 use constant Max_Time => 0xffffffff;
 
