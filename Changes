@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.101  Feb 28, 2009
+0.101  Mar 2, 2009
 
 - Don't use Data::Serializer up front
 
