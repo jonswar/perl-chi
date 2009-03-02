@@ -4,6 +4,8 @@ Revision history for CHI
 
 0.11  Mar  2, 2009
 
+- Skip get_namespaces in tests with drivers that don't support it
+
 0.101  Mar 2, 2009
 
 - Don't use Data::Serializer up front
