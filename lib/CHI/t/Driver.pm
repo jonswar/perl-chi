@@ -450,7 +450,6 @@ sub test_serializers : Tests {
 
     return 'Data::Serializer not installed'
       unless can_load( modules => { 'Data::Serializer' => undef } );
-    require Data::Serializer;
 
     my @modes    = (qw(string hash object));
     my @variants = (qw(Storable Data::Dumper YAML));
