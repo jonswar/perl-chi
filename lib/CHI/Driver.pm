@@ -149,9 +149,11 @@ sub wrap_subclass_methods {
 
     foreach my $method qw(clear) {
         my $full_subclass_method = join( '::', $subclass, $method );
-        my $prepend_method       = "_prepend_$method";
-        my $prepend_code         = \&$prepend_method;
-        prepend( $full_subclass_method, $prepend_code );
+        my $orig_subclass_method = join( '::', $subclass, "_orig_$method" );
+        my $prepend_method = "_prepend_$method";
+
+        no strict 'refs';
+        *{$orig_subclass_method} = *{$full_subclass_method};
     }
 }
 
