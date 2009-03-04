@@ -2,6 +2,7 @@ package CHI::t::Multilevel;
 use strict;
 use warnings;
 use CHI::Test;
+use Module::Load::Conditional qw(can_load);
 use base qw(CHI::Test::Class);
 
 sub test_multilevel_with_serializer : Tests(1) {
