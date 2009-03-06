@@ -6,7 +6,7 @@ use CHI::Util qw(require_dynamic);
 use strict;
 use warnings;
 
-our $VERSION = '0.11';
+our $VERSION = '0.102';
 
 our $Logger = CHI::NullLogger->new();    ## no critic
 
