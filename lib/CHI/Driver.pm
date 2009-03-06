@@ -99,7 +99,8 @@ sub _build_data_serializer {
         return Data::Serializer->new(%$params);
     }
     else {
-        die "Data::Serializer not installed, cannot handle serializer argument";
+        croak
+          "Data::Serializer not installed, cannot handle serializer argument";
     }
 }
 
