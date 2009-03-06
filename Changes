@@ -2,9 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.102  Mar  6, 2009
-
-0.11  Mar 4, 2009
+0.102  Mar 6, 2009
 
 - Skip get_namespaces in tests with drivers that don't support it
 
