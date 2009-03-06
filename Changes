@@ -5,6 +5,7 @@ Revision history for CHI
 0.102  Mar 6, 2009
 
 - Skip get_namespaces in tests with drivers that don't support it
+- Eliminate unconditional use of Data::Serializer in tests; improve error when Data::Serializer not installed
 
 0.101  Mar 2, 2009
 
