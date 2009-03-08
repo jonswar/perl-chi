@@ -2,6 +2,35 @@ SWITCHING TO MOUSE/MOOSE::ANY
 
 Have gotten several comments about Moose being a heavy dependency on CHI. Realized that, with the limited feature set we use, we could get away with using Mouse and Moose::Any, leaving the choice to the application of whether to incur Moose's cost.
 
+PREPENDING SUBCLASS METHODS
+
+Gotten to the point where there are multiple reasons to wrap certain driver methods - e.g. remove(), clear(), get_keys(). Now needed at least for subcaches, size-awareness, and logging.
+
+Proposal: Have CHI.pm use Sub::Prepend or similar on any driver class the first time it is used. e.g. the first time someone says CHI->new(driver => 'File'), we wrap the appropriate File methods. Driver subclass could optionally specify, via class data, which methods not to wrap.
+
+Prepend methods are defined in Driver.pm as _pre_remove(), _pre_clear(), etc.
+
+We could also ask driver subclass to manually call __PACKAGE__->register_driver or something at the bottom - might be a little better in terms of compilation order. Also, what happens if there is a mid-level virtual subclass, e.g. CHI::Driver::MyVirtualTypeOfDriver inherits from CHI::Driver? Then will definitely need to call __PACKAGE__->register_driver at the bottom.
+
+What happens if we have a driver sub-sub-class, e.g. CHI::Driver::File::Fast which inherits from CHI::Driver::File, and has a remove() which calls SUPER::remove()? A call to remove will result in
+
+   CHI::Driver::_pre_remove()
+   CHI::Driver::File::Fast::remove()
+   CHI::Driver::_pre_remove()
+   CHI::Driver::File::remove()
+
+To prevent this, _pre_* should set a dynamically scoped variable to $self. If it sees the flag set, it should skip the prepend code.
+
+PROBLEM WITH PAIRED CACHE IMPLEMENTATION: DELEGATION TRAP
+
+Paired.pm has the same inherit problem as Module::Pluggable had - once you get "trapped" inside the primary cache class, methods will not be dispatched back to Paired.pm. No matter what mechinations we go through to keep things in Paired.pm.
+
+e.g. Suppose that CHI::Driver::File has a get_politely() method, which essentially calls get() with some minor difference. get() will be called on the File class, not on Paired as it should be, and thus will circumvent the l1 cache.
+
+So l1_cache and mirror_to_cache should be implemented in Driver.pm. However, we can still use our code to initialize those caches and inherit parameters from the primary.
+
+Whoops! Another reason to override clear() and purge() in all drivers - we need to distribute to subcaches.
+
 MORE ON PAIRED CACHES
 
 Say we have a file cache with a l1 memory cache. Do a set with expires_variance. Both the caches should have the same expires and early expires time. And if possible, we should pick the same random # for them, so that they either both expire or both don't expire.
@@ -10,7 +39,37 @@ Also we have to make sure to override every external write API method in Paired.
 
 Also make sure to handle get_object and set_object.
 
-Paired.pm should in fact be a subclass of Driver, to handle some methods (e.g. is_valid, compute, get_multi_*, set_multi, expire) that layer on other driver methods by default.
+Paired.pm should in fact be a subclass of Driver, to handle some methods (e.g. is_valid, compute, get_multi_*) that are defined in terms of other driver methods by default.
+
+Let's list out all the standard driver methods and make sure we know how to handle each one. For each, do we define specially or inherit from Driver.pm?
+
+* fetch - inherit (acts on primary)
+* store - inherit (acts on primary)
+* remove - distribute to both
+* get_keys - inherit (acts on primary)
+* get_namespaces - inherit (acts on primary)
+* get - define specially
+* get_object - inherit (will call fetch, acts on primary)
+* get_expires_at - inherit (will call get_object, acts on primary)
+* exists_and_is_expired - inherit (will call get_object, acts on primary)
+* is_valid - inherit (acts on primary)
+* set - define specially
+* expire - distribute to both
+* expire_if - distribute to both
+* compute - inherit (will call get and set)
+* get_multi_arrayref - inherit (will call get)  ** should ideally define specially
+* get_multi_array - inherit (will call get_multi_arrayref)
+* get_multi_hashref - inherit (will call get_multi_arrayref)
+* set_multi - inherit (will call set)  ** should ideally define specially
+* remove_multi - inherit (will call remove)
+* clear - distribute to both
+* purge - distribute to both
+* dump_as_hash - inherit (acts on primary)
+* is_empty - inherit (will call get_keys, acts on primary)
+
+define specially - get, set[, get_multi_arrayref]
+distribute to both - remove, expire, expire_if, clear, purge
+inherit - all others
 
 REDOING MULTI-LEVEL CACHE API
 
