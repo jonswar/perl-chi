@@ -43,8 +43,6 @@ What happens if we have a driver sub-sub-class, e.g. CHI::Driver::File::Fast whi
 
 To prevent this, _pre_* should set a dynamically scoped variable to $self. If it sees the flag set, it should skip the prepend code.
 
-What happens if there is a mid-level virtual subclass, e.g. CHI::Driver::MyVirtualTypeOfDriver inherits from CHI::Driver? Then will definitely need to call __PACKAGE__->register_driver_class at the bottom.
-
 PROBLEM WITH PAIRED CACHE IMPLEMENTATION: DELEGATION TRAP
 
 Paired.pm has the same inherit problem as Module::Pluggable had - once you get "trapped" inside the primary cache class, methods will not be dispatched back to Paired.pm. No matter what mechinations we go through to keep things in Paired.pm.
