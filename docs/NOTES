@@ -1,6 +1,28 @@
-SWITCHING TO MOUSE/MOOSE::ANY
+STAY WITH MOUSE FOR NOW?
 
-Have gotten several comments about Moose being a heavy dependency on CHI. Realized that, with the limited feature set we use, we could get away with using Mouse and Moose::Any, leaving the choice to the application of whether to incur Moose's cost.
+What's the downside of sticking with Mouse for now? Basically, some people won't be able to do as much with introspection and possibly subclassing as they'd like.
+
+Perhaps easiest to do this, and wait to see what happens with Any::Moose, performance of Moose itself, etc.
+
+SWITCHING TO MOUSE/Any::Moose
+
+Have gotten several comments about Moose being a heavy dependency on CHI. Realized that, with the limited feature set we use, we could get away with using Mouse and/or Any::Moose:, leaving the choice to the application of whether to incur Moose's cost.
+
+Once Any::Moose makes a "choice" of which OO backer to use, it remains locked to that choice for the remainder of the application. e.g. if it chooses Mouse, it'll stay Mouse even if Moose is loaded later.
+
+While I appreciate what Any::Moose is trying to do, the automatic backer selection is a little scary. If an application starts using a new module or changes the order of its 'use' statements, the selection of Moose vs Mouse can change silently for all Any::Moose-based modules. Any behavioral differences or bugs between the two will show up without apparent reason. This is classic action-at-a-distance. I suppose the same could be said for other 'Any' modules like YAML::Any and Config::Any (if you install a new YAML module, it might change the behavior of a YAML::Any-using application), but this one seems more critical than those. :) Anyway, installing a new version of a module can always affect existing applications - there's something especially insidious about effects from changing load order.
+
+So in summary, I don't like the automatic backer selection, especially for something as large as CHI. I would prefer that the application pick the OO backer explicitly, defaulting to Mouse if no selection is made.
+
+So suppose we have all drivers (and other Moose-using CHI classes) use
+
+    use Any::Moose::Select;
+
+which inherits from Any::Moose and overrides the following behaviors:
+
+1) Any::Moose::Select maintains a single class property, backer(), which can be 'Mouse' or 'Moose', and defaults to 'Mouse'
+2) You can set backer() by calling Any::Moose::Select->backer('Moose'), but this should die if has already been selected, either explicitly or implicitly
+3) _backer_of is overriden to rely on backer()
 
 PREPENDING SUBCLASS METHODS
 
