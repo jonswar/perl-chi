@@ -26,13 +26,36 @@ which inherits from Any::Moose and overrides the following behaviors:
 
 PREPENDING SUBCLASS METHODS
 
-Gotten to the point where there are multiple reasons to wrap certain driver methods - e.g. remove(), clear(), get_keys(). Now needed at least for subcaches, size-awareness, and logging.
+Another, perhaps easier, way to transparently wrap driver methods. The first time a driver class (CHI::Driver::Memory) is used in CHI->new, create a dynamic subclass (CHI::Driver::Memory::AutoWrapped) that inherits from CHI::Driver::AutoWrap and CHI::Driver::Memory. AutoWrap.pm contains methods like
+
+    sub remove {
+        $self->call_native_driver('remove', @_);
+        foreach my $cache ( @{ $self->{subcaches} } } ) {
+            $self->remove(@_);
+        }
+    }
+    
+where
+
+    sub call_native_driver {
+        my $self = shift;
+        my $method = shift;
+        my $native_driver_class = $self->driver_class;
+        my $native_driver_method = join("::", $native_driver_class, $method);
+        $proto->$native_driver_method(@_);
+    }
+
+Document that driver_class is the way to get the true driver class, and that ref() no longer works.
+
+PREPENDING DRIVER METHODS
+
+Gotten to the point where there are multiple reasons to transparently wrap certain driver methods - e.g. remove(), clear(), get_keys(). Now needed at least for subcaches, size-awareness, and logging.
 
 Proposal: Have CHI.pm use Sub::Prepend or similar on any driver class the first time it is used. e.g. the first time someone says CHI->new(driver => 'File'), we wrap the appropriate File methods. Driver subclass could optionally specify, via class data, which methods not to wrap.
 
 Prepend methods are defined in Driver.pm as _pre_remove(), _pre_clear(), etc.
 
-We could also ask driver subclass to manually call __PACKAGE__->register_driver or something at the bottom - might be a little better in terms of compilation order. Also, what happens if there is a mid-level virtual subclass, e.g. CHI::Driver::MyVirtualTypeOfDriver inherits from CHI::Driver? Then will definitely need to call __PACKAGE__->register_driver at the bottom.
+We could also ask driver subclass to manually call __PACKAGE__->register_driver_class or something at the bottom - might be a little better in terms of compilation order. Also, what happens if there is a mid-level virtual subclass, e.g. CHI::Driver::MyVirtualTypeOfDriver inherits from CHI::Driver? Then will definitely need to call __PACKAGE__->register_driver_class at the bottom.
 
 What happens if we have a driver sub-sub-class, e.g. CHI::Driver::File::Fast which inherits from CHI::Driver::File, and has a remove() which calls SUPER::remove()? A call to remove will result in
 
@@ -41,7 +64,7 @@ What happens if we have a driver sub-sub-class, e.g. CHI::Driver::File::Fast whi
    CHI::Driver::_pre_remove()
    CHI::Driver::File::remove()
 
-To prevent this, _pre_* should set a dynamically scoped variable to $self. If it sees the flag set, it should skip the prepend code.
+To prevent this, _pre_* should set a dynamically scoped variable to $self. If it sees the flag set, it should skip the prepend code. There needs to be one dynamically scoped variable for each method - so use a hash.
 
 PROBLEM WITH PAIRED CACHE IMPLEMENTATION: DELEGATION TRAP
 
