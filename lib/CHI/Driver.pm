@@ -10,7 +10,6 @@ use Module::Load::Conditional qw(can_load);
 use Mouse;
 use Mouse::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
-use Sub::Prepend qw(prepend);
 use Time::Duration;
 use strict;
 use warnings;
@@ -141,19 +140,6 @@ sub BUILD {
             $self->{$subcache_key} = $subcache;
             push( @{ $self->{subcaches} }, $subcache );
         }
-    }
-}
-
-sub wrap_subclass_methods {
-    my ( $class, $subclass ) = @_;
-
-    foreach my $method qw(clear) {
-        my $full_subclass_method = join( '::', $subclass, $method );
-        my $orig_subclass_method = join( '::', $subclass, "_orig_$method" );
-        my $prepend_method = "_prepend_$method";
-
-        no strict 'refs';
-        *{$orig_subclass_method} = *{$full_subclass_method};
     }
 }
 
