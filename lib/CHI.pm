@@ -2,6 +2,7 @@ package CHI;
 use 5.006;
 use Carp;
 use CHI::NullLogger;
+use CHI::Driver::Wrapper;
 use CHI::Util qw(require_dynamic);
 use strict;
 use warnings;
@@ -37,7 +38,12 @@ sub new {
         require_dynamic($driver_class);
     }
 
-    return $driver_class->new( chi_root_class => $class, %params );
+    # Get the wrapper class for this driver class, creating it if necessary.
+    # See CHI::Driver::Wrapper for details.
+    #
+    my $wrapped_driver_class =
+      CHI::Driver::Wrapper->create_wrapped_driver_class($driver_class);
+    return $wrapped_driver_class->new( chi_root_class => $class, %params );
 }
 
 1;
@@ -453,6 +459,20 @@ Returns a hash reference containing all the non-expired keys and values in the c
 =head2 Property accessors
 
 =over
+
+=item driver_class( )
+
+Returns the full name of the driver class. e.g.
+
+    CHI->new(driver=>'File')->driver_class
+       => CHI::Driver::File
+    CHI->new(driver_class=>'CHI::Driver::File')->driver_class
+       => CHI::Driver::File
+    CHI->new(driver_class=>'My::Driver::File')->driver_class
+       => My::Driver::File
+
+You should use this rather than C<ref()>. Due to some subclassing tricks CHI employs, the
+actual class of the object is neither guaranteed nor likely to be the driver class.
 
 =item short_driver_name( )
 

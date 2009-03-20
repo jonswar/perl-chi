@@ -87,7 +87,7 @@ our $Test_Time;    ## no critic (ProhibitPackageVars)
 sub _build_short_driver_name {
     my ($self) = @_;
 
-    ( my $name = ref($self) ) =~ s/^CHI::Driver:://;
+    ( my $name = $self->driver_class ) =~ s/^CHI::Driver:://;
 
     return $name;
 }
