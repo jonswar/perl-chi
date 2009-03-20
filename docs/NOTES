@@ -26,7 +26,7 @@ which inherits from Any::Moose and overrides the following behaviors:
 
 PREPENDING DRIVER METHODS VIA AUTO SUBCLASS
 
-Another, perhaps easier, way to transparently wrap driver methods. The first time a driver class (CHI::Driver::Memory) is used in CHI->new, create a dynamic subclass (CHI::Driver::Memory::AutoWrapped) that inherits from CHI::Driver::AutoWrap and CHI::Driver::Memory. AutoWrap.pm contains methods like
+Another, perhaps easier, way to transparently wrap driver methods. The first time a driver class (CHI::Driver::Memory) is used in CHI->new, create a dynamic subclass (CHI::Driver::Memory::Wrapperped) that inherits from CHI::Driver::Wrapper and CHI::Driver::Memory. Wrapper.pm contains methods like
 
     sub remove {
         $self->call_native_driver('remove', @_);
@@ -45,7 +45,15 @@ where
         $proto->$native_driver_method(@_);
     }
 
-Document that driver_class is the way to get the true driver class, and that ref() no longer works.
+Implement driver_class as a dynamically constructed class method in each new dynamic subclass. Document that driver_class is the way to get the true driver class, and that ref() no longer works.
+
+To do:
+* Implement CHI::Driver::Wrapper.pm
+* Implement CHI::create_wrapped_driver_class:
+  * Named CHI::Wrapped::$driver_class
+  * Inherits from CHI::Driver::Wrap and $driver_class
+  * Has "sub driver_class { '$driver_class' }"
+* First time a driver class $driver_class is used in CHI->new, call create_wrapped_driver_class($driver_class), call new() on that
 
 PREPENDING DRIVER METHODS
 
