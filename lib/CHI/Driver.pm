@@ -285,7 +285,8 @@ sub _default_set_options {
 }
 
 sub set {
-    my ( $self, $key, $value, $options ) = @_;
+    my $self = shift;
+    my ( $key, $value, $options ) = @_;
     croak "must specify key" unless defined($key);
     return unless defined($value);
 
@@ -350,7 +351,8 @@ sub set {
 }
 
 sub expire {
-    my ( $self, $key ) = @_;
+    my $self = shift;
+    my ( $key ) = @_;
     croak "must specify key" unless defined($key);
 
     my $time = $Test_Time || time();
@@ -364,6 +366,7 @@ sub expire {
     $self->call_method_on_subcaches( 'expire', @_ );
 }
 
+# DEPRECATED
 sub expire_if {
     my ( $self, $key, $code ) = @_;
     croak "must specify key and code" unless defined($key) && defined($code);
@@ -492,12 +495,9 @@ sub is_empty {
 }
 
 sub call_method_on_subcaches {
-    my $self      = shift;
+    my ($self, $method) = @_;
     my $subcaches = $self->subcaches;
     return unless $subcaches;
-
-    my $method = shift;
-    shift;    # eliminate second copy of self
 
     foreach my $subcache (@$subcaches) {
         $subcache->$method(@_);
