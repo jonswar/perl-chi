@@ -22,6 +22,18 @@ use Carp;
 use strict;
 use warnings;
 
+# Call these methods first on the main cache, then on any subcaches.
+#
+foreach my $method (qw(remove expire expire_if clear purge)) {
+    no strict 'refs';
+    *{ __PACKAGE__ . "::$method" } = sub {
+        my $self = shift;
+        my $retval = $self->call_native_driver( $method, @_ );
+        $self->call_method_on_subcaches( $method, @_ );
+        return $retval;
+    };
+}
+
 # Call the specified $method on the native driver class, e.g. CHI::Driver::Memory.  SUPER
 # cannot be used because it refers to the superclass(es) of the current package and not to
 # the superclass(es) of the object - see perlobj.
