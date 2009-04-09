@@ -3,7 +3,6 @@ use Carp;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
-use Data::Serializer;
 use Hash::MoreUtils qw(slice_exists);
 use List::MoreUtils qw(pairwise);
 use Module::Load::Conditional qw(can_load);
@@ -41,7 +40,6 @@ has 'is_subcache'      => ( is => 'rw' );
 has 'l1_cache'         => ( is => 'ro' );
 has 'mirror_to_cache'  => ( is => 'ro' );
 has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
-has 'no_logging'   => ( is => 'ro', isa => 'Bool' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'serializer' => (
@@ -103,7 +101,7 @@ our $Test_Time;    ## no critic (ProhibitPackageVars)
 sub _build_short_driver_name {
     my ($self) = @_;
 
-    ( my $name = ref($self) ) =~ s/^CHI::Driver:://;
+    ( my $name = $self->driver_class ) =~ s/^CHI::Driver:://;
 
     return $name;
 }
