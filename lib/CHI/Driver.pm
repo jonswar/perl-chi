@@ -1,5 +1,6 @@
 package CHI::Driver;
 use Carp;
+use Carp::Assert;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
@@ -114,7 +115,7 @@ sub _build_data_serializer {
     }
     else {
         croak
-          "Data::Serializer not installed, cannot handle serializer argument";
+          "Data::Serializer not loaded, cannot handle serializer argument";
     }
 }
 
