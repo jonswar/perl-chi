@@ -347,11 +347,8 @@ sub test_expires_conditionally : Test(24) {
             $cache->set( $key, $value );
             if ($separate_call) {
                 is( $cache->get($key), $value, "hit ($desc)" );
-                cmp_bool(
-                    $cache->expire_if( $key, $code ),
-                    $expect_expire ? 1 : 0,
-                    "expire_if ($desc)"
-                );
+                cmp_bool( $cache->expire_if( $key, $code ),
+                    $expect_expire, "expire_if ($desc)" );
             }
             else {
                 is(
