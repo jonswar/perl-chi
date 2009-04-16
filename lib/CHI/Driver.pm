@@ -496,7 +496,8 @@ sub is_empty {
 }
 
 sub call_method_on_subcaches {
-    my ($self, $method) = @_;
+    my $self = shift;
+    my $method = shift;
     my $subcaches = $self->subcaches;
     return unless $subcaches;
 
