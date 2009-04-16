@@ -4,7 +4,7 @@ use warnings;
 use CHI::Test;
 use base qw(CHI::t::Driver);
 
-my ( $cache, $secondary_cache, $key, $value, $key2, $value2 );
+my ( $cache, $subcache, $key, $value, $key2, $value2 );
 
 sub set_standard_keys_and_values {
     my ($self) = @_;
@@ -24,8 +24,8 @@ sub test_set_and_remove : Tests(100) {
     $key2   = $key . "2";
     $value2 = $value . "2";
 
-    $cache           = $self->{cache};
-    $secondary_cache = $cache->secondary_subcache;
+    $cache    = $self->{cache};
+    $subcache = $cache->subcaches->[0];
 
     my $test_remove_method = sub {
         my ( $desc, $remove_code ) = @_;
@@ -62,18 +62,16 @@ sub test_set_and_remove : Tests(100) {
 
 sub confirm_caches_empty {
     my ($desc) = @_;
-    ok( $cache->is_empty(),           "primary cache is empty - $desc" );
-    ok( $secondary_cache->is_empty(), "secondary cache is empty - $desc" );
+    ok( $cache->is_empty(),    "primary cache is empty - $desc" );
+    ok( $subcache->is_empty(), "subcache is empty - $desc" );
 }
 
 sub confirm_caches_populated {
     my ($desc) = @_;
-    is( $cache->get($key), $value, "primary cache is populated - $desc" );
-    is( $secondary_cache->get($key),
-        $value, "secondary cache is populated - $desc" );
+    is( $cache->get($key),    $value, "primary cache is populated - $desc" );
+    is( $subcache->get($key), $value, "subcache is populated - $desc" );
     is( $cache->get($key2), $value2, "primary cache is populated #2 - $desc" );
-    is( $secondary_cache->get($key2),
-        $value2, "secondary cache is populated #2 - $desc" );
+    is( $subcache->get($key2), $value2, "subcache is populated #2 - $desc" );
 }
 
 1;
