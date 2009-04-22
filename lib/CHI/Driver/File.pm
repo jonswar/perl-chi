@@ -51,12 +51,6 @@ sub _build_path_to_namespace {
         $self->escape_for_filename( $self->namespace ) );
 }
 
-sub desc {
-    my $self = shift;
-
-    return sprintf( "%s (%s)", $self->SUPER::desc(), $self->root_dir );
-}
-
 sub fetch {
     my ( $self, $key ) = @_;
 
