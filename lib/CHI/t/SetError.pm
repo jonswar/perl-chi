@@ -16,8 +16,9 @@ sub readonly_cache {
 sub test_set_errors : Test(14) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
-    my $error_pattern = qr/error setting key 'medium' in .*: read-only cache/;
-    my $log           = CHI::Test::Logger->new();
+    my $error_pattern =
+      qr/error during cache set for namespace='.*', key='medium', size=\d+.*: read-only cache/;
+    my $log = CHI::Test::Logger->new();
     CHI->logger($log);
 
     my $cache;

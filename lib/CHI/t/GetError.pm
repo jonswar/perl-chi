@@ -16,8 +16,9 @@ sub writeonly_cache {
 sub test_get_errors : Test(10) {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
-    my $error_pattern = qr/error getting key 'medium' in .*: write-only cache/;
-    my $log           = CHI::Test::Logger->new();
+    my $error_pattern =
+      qr/error during cache get for namespace='.*', key='medium'.*: write-only cache/;
+    my $log = CHI::Test::Logger->new();
     CHI->logger($log);
 
     my $cache;
