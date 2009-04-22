@@ -528,26 +528,28 @@ sub _log_set_result {
 sub _handle_get_error {
     my $self  = shift;
     my $error = shift;
+    my $key = $_[0];
 
     my $msg =
       sprintf( "error during %s: %s", $self->_describe_cache_get(@_), $error );
-    $self->_dispatch_error_msg( $msg, $error, $self->on_get_error(), @_ );
+    $self->_dispatch_error_msg( $msg, $error, $self->on_get_error(), $key );
 }
 
 sub _handle_set_error {
     my $self  = shift;
     my $error = shift;
+    my $key = $_[0];
 
     my $msg =
       sprintf( "error during %s: %s", $self->_describe_cache_set(@_), $error );
-    $self->_dispatch_error_msg( $msg, $error, $self->on_set_error(), @_ );
+    $self->_dispatch_error_msg( $msg, $error, $self->on_set_error(), $key );
 }
 
 sub _dispatch_error_msg {
-    my ( $self, $msg, $error, $on_error ) = splice( @_, 0, 4 );
+    my ( $self, $msg, $error, $on_error, $key ) = @_;
 
     for ($on_error) {
-        ( ref($_) eq 'CODE' ) && do { $_->( $msg, $error, @_ ) };
+        ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
         /^log$/
           && do { my $log = $self->logger; $log->error($msg) };
         /^ignore$/ && do { };
