@@ -4,6 +4,8 @@ Revision history for CHI
 
 0.11  Mar  6, 2009
 
+- Standardized log and error format
+
 0.102  Mar 6, 2009
 
 - Skip get_namespaces in tests with drivers that don't support it
