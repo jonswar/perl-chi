@@ -18,11 +18,9 @@ sub set_standard_keys_and_values {
     return ( $keys, $values );
 }
 
-sub test_set_and_remove : Tests(100) {
+sub test_set_and_remove : Tests(80) {
     my ($self) = @_;
-    ( $key, $value ) = $self->kvpair();
-    $key2   = $key . "2";
-    $value2 = $value . "2";
+    ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
 
     $cache    = $self->{cache};
     $subcache = $cache->subcaches->[0];
@@ -62,16 +60,26 @@ sub test_set_and_remove : Tests(100) {
 
 sub confirm_caches_empty {
     my ($desc) = @_;
-    ok( $cache->is_empty(),    "primary cache is empty - $desc" );
-    ok( $subcache->is_empty(), "subcache is empty - $desc" );
+    ok( !defined( $cache->get($key) ),
+        "primary cache is not populated with '$key' - $desc" );
+    ok( !defined( $subcache->get($key) ),
+        "subcache is not populated with '$key' - $desc" );
+    ok( !defined( $cache->get($key2) ),
+        "primary cache is not populated #2 with '$key2' - $desc" );
+    ok( !defined( $subcache->get($key2) ),
+        "subcache is not populated #2 with '$key2' - $desc" );
 }
 
 sub confirm_caches_populated {
     my ($desc) = @_;
-    is( $cache->get($key),    $value, "primary cache is populated - $desc" );
-    is( $subcache->get($key), $value, "subcache is populated - $desc" );
-    is( $cache->get($key2), $value2, "primary cache is populated #2 - $desc" );
-    is( $subcache->get($key2), $value2, "subcache is populated #2 - $desc" );
+    is( $cache->get($key), $value,
+        "primary cache is populated with '$key' - $desc" );
+    is( $subcache->get($key), $value,
+        "subcache is populated with '$key' - $desc" );
+    is( $cache->get($key2), $value2,
+        "primary cache is populated with '$key2' - $desc" );
+    is( $subcache->get($key2), $value2,
+        "subcache is populated with '$key2' - $desc" );
 }
 
 1;
