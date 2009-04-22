@@ -17,7 +17,7 @@ use CHI;
 require CHI::Driver;
 
 my $cache;
-throws_ok { $cache = CHI->new(driver => 'Memory', serializer => 'Data::Dumper') } qr/Data::Serializer not installed/, "dies with serializer";
+throws_ok { $cache = CHI->new(driver => 'Memory', serializer => 'Data::Dumper') } qr/Data::Serializer not loaded/, "dies with serializer";
 lives_ok { $cache = CHI->new(driver => 'Memory') } "lives with no serializer";
 $cache->set('foo', 5);
 is($cache->get('foo'), 5, 'cache get ok');
