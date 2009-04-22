@@ -24,8 +24,14 @@ sub standard_keys_and_values : Test(startup) {
 
 sub kvpair {
     my $self = shift;
+    my $count = shift || 1;
 
-    return ( $self->{keys}->{medium}, $self->{values}->{medium} );
+    return map {
+        (
+            $self->{keys}->{medium} .   ( $_ == 1 ? '' : $_ ),
+            $self->{values}->{medium} . ( $_ == 1 ? '' : $_ )
+          )
+    } ( 1 .. $count );
 }
 
 sub setup : Test(setup) {
@@ -650,7 +656,7 @@ sub test_clear : Tests {
     }
 }
 
-sub test_logging : Test(8) {
+sub test_logging : Test(10) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -667,24 +673,33 @@ sub test_logging : Test(8) {
       ( $driver eq 'Multilevel' ? 'MISS' : 'MISS \(expired\)' );
 
     my $start_time = time();
+
     $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
+    $log->empty_ok();
+
     $cache->set( $key, $value, 80 );
     my $length = length($value);
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', driver='$driver'/
+        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
     );
+    $log->empty_ok();
+
     $cache->get($key);
-    $log->contains_ok(qr/cache get for .* key='$key', driver='$driver': HIT/);
+    $log->contains_ok(qr/cache get for .* key='$key', cache='$driver': HIT/);
+    $log->empty_ok();
+
     local $CHI::Driver::Test_Time = $start_time + 120;
     $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_expired/);
+        qr/cache get for .* key='$key', cache='$driver': $miss_expired/);
+    $log->empty_ok();
+
     $cache->remove($key);
     $cache->get($key);
     $log->contains_ok(
-        qr/cache get for .* key='$key', driver='$driver': $miss_not_in_cache/);
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
     $log->empty_ok();
 }
 
