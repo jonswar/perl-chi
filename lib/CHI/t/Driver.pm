@@ -5,6 +5,7 @@ use CHI::Test;
 use CHI::Test::Logger;
 use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
+use File::Temp qw(tempdir);
 use Module::Load::Conditional qw(can_load check_install);
 use base qw(CHI::Test::Class);
 
@@ -629,6 +630,309 @@ sub test_multi_no_keys : Test(4) {
         {}, "get_multi_hashref (no args)" );
     lives_ok { $cache->set_multi( {} ) } "set_multi (no args)";
     lives_ok { $cache->remove_multi( [] ) } "remove_multi (no args)";
+}
+
+sub test_l1_cache : Test(212) {
+    my $self   = shift;
+    my @keys   = map { "key$_" } ( 0 .. 2 );
+    my @values = map { "value$_" } ( 0 .. 2 );
+    my ( $cache, $l1_cache );
+
+    my $test_l1_cache = sub {
+
+        # Get on cache should populate l1 cache
+        #
+        $cache->set( $keys[0], $values[0] );
+        $l1_cache->clear();
+        ok( !$l1_cache->get( $keys[0] ), "l1 miss after clear" );
+        is( $cache->get( $keys[0] ),
+            $values[0], "primary hit after primary set" );
+        is( $l1_cache->get( $keys[0] ), $values[0],
+            "l1 hit after primary get" );
+
+        # Primary cache should be reading l1 cache first
+        #
+        $l1_cache->set( $keys[0], $values[1] );
+        is( $cache->get( $keys[0] ),
+            $values[1], "got new value set explicitly in l1 cache" );
+        $l1_cache->remove( $keys[0] );
+        is( $cache->get( $keys[0] ), $values[0], "got old value again" );
+
+        $cache->clear();
+        ok( !$cache->get( $keys[0] ),    "miss after clear" );
+        ok( !$l1_cache->get( $keys[0] ), "miss after clear" );
+
+        # get_multi_* - one from l1 cache, one from primary cache, one miss
+        #
+        $cache->set( $keys[0], $values[0] );
+        $cache->set( $keys[1], $values[0] );
+        $l1_cache->remove( $keys[0] );
+        $l1_cache->set( $keys[1], $values[1] );
+        cmp_deeply(
+            $cache->get_multi_arrayref( [ $keys[0], $keys[1], $keys[2] ] ),
+            [ $values[0], $values[1], undef ],
+            "get_multi_arrayref"
+        );
+        cmp_deeply(
+            [ $cache->get_multi_array( [ $keys[0], $keys[1], $keys[2] ] ) ],
+            [ $values[0], $values[1], undef ],
+            "get_multi_array"
+        );
+        cmp_deeply(
+            $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ),
+            {
+                $keys[0] => $values[0],
+                $keys[1] => $values[1],
+                $keys[2] => undef
+            },
+            "get_multi_hashref"
+        );
+
+        $self->_test_logging_with_l1_cache( $cache, $l1_cache );
+
+        $self->_test_set_and_remove_with_subcache( $cache, $l1_cache );
+    };
+
+    # Test with current cache in primary position...
+    #
+    $cache = $self->new_cache( l1_cache => { driver => 'Memory' } );
+    $l1_cache = $cache->l1_cache;
+    isa_ok( $cache,    $self->testing_driver_class );
+    isa_ok( $l1_cache, 'CHI::Driver::Memory' );
+    $test_l1_cache->();
+
+    # and in l1 position
+    #
+    $cache = CHI->new(
+        driver   => 'Memory',
+        l1_cache => { $self->new_cache_options() }
+    );
+    $l1_cache = $cache->l1_cache;
+    isa_ok( $cache,    'CHI::Driver::Memory' );
+    isa_ok( $l1_cache, $self->testing_driver_class );
+    $test_l1_cache->();
+}
+
+sub test_mirror_to_cache : Test(190) {
+    my $self = shift;
+    my ( $cache, $mirror_to_cache );
+    my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
+
+    my $test_mirror_to_cache = sub {
+
+        # Get on either cache should not populate the other, and should not be able to see
+        # mirror keys from regular cache
+        #
+        $cache->set( $key, $value );
+        $mirror_to_cache->remove($key);
+        $cache->get($key);
+        ok( !$mirror_to_cache->get($key), "key not in mirror_to_cache" );
+
+        $mirror_to_cache->set( $key2, $value2 );
+        ok( !$cache->get($key2), "key2 not in cache" );
+
+        $self->_test_logging_with_mirror_to_cache( $cache, $mirror_to_cache );
+
+        $self->_test_set_and_remove_with_subcache( $cache, $mirror_to_cache );
+    };
+
+    my $file_cache_options = sub {
+        my $root_dir =
+          tempdir( "chi-test-mirror-cache-XXXX", TMPDIR => 1, CLEANUP => 1 );
+        return ( driver => 'File', root_dir => $root_dir, depth => 3 );
+    };
+
+    # Test with current cache in primary position...
+    #
+    $cache = $self->new_cache( mirror_to_cache => { $file_cache_options->() } );
+    $mirror_to_cache = $cache->mirror_to_cache;
+    isa_ok( $cache,           $self->testing_driver_class );
+    isa_ok( $mirror_to_cache, 'CHI::Driver::File' );
+    $test_mirror_to_cache->();
+
+    # and in mirror_to position
+    #
+    $cache =
+      CHI->new( $file_cache_options->(),
+        mirror_to_cache => { $self->new_cache_options() } );
+    $mirror_to_cache = $cache->mirror_to_cache;
+    isa_ok( $cache,           'CHI::Driver::File' );
+    isa_ok( $mirror_to_cache, $self->testing_driver_class );
+    $test_mirror_to_cache->();
+}
+
+# Run logging tests for a cache with an l1_cache
+#
+sub _test_logging_with_l1_cache {
+    my ( $self, $cache ) = @_;
+
+    $cache->clear();
+    my $log = CHI::Test::Logger->new();
+    CHI->logger($log);
+    my ( $key, $value ) = $self->kvpair();
+
+    my $driver = $cache->short_driver_name;
+
+    my $miss_not_in_cache = 'MISS \(not in cache\)';
+    my $miss_expired      = 'MISS \(expired\)';
+
+    my $start_time = time();
+
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='.*l1.*': $miss_not_in_cache/);
+    $log->empty_ok();
+
+    $cache->set( $key, $value, 80 );
+    my $length = length($value);
+    $log->contains_ok(
+        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
+    );
+    $log->contains_ok(
+        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='.*l1.*'/
+    );
+    $log->empty_ok();
+
+    $cache->get($key);
+    $log->contains_ok(qr/cache get for .* key='$key', cache='.*l1.*': HIT/);
+    $log->empty_ok();
+
+    local $CHI::Driver::Test_Time = $start_time + 120;
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_expired/);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='.*l1.*': $miss_expired/);
+    $log->empty_ok();
+
+    $cache->remove($key);
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='.*l1.*': $miss_not_in_cache/);
+    $log->empty_ok();
+}
+
+sub _test_logging_with_mirror_to_cache {
+    my ( $self, $cache ) = @_;
+
+    $cache->clear();
+    my $log = CHI::Test::Logger->new();
+    CHI->logger($log);
+    my ( $key, $value ) = $self->kvpair();
+
+    my $driver = $cache->short_driver_name;
+
+    my $miss_not_in_cache = 'MISS \(not in cache\)';
+    my $miss_expired      = 'MISS \(expired\)';
+
+    my $start_time = time();
+
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
+    $log->empty_ok();
+
+    $cache->set( $key, $value, 80 );
+    my $length = length($value);
+    $log->contains_ok(
+        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
+    );
+    $log->contains_ok(
+        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='.*mirror.*'/
+    );
+    $log->empty_ok();
+
+    $cache->get($key);
+    $log->contains_ok(qr/cache get for .* key='$key', cache='$driver': HIT/);
+    $log->empty_ok();
+
+    local $CHI::Driver::Test_Time = $start_time + 120;
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_expired/);
+    $log->empty_ok();
+
+    $cache->remove($key);
+    $cache->get($key);
+    $log->contains_ok(
+        qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
+    $log->empty_ok();
+}
+
+# Run tests common to l1_cache and mirror_to_cache
+#
+sub _test_set_and_remove_with_subcache {
+    my ( $self, $cache, $subcache ) = @_;
+    my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
+
+    for ( $cache, $subcache ) { $_->clear() }
+
+    # Test that sets and various kinds of removals and expirations are distributed to both
+    # the primary cache and the subcache
+    #
+    my ( $test_remove_method, $confirm_caches_empty,
+        $confirm_caches_populated );
+    $test_remove_method = sub {
+        my ( $desc, $remove_code ) = @_;
+        $desc = "testing $desc";
+
+        $confirm_caches_empty->("$desc: before set");
+
+        $cache->set( $key,  $value );
+        $cache->set( $key2, $value2 );
+        $confirm_caches_populated->("$desc: after set");
+        $remove_code->();
+
+        $confirm_caches_empty->("$desc: before set_multi");
+        $cache->set_multi( { $key => $value, $key2 => $value2 } );
+        $confirm_caches_populated->("$desc: after set_multi");
+        $remove_code->();
+
+        $confirm_caches_empty->("$desc: before return");
+    };
+
+    $confirm_caches_empty = sub {
+        my ($desc) = @_;
+        ok( !defined( $cache->get($key) ),
+            "primary cache is not populated with '$key' - $desc" );
+        ok( !defined( $subcache->get($key) ),
+            "subcache is not populated with '$key' - $desc" );
+        ok( !defined( $cache->get($key2) ),
+            "primary cache is not populated #2 with '$key2' - $desc" );
+        ok( !defined( $subcache->get($key2) ),
+            "subcache is not populated #2 with '$key2' - $desc" );
+    };
+
+    $confirm_caches_populated = sub {
+        my ($desc) = @_;
+        is( $cache->get($key), $value,
+            "primary cache is populated with '$key' - $desc" );
+        is( $subcache->get($key), $value,
+            "subcache is populated with '$key' - $desc" );
+        is( $cache->get($key2), $value2,
+            "primary cache is populated with '$key2' - $desc" );
+        is( $subcache->get($key2), $value2,
+            "subcache is populated with '$key2' - $desc" );
+    };
+
+    $test_remove_method->(
+        'remove', sub { $cache->remove($key); $cache->remove($key2) }
+    );
+    $test_remove_method->(
+        'expire', sub { $cache->expire($key); $cache->expire($key2) }
+    );
+    $test_remove_method->(
+        'expire_if',
+        sub {
+            $cache->expire_if( $key,  sub { 1 } );
+            $cache->expire_if( $key2, sub { 1 } );
+        }
+    );
+    $test_remove_method->( 'clear', sub { $cache->clear() } );
 }
 
 sub test_clear : Tests {
