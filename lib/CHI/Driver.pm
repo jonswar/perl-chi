@@ -528,7 +528,7 @@ sub _log_set_result {
 sub _handle_get_error {
     my $self  = shift;
     my $error = shift;
-    my $key = $_[0];
+    my $key   = $_[0];
 
     my $msg =
       sprintf( "error during %s: %s", $self->_describe_cache_get(@_), $error );
@@ -538,7 +538,7 @@ sub _handle_get_error {
 sub _handle_set_error {
     my $self  = shift;
     my $error = shift;
-    my $key = $_[0];
+    my $key   = $_[0];
 
     my $msg =
       sprintf( "error during %s: %s", $self->_describe_cache_set(@_), $error );
