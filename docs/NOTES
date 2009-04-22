@@ -1,3 +1,44 @@
+SUBCACHE LOGGING
+
+Say we have a File cache with a Memory L1 cache. How should hits, misses and sets on the L1 cache be logged?
+
+Each could be logged on the l1 cache, on the parent cache, on the parent cache with special designations, or on both caches.
+
+If we didn't do anything special, misses and sets would be logged on both caches, but hits would only be logged on the l1 cache - but we could fix that with an extra log line.
+
+As long as the l1 cache has an appropriate description, mentioning the parent, then logging both would probably be the best. So we need to give people some control over description used in logs.
+
+Right now, logs look like this:
+
+    05/Mar/2009:00:02:44.35 cache get for namespace='/shared/findSite', key='domain=cosmopolitan.com', driver='File': HIT - www.cosmopolitan.com/sex-love/dating/Attract-Hot-Guys-Like-Crazy-3 - 16891-70
+    05/Mar/2009:00:33:46.33 cache set for namespace='/shared/ams/getAmsPosCriteriaLOH', key='pos_id=252', size=16, expires='1h', time=0ms, driver='File' - www.esquire.com/ams/page-ads.js - 2052-38
+
+Instead of driver='...', we could have cache='<desc>', where <desc> by default is the short driver name, but can be set to anything, e.g. 'file-local' or 'file-local@/foo/bar/baz'.
+
+desc for an l1 or mirror_to cache can be <parent_desc>:l1 or <parent_desc>:mirror.
+
+Errors look like this:
+
+    error setting key 'foo' in CHI cache (driver=File, namespace=/bar/baz): ...
+
+where "CHI cache (driver=File, namespace=/bar/baz)" is the description. This is only place that $self->desc() is used.
+
+Would be nice to unify these. But "CHI cache" doesn't need to be in logs, and we want namespace to be easily separated out in logs.
+
+Ok. Assuming that errors are being logged:
+
+    05/Mar/2009:00:02:44.35 error during cache get for namespace='/shared/findSite', key='domain=cosmopolitan.com', cache='File': ...
+    05/Mar/2009:00:02:44.35 cache get for namespace='/shared/findSite', key='domain=cosmopolitan.com', driver='File': HIT - www.cosmopolitan.com/sex-love/dating/Attract-Hot-Guys-Like-Crazy-3 - 16891-70
+
+So now we have
+
+    $self->_describe_cache_get($self, $key)
+       => cache get for namespace='/shared/findSite', key='domain=cosmopolitan.com', cache='File'
+    $self->_describe_cache_set($self, $key)
+       => cache set for namespace='/shared/ams/getAmsPosCriteriaLOH', key='pos_id=252', size=16, expires='1h', cache='File'
+that can be called for both logging and errors.
+
+
 STAY WITH MOUSE FOR NOW?
 
 What's the downside of sticking with Mouse for now? Basically, some people won't be able to do as much with introspection and possibly subclassing as they'd like.
