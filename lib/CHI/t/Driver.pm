@@ -7,6 +7,7 @@ use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
 use File::Temp qw(tempdir);
 use Module::Load::Conditional qw(can_load check_install);
+use Scalar::Util qw(weaken);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -1096,6 +1097,18 @@ sub test_obj_ref : Tests(8) {
     ok( !defined($obj), "obj not defined before get" );
     $cache->get( $key, obj_ref => \$obj );
     $validate_obj->($obj);
+}
+
+sub test_no_leak : Tests(2) {
+    my ( $self ) = @_;
+
+    my $weakref;
+    { my $cache = $self->new_cache();
+      $weakref = $cache;
+      weaken($weakref);
+      ok(defined($weakref) && $weakref->isa('CHI::Driver'), "weakref is defined");
+    }
+    ok(!defined($weakref), "weakref is no longer defined - cache was freed")
 }
 
 ## no critic
