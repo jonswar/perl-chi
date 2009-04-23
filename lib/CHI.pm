@@ -476,10 +476,10 @@ Returns the name of the driver class, minus the CHI::Driver:: prefix, if any. e.
     CHI->new(driver_class=>'My::Driver::File')->short_driver_name
        => My::Driver::File
 
+=back
+
 There is a read-only accessor for C<namespace>, and read/write accessors for
 C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set_error>.
-
-=back
 
 =head2 Deprecated methods
 
@@ -559,6 +559,36 @@ A cache cannot have more than one of each kind of subcache, but a subcache can h
             l1_cache   => { driver => 'Memory' }
         }
     );
+
+=head2 Subcache-related methods
+
+=over
+
+=item l1_cache( )
+
+Returns the L1 cache for this cache, if any.
+
+=item mirror_cache( )
+
+Returns the mirror cache for this cache, if any.
+
+=item subcaches( )
+
+Returns the subcaches for this cache, if any. Order is arbitrary.
+
+=item is_subcache( )
+
+If this is a subcache, returns true, otherwise false.
+
+=item subcache_type( )
+
+If this is a subcache, returns the type of subcache as a string, e.g. 'l1_cache' or 'mirror_cache', otherwise undef.
+
+=item parent_cache( )
+
+If this is a subcache, returns the parent cache (weakened to prevent circular reference), otherwise undef.
+
+=back
 
 =head1 DURATION EXPRESSIONS
 
