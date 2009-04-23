@@ -340,7 +340,7 @@ sub test_expires_manually : Test(3) {
     ok( !$cache->is_valid($key),    "invalid after expire ($desc)" );
 }
 
-sub test_expires_conditionally : Test(24) {
+sub test_expires_conditionally : Test(22) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -632,13 +632,15 @@ sub test_multi_no_keys : Test(4) {
     lives_ok { $cache->remove_multi( [] ) } "remove_multi (no args)";
 }
 
-sub test_l1_cache : Test(212) {
+sub test_l1_cache : Test(228) {
     my $self   = shift;
     my @keys   = map { "key$_" } ( 0 .. 2 );
     my @values = map { "value$_" } ( 0 .. 2 );
     my ( $cache, $l1_cache );
 
     my $test_l1_cache = sub {
+
+        is( $l1_cache->subcache_type, "l1_cache" );
 
         # Get on cache should populate l1 cache
         #
@@ -690,7 +692,7 @@ sub test_l1_cache : Test(212) {
 
         $self->_test_logging_with_l1_cache( $cache, $l1_cache );
 
-        $self->_test_set_and_remove_with_subcache( $cache, $l1_cache );
+        $self->_test_common_subcache_features( $cache, $l1_cache );
     };
 
     # Test with current cache in primary position...
@@ -713,12 +715,14 @@ sub test_l1_cache : Test(212) {
     $test_l1_cache->();
 }
 
-sub test_mirror_cache : Test(190) {
+sub test_mirror_cache : Test(206) {
     my $self = shift;
     my ( $cache, $mirror_cache );
     my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
 
     my $test_mirror_cache = sub {
+
+        is( $mirror_cache->subcache_type, "mirror_cache" );
 
         # Get on either cache should not populate the other, and should not be able to see
         # mirror keys from regular cache
@@ -733,7 +737,7 @@ sub test_mirror_cache : Test(190) {
 
         $self->_test_logging_with_mirror_cache( $cache, $mirror_cache );
 
-        $self->_test_set_and_remove_with_subcache( $cache, $mirror_cache );
+        $self->_test_common_subcache_features( $cache, $mirror_cache );
     };
 
     my $file_cache_options = sub {
@@ -865,11 +869,21 @@ sub _test_logging_with_mirror_cache {
 
 # Run tests common to l1_cache and mirror_cache
 #
-sub _test_set_and_remove_with_subcache {
+sub _test_common_subcache_features {
     my ( $self, $cache, $subcache ) = @_;
     my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
 
     for ( $cache, $subcache ) { $_->clear() }
+
+    # Test informational methods
+    #
+    ok( !$cache->is_subcache,             "is_subcache - false" );
+    ok( $subcache->is_subcache,           "is_subcache - true" );
+    ok( !defined( $cache->parent_cache ), "parent_cache - undef" );
+    is( $subcache->parent_cache, $cache, "parent_cache - defined" );
+    ok( !defined( $cache->subcache_type ), "subcache_type - undef" );
+    cmp_deeply( $cache->subcaches, [$subcache],         "subcaches - empty");
+    cmp_deeply( $subcache->subcaches, [],         "subcaches - empty");
 
     # Test that sets and various kinds of removals and expirations are distributed to both
     # the primary cache and the subcache
