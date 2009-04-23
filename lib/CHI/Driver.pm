@@ -40,7 +40,7 @@ has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
 has 'is_subcache'      => ( is => 'rw' );
 has 'l1_cache'         => ( is => 'ro' );
-has 'mirror_to_cache'  => ( is => 'ro' );
+has 'mirror_cache'     => ( is => 'ro' );
 has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
@@ -63,7 +63,7 @@ my %common_params =
 
 # List of parameter keys that initialize a subcache
 #
-my @subcache_keys = qw(l1_cache mirror_to_cache);
+my @subcache_keys = qw(l1_cache mirror_cache);
 
 # List of parameters that are automatically inherited by a subcache
 #
@@ -128,7 +128,7 @@ sub _build_data_serializer {
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    # Create subcaches as necessary (l1_cache, mirror_to_cache)
+    # Create subcaches as necessary (l1_cache, mirror_cache)
     # ** Eventually might allow existing caches to be passed
     #
     foreach my $subcache_key (@subcache_keys) {

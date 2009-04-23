@@ -15,7 +15,7 @@ Right now, logs look like this:
 
 Instead of driver='...', we could have cache='<desc>', where <desc> by default is the short driver name, but can be set to anything, e.g. 'file-local' or 'file-local@/foo/bar/baz'.
 
-desc for an l1 or mirror_to cache can be <parent_desc>:l1 or <parent_desc>:mirror.
+desc for an l1 or mirror cache can be <parent_desc>:l1 or <parent_desc>:mirror.
 
 Errors look like this:
 
@@ -113,7 +113,7 @@ Paired.pm has the same inherit problem as Module::Pluggable had - once you get "
 
 e.g. Suppose that CHI::Driver::File has a get_politely() method, which essentially calls get() with some minor difference. get() will be called on the File class, not on Paired as it should be, and thus will circumvent the l1 cache.
 
-So l1_cache and mirror_to_cache should be implemented in Driver.pm. However, we can still use our code to initialize those caches and inherit parameters from the primary.
+So l1_cache and mirror_cache should be implemented in Driver.pm. However, we can still use our code to initialize those caches and inherit parameters from the primary.
 
 Whoops! Another reason to override clear() and purge() in all drivers - we need to distribute to subcaches.
 
@@ -179,7 +179,7 @@ How does this cache handle...
 
   my $cache = CHI->new(driver => 'File',
                        root_dir => '/mnt/cache',
-                       mirror_to_cache => { driver=>'File', root_dir=>'/mnt/cache.new');
+                       mirror_cache => { driver=>'File', root_dir=>'/mnt/cache.new');
 
 How does this cache handle...
 - set, set_object: sets the value in both
@@ -194,7 +194,7 @@ In CHI.pm:
        return CHI::Driver::Paired->new
           (subcaches => { $sub_params, \%params}, primary_index => 1);
    }
-   if (my $sub_params = delete($params{mirror_to_cache})) {
+   if (my $sub_params = delete($params{mirror_cache})) {
        return CHI::Driver::Paired->new
           (subcaches => { \%params, $sub_params },
            primary_index=>0, no_distribute_reads = 1);  # or secondary_is_write_only, or only_primary_reads
@@ -221,7 +221,7 @@ Changes to Driver:
 . Add chi_root_class, the factory class that created this driver (e.g. 'CHI'), so that
   it can be used to create other caches
 . Add obj_ref to both get and set, if it exists it is populated with the cache object
-. Add l1_cache and mirror_to_cache options
+. Add l1_cache and mirror_cache options
 
 Paired:
 . No longer a CHI::Driver subclass - delegates everything
@@ -233,10 +233,10 @@ Paired:
 . Add disable_logging to Driver.pm, possibly make this the default for secondary caches (but useful nonetheless)
 
 Other:
-* Make l1_cache(), mirror_to_cache() options work as accessors
+* Make l1_cache(), mirror_cache() options work as accessors
 
 **Don't** try to make Paired a clean external API. Treat it like an internal class right
-now, solely to support l1_cache and mirror_to_cache. Later, we can clean up the API, as well
+now, solely to support l1_cache and mirror_cache. Later, we can clean up the API, as well
 as adding other aliases.
 
 STORING META-INFORMATION

@@ -713,27 +713,27 @@ sub test_l1_cache : Test(212) {
     $test_l1_cache->();
 }
 
-sub test_mirror_to_cache : Test(190) {
+sub test_mirror_cache : Test(190) {
     my $self = shift;
-    my ( $cache, $mirror_to_cache );
+    my ( $cache, $mirror_cache );
     my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
 
-    my $test_mirror_to_cache = sub {
+    my $test_mirror_cache = sub {
 
         # Get on either cache should not populate the other, and should not be able to see
         # mirror keys from regular cache
         #
         $cache->set( $key, $value );
-        $mirror_to_cache->remove($key);
+        $mirror_cache->remove($key);
         $cache->get($key);
-        ok( !$mirror_to_cache->get($key), "key not in mirror_to_cache" );
+        ok( !$mirror_cache->get($key), "key not in mirror_cache" );
 
-        $mirror_to_cache->set( $key2, $value2 );
+        $mirror_cache->set( $key2, $value2 );
         ok( !$cache->get($key2), "key2 not in cache" );
 
-        $self->_test_logging_with_mirror_to_cache( $cache, $mirror_to_cache );
+        $self->_test_logging_with_mirror_cache( $cache, $mirror_cache );
 
-        $self->_test_set_and_remove_with_subcache( $cache, $mirror_to_cache );
+        $self->_test_set_and_remove_with_subcache( $cache, $mirror_cache );
     };
 
     my $file_cache_options = sub {
@@ -744,21 +744,21 @@ sub test_mirror_to_cache : Test(190) {
 
     # Test with current cache in primary position...
     #
-    $cache = $self->new_cache( mirror_to_cache => { $file_cache_options->() } );
-    $mirror_to_cache = $cache->mirror_to_cache;
-    isa_ok( $cache,           $self->testing_driver_class );
-    isa_ok( $mirror_to_cache, 'CHI::Driver::File' );
-    $test_mirror_to_cache->();
+    $cache = $self->new_cache( mirror_cache => { $file_cache_options->() } );
+    $mirror_cache = $cache->mirror_cache;
+    isa_ok( $cache,        $self->testing_driver_class );
+    isa_ok( $mirror_cache, 'CHI::Driver::File' );
+    $test_mirror_cache->();
 
-    # and in mirror_to position
+    # and in mirror position
     #
     $cache =
       CHI->new( $file_cache_options->(),
-        mirror_to_cache => { $self->new_cache_options() } );
-    $mirror_to_cache = $cache->mirror_to_cache;
-    isa_ok( $cache,           'CHI::Driver::File' );
-    isa_ok( $mirror_to_cache, $self->testing_driver_class );
-    $test_mirror_to_cache->();
+        mirror_cache => { $self->new_cache_options() } );
+    $mirror_cache = $cache->mirror_cache;
+    isa_ok( $cache,        'CHI::Driver::File' );
+    isa_ok( $mirror_cache, $self->testing_driver_class );
+    $test_mirror_cache->();
 }
 
 # Run logging tests for a cache with an l1_cache
@@ -816,7 +816,7 @@ sub _test_logging_with_l1_cache {
     $log->empty_ok();
 }
 
-sub _test_logging_with_mirror_to_cache {
+sub _test_logging_with_mirror_cache {
     my ( $self, $cache ) = @_;
 
     $cache->clear();
@@ -863,7 +863,7 @@ sub _test_logging_with_mirror_to_cache {
     $log->empty_ok();
 }
 
-# Run tests common to l1_cache and mirror_to_cache
+# Run tests common to l1_cache and mirror_cache
 #
 sub _test_set_and_remove_with_subcache {
     my ( $self, $cache, $subcache ) = @_;
