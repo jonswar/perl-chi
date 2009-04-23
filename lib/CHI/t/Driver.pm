@@ -883,8 +883,8 @@ sub _test_common_subcache_features {
     ok( !defined( $cache->parent_cache ), "parent_cache - undef" );
     is( $subcache->parent_cache, $cache, "parent_cache - defined" );
     ok( !defined( $cache->subcache_type ), "subcache_type - undef" );
-    cmp_deeply( $cache->subcaches, [$subcache],         "subcaches - empty");
-    cmp_deeply( $subcache->subcaches, [],         "subcaches - empty");
+    cmp_deeply( $cache->subcaches,    [$subcache], "subcaches - empty" );
+    cmp_deeply( $subcache->subcaches, [],          "subcaches - empty" );
 
     # Test that sets and various kinds of removals and expirations are distributed to both
     # the primary cache and the subcache
@@ -1100,15 +1100,17 @@ sub test_obj_ref : Tests(8) {
 }
 
 sub test_no_leak : Tests(2) {
-    my ( $self ) = @_;
+    my ($self) = @_;
 
     my $weakref;
-    { my $cache = $self->new_cache();
-      $weakref = $cache;
-      weaken($weakref);
-      ok(defined($weakref) && $weakref->isa('CHI::Driver'), "weakref is defined");
+    {
+        my $cache = $self->new_cache();
+        $weakref = $cache;
+        weaken($weakref);
+        ok( defined($weakref) && $weakref->isa('CHI::Driver'),
+            "weakref is defined" );
     }
-    ok(!defined($weakref), "weakref is no longer defined - cache was freed")
+    ok( !defined($weakref), "weakref is no longer defined - cache was freed" );
 }
 
 ## no critic

@@ -53,7 +53,7 @@ has 'serializer'   => (
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
 has 'subcache_type' => ( is => 'ro' );
-has 'subcaches'     => ( is => 'ro', default => sub { [] } );
+has 'subcaches' => ( is => 'ro', default => sub { [] } );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -146,8 +146,8 @@ sub BUILD {
                 %inherited_params, %$subcache_params
             );
             $subcache->{subcache_type} = $subcache_type;
-            $subcache->{parent_cache} = $self;
-            weaken($subcache->{parent_cache});
+            $subcache->{parent_cache}  = $self;
+            weaken( $subcache->{parent_cache} );
             $self->{$subcache_type} = $subcache;
             push( @{ $self->{subcaches} }, $subcache );
         }
@@ -509,9 +509,9 @@ sub call_method_on_subcaches {
 }
 
 sub is_subcache {
-    my ( $self ) = @_;
+    my ($self) = @_;
 
-    return defined($self->{subcache_type});
+    return defined( $self->{subcache_type} );
 }
 
 sub _set_object {
