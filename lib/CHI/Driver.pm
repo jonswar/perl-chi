@@ -9,7 +9,7 @@ use List::MoreUtils qw(pairwise);
 use Module::Load::Conditional qw(can_load);
 use Mouse;
 use Mouse::Util::TypeConstraints;
-use Scalar::Util qw(blessed);
+use Scalar::Util qw(blessed weaken);
 use Time::Duration;
 use strict;
 use warnings;
@@ -38,12 +38,12 @@ has 'desc'           => ( is => 'rw', builder => '_build_desc' );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'is_subcache'      => ( is => 'rw' );
 has 'l1_cache'         => ( is => 'ro' );
 has 'mirror_cache'     => ( is => 'ro' );
 has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
+has 'parent_cache' => ( is => 'ro' );
 has 'serializer'   => (
     is      => 'rw',
     isa     => 'Serializer',
@@ -52,7 +52,8 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
-has 'subcaches' => ( is => 'ro' );
+has 'subcache_type' => ( is => 'ro' );
+has 'subcaches'     => ( is => 'ro', default => sub { [] } );
 
 __PACKAGE__->meta->make_immutable();
 
@@ -63,7 +64,7 @@ my %common_params =
 
 # List of parameter keys that initialize a subcache
 #
-my @subcache_keys = qw(l1_cache mirror_cache);
+my @subcache_types = qw(l1_cache mirror_cache);
 
 # List of parameters that are automatically inherited by a subcache
 #
@@ -129,23 +130,25 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     # Create subcaches as necessary (l1_cache, mirror_cache)
-    # ** Eventually might allow existing caches to be passed
+    # Eventually might allow existing caches to be passed
     #
-    foreach my $subcache_key (@subcache_keys) {
-        if ( my $subcache_params = $params->{$subcache_key} ) {
+    foreach my $subcache_type (@subcache_types) {
+        if ( my $subcache_params = $params->{$subcache_type} ) {
             affirm {
                 !blessed($subcache_params) && ref($subcache_params) eq 'HASH';
             };
             my $chi_root_class = $self->chi_root_class;
             my %inherited_params =
               slice_exists( $params, @subcache_inherited_param_keys );
-            my $default_desc = $self->desc . ":$subcache_key";
+            my $default_desc = $self->desc . ":$subcache_type";
             my $subcache     = $chi_root_class->new(
                 desc => $default_desc,
                 %inherited_params, %$subcache_params
             );
-            $subcache->{is_subcache} = 1;
-            $self->{$subcache_key} = $subcache;
+            $subcache->{subcache_type} = $subcache_type;
+            $subcache->{parent_cache} = $self;
+            weaken($subcache->{parent_cache});
+            $self->{$subcache_type} = $subcache;
             push( @{ $self->{subcaches} }, $subcache );
         }
     }
@@ -503,6 +506,12 @@ sub call_method_on_subcaches {
     foreach my $subcache (@$subcaches) {
         $subcache->$method(@_);
     }
+}
+
+sub is_subcache {
+    my ( $self ) = @_;
+
+    return defined($self->{subcache_type});
 }
 
 sub _set_object {
