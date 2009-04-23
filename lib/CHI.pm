@@ -71,17 +71,8 @@ CHI -- Unified cache interface
     );
     my $cache = CHI->new(
         driver  => 'Memcached',
-        servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
-    );
-    my $cache = CHI->new(
-        driver => 'Multilevel',
-        subcaches => [
-            { driver => 'Memory' },
-            {
-                driver  => 'Memcached',
-                servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
-            }
-        ],
+        servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => { driver => 'FastMmap', root_dir => '/path/to/root' }
     );
 
     # Create your own driver
@@ -496,6 +487,79 @@ The following methods are deprecated and will be removed in a later version:
 
     expire_if
 
+=head1 SUBCACHES
+
+It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches hardcoded into CHI: L1 and mirror. We'd like to make this more flexible in the future.
+
+=head2 L1 cache
+
+An L1 (or "level one") cache sits in front of the primary cache, usually to provide faster access for commonly accessed cache entries. For example, this places an in-process Memory cache in front of a Memcached cache:
+
+    my $cache = CHI->new(
+        driver   => 'Memcached',
+        servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => { driver => 'Memory' }
+    );
+
+On a C<get>, the L1 cache is checked first - if a valid value exists, it is returned. Otherwise, the primary cache is checked - if a valid value exists, it is returned, and the value is placed in the L1 cache with the same expiration time. In this way, items fetched most frequently from the primary cache will tend to be in the L1 cache.
+
+C<set> operations are distributed to both the primary and L1 cache.
+
+You can access the L1 cache with the C<l1_cache> method. For example, this clears the L1 cache but leaves the primary cache intact:
+
+    $cache->l1_cache->clear();
+
+=head2 Mirror cache
+
+A mirror cache is a write-only cache that, over time, mirrors the content of the primary cache. C<set> operations are distributed to both the primary and mirror cache, but C<get> operations go only to the primary cache.
+
+Mirror caches are useful when you want to migrate from one cache to another. You can populate a mirror cache and switch over to it once it is sufficiently populated. For example, here we migrate from an old to a new cache directory:
+
+    my $cache = CHI->new(
+        driver          => 'File',
+        root_dir        => '/old/cache/root',
+        mirror_cache => { driver => 'File', root_dir => '/new/cache/root' },
+    );
+
+We leave this running for a few hours (or as needed), then replace it with
+
+    my $cache = CHI->new(
+        driver   => 'File',
+        root_dir => '/new/cache/root'
+    );
+
+You can access the mirror cache with the C<mirror_cache> method. For example, to see how many keys have made it over to the mirror cache:
+
+    my @keys = $cache->mirror_cache->get_keys();
+
+=head2 Common subcache behaviors
+
+These behaviors hold regardless of the type of subcache.
+
+The following methods are distributed to both the primary cache and subcache:
+
+    C<clear>, C<expire>, C<purge>, C<remove>
+
+The following methods return information solely from the primary cache. However, you are free to call them explicitly on the subcache. Trying to merge in the results from the subcache automatically would require too much guessing about the caller's intent.
+
+    C<get_keys>, C<get_namespaces>, C<get_object>, C<get_expires_at>, C<exists_and_is_expired>, C<is_valid>, C<dump_as_hash>, C<is_empty>
+
+=head2 Multiple subcaches
+
+It is valid for a cache to have one of each kind of subcache, e.g. an L1 cache and a mirror cache.
+
+A cache cannot have more than one of each kind of subcache, but a subcache can have its own subcaches, and so on. e.g.
+
+    my $cache = CHI->new(
+        driver   => 'Memcached',
+        servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => {
+            driver     => 'File',
+            cache_root => '/path/to/root',
+            l1_cache   => { driver => 'Memory' }
+        }
+    );
+
 =head1 DURATION EXPRESSIONS
 
 Duration expressions, which appear in the L</set> command and various other parts of the
@@ -543,10 +607,6 @@ L<CHI::Driver::FastMmap|CHI::Driver::FastMmap> - Shared memory interprocess cach
 =item *
 
 L<CHI::Driver::FastMmap|CHI::Driver::Null> - Dummy cache in which nothing is stored
-
-=item *
-
-L<CHI::Driver::Multilevel|CHI::Driver::Multilevel> - Cache formed from several subcaches chained together
 
 =item *
 
