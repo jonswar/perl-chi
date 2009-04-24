@@ -26,10 +26,10 @@ sub cmp_bool {
 
     my $tb = Test::Builder->new();
     if ( $bool1 && !$bool2 ) {
-        $tb->diag("bool1 is true, bool2 is false");
+        $tb->ok( 0, "$desc - bool1 is true, bool2 is false" );
     }
     elsif ( !$bool1 && $bool2 ) {
-        $tb->diag("bool1 is false, bool2 is true");
+        $tb->ok( 0, "$desc - bool1 is false, bool2 is true" );
     }
     else {
         $tb->ok( 1, $desc );

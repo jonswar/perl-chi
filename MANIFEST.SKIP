@@ -12,6 +12,7 @@
 ^tmp
 ^wiki
 ^README.DEVELOPERS
+^TODO
 ^VERSION
 
 # Backup files, etc.

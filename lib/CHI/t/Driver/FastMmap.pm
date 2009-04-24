@@ -73,7 +73,7 @@ sub test_value_too_large : Tests(2) {
     $cache->set( 'small', $values{small} );
     is( $cache->get('small'), $values{small}, "got small" );
     throws_ok { $cache->set( 'large', $values{large} ) }
-    qr/error setting key 'large'.*fastmmap set failed/;
+    qr/error during cache set.*fastmmap set failed/;
 }
 
 1;

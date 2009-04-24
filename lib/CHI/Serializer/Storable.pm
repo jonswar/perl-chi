@@ -15,4 +15,8 @@ sub deserialize {
     return Storable::thaw( $_[1] );
 }
 
+sub serializer {
+    return 'Storable';
+}
+
 1;

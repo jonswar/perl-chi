@@ -109,7 +109,7 @@ sub test_generate_temporary_filename : Tests(2) {
     $self->test_simple();
     $self->{cache} =
       $self->new_cache( driver_class => 'CHI::t::Driver::File::BadTempDriver' );
-    throws_ok { $self->test_simple() } qr/error setting key/;
+    throws_ok { $self->test_simple() } qr/error during cache set/;
 }
 
 sub test_default_depth : Test(1) {

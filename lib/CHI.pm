@@ -71,18 +71,10 @@ CHI -- Unified cache interface
     );
     my $cache = CHI->new(
         driver  => 'Memcached',
-        servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
+        servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => { driver => 'FastMmap', root_dir => '/path/to/root' }
     );
-    my $cache = CHI->new(
-        driver => 'Multilevel',
-        subcaches => [
-            { driver => 'Memory' },
-            {
-                driver  => 'Memcached',
-                servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ]
-            }
-        ],
-    );
+    my $cache = CHI->new( driver => 'DBI', dbh => $dbh );
 
     # Create your own driver
     # 
@@ -90,7 +82,6 @@ CHI -- Unified cache interface
 
     # (These drivers coming soon...)
     #
-    my $cache = CHI->new( driver => 'DBI', dbh => $dbh, table => 'app_cache' );
     my $cache = CHI->new( driver => 'BerkeleyDB', root_dir => '/path/to/root' );
 
     # Basic cache operations
@@ -104,8 +95,7 @@ CHI -- Unified cache interface
 
 =head1 DESCRIPTION
 
-CHI provides a unified caching API, designed to assist a developer in persisting data for
-a specified period of time.
+CHI provides a unified caching API, designed to assist a developer in persisting data for a specified period of time.
 
 The CHI interface is implemented by driver classes that support fetching, storing and
 clearing of data. Driver classes exist or will exist for the gamut of storage backends
@@ -132,6 +122,29 @@ will prefix the string with "CHI::Driver::".
 =item driver_class [STRING]
 
 The exact CHI::Driver subclass to drive the cache, for example "My::Memory::Driver".
+
+=item expires_in [DURATION]
+
+=item expires_at [NUM]
+
+=item expires_variance [FLOAT]
+
+Provide default values for the corresponding L</set> options.
+
+=item label [STRING]
+
+A label for the cache as a whole, used when referring to it in logs and error messages,
+for example "web-file-cache". Does not need to include namespace - this will be
+appended to messages automatically. By default, the driver name will be used,
+e.g. "Memcached".
+
+=item l1_cache [HASHREF]
+
+Add an L1 cache as a subcache. See L</SUBCACHES>.
+
+=item mirror_cache [HASHREF]
+
+Add an mirror cache as a subcache. See L</SUBCACHES>.
 
 =item namespace [STRING]
 
@@ -191,14 +204,6 @@ e.g.
 
 The default is to use raw Storable.
 
-=item expires_in [DURATION]
-
-=item expires_at [NUM]
-
-=item expires_variance [FLOAT]
-
-Provide default values for the corresponding L</set> options.
-
 =item on_get_error [STRING|CODEREF]
 
 =item on_set_error [STRING|CODEREF]
@@ -229,10 +234,6 @@ die - call die() with an appropriate message
 I<coderef> - call this code reference with three arguments: an appropriate message, the key, and the original raw error message
 
 =back
-
-=item no_logging
-
-If set to true, all get and set logging for this cache will be supressed.
 
 =back    
 
@@ -277,7 +278,7 @@ L</expires_variance> for another technique.
 
 =item set( $key, $data, [$expires_in | "now" | "never" | options] )
 
-Associates I<$data> with I<$key> in the cache, overwriting any existing entry.
+Associates I<$data> with I<$key> in the cache, overwriting any existing entry. Returns I<$data>.
 
 The third argument to C<set> is optional, and may be either a scalar or a hash reference.
 If it is a scalar, it may be the string "now", the string "never", or else a duration
@@ -485,9 +486,23 @@ Returns the name of the driver class, minus the CHI::Driver:: prefix, if any. e.
     CHI->new(driver_class=>'My::Driver::File')->short_driver_name
        => My::Driver::File
 
-There is a read-only accessor for C<namespace>, and read/write accessors for
-C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set_error>.
+=item Standard read-write accessors
 
+    expires_in
+    expires_at
+    expires_variance
+    label
+    on_get_error
+    on_set_error
+    
+=item Standard read-only accessors
+
+    l1_cache
+    mirror_cache
+    namespace
+    parent_cache
+    serializer
+    
 =back
 
 =head2 Deprecated methods
@@ -495,6 +510,121 @@ C<expires_in>, C<expires_at>, C<expires_variance>, C<on_get_error>, and C<on_set
 The following methods are deprecated and will be removed in a later version:
 
     expire_if
+
+=head1 SUBCACHES
+
+It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches hardcoded into CHI: L1 and mirror. We'd like to make this more flexible in the future.
+
+=head2 L1 cache
+
+An L1 (or "level one") cache sits in front of the primary cache, usually to provide faster access for commonly accessed cache entries. For example, this places an in-process Memory cache in front of a Memcached cache:
+
+    my $cache = CHI->new(
+        driver   => 'Memcached',
+        servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => { driver => 'Memory' }
+    );
+
+On a C<get>, the L1 cache is checked first - if a valid value exists, it is returned. Otherwise, the primary cache is checked - if a valid value exists, it is returned, and the value is placed in the L1 cache with the same expiration time. In this way, items fetched most frequently from the primary cache will tend to be in the L1 cache.
+
+C<set> operations are distributed to both the primary and L1 cache.
+
+You can access the L1 cache with the C<l1_cache> method. For example, this clears the L1 cache but leaves the primary cache intact:
+
+    $cache->l1_cache->clear();
+
+=head2 Mirror cache
+
+A mirror cache is a write-only cache that, over time, mirrors the content of the primary cache. C<set> operations are distributed to both the primary and mirror cache, but C<get> operations go only to the primary cache.
+
+Mirror caches are useful when you want to migrate from one cache to another. You can populate a mirror cache and switch over to it once it is sufficiently populated. For example, here we migrate from an old to a new cache directory:
+
+    my $cache = CHI->new(
+        driver          => 'File',
+        root_dir        => '/old/cache/root',
+        mirror_cache => { driver => 'File', root_dir => '/new/cache/root' },
+    );
+
+We leave this running for a few hours (or as needed), then replace it with
+
+    my $cache = CHI->new(
+        driver   => 'File',
+        root_dir => '/new/cache/root'
+    );
+
+You can access the mirror cache with the C<mirror_cache> method. For example, to see how many keys have made it over to the mirror cache:
+
+    my @keys = $cache->mirror_cache->get_keys();
+
+=head2 Creating subcaches
+
+As illustrated above, you create subcaches by passing the C<l1_cache> and/or C<mirror_cache> option to the CHI constructor. These options, in turn, should contain a hash of options to create the subcache with.
+
+The following options are automatically inherited by the subcache from the parent cache, if they are not specified explicitly:
+
+    expires_at expires_in expires_variance namespace on_get_error on_set_error
+
+All other options are initialized in the subcache as normal, irrespective of their values in the parent.
+
+It is not currently possible to pass an existing cache in as a subcache.
+
+=head2 Common subcache behaviors
+
+These behaviors hold regardless of the type of subcache.
+
+The following methods are distributed to both the primary cache and subcache:
+
+    C<clear>, C<expire>, C<purge>, C<remove>
+
+The following methods return information solely from the primary cache. However, you are free to call them explicitly on the subcache. (Trying to merge in subcache information automatically would require too much guessing about the caller's intent.)
+
+    C<get_keys>, C<get_namespaces>, C<get_object>, C<get_expires_at>, C<exists_and_is_expired>, C<is_valid>, C<dump_as_hash>, C<is_empty>
+
+=head2 Multiple subcaches
+
+It is valid for a cache to have one of each kind of subcache, e.g. an L1 cache and a mirror cache.
+
+A cache cannot have more than one of each kind of subcache, but a subcache can have its own subcaches, and so on. e.g.
+
+    my $cache = CHI->new(
+        driver   => 'Memcached',
+        servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
+        l1_cache => {
+            driver     => 'File',
+            cache_root => '/path/to/root',
+            l1_cache   => { driver => 'Memory' }
+        }
+    );
+
+=head2 Subcache-related methods
+
+=over
+
+=item l1_cache( )
+
+Returns the L1 cache for this cache, if any.
+
+=item mirror_cache( )
+
+Returns the mirror cache for this cache, if any.
+
+=item subcaches( )
+
+Returns the subcaches for this cache, if any. Order is arbitrary.
+
+=item is_subcache( )
+
+If this is a subcache, returns true, otherwise false.
+
+=item subcache_type( )
+
+If this is a subcache, returns the type of subcache as a string, e.g. 'l1_cache' or 'mirror_cache', otherwise undef.
+
+=item parent_cache( )
+
+If this is a subcache, returns the parent cache (weakened to prevent circular reference), otherwise undef.
+
+=back
 
 =head1 DURATION EXPRESSIONS
 
@@ -523,8 +653,7 @@ e.g. the following are all valid duration expressions:
 
 =head1 AVAILABILITY OF DRIVERS
 
-The following drivers are currently available as part of this distribution. Other drivers
-can be found on CPAN by searching for "CHI::Driver".
+The following drivers are currently available as part of this distribution:
 
 =over
 
@@ -546,13 +675,24 @@ L<CHI::Driver::FastMmap|CHI::Driver::Null> - Dummy cache in which nothing is sto
 
 =item *
 
-L<CHI::Driver::Multilevel|CHI::Driver::Multilevel> - Cache formed from several subcaches chained together
-
-=item *
-
 L<CHI::Driver::CacheCache|CHI::Driver::CacheCache> - CHI wrapper for Cache::Cache
 
 =back
+
+The following drivers are currently available as separate CPAN distributions:
+
+=item *
+
+L<CHI::Driver::Memcached|CHI::Driver::Memcached> - The L<http://www.danga.com/memcached/|memcached> distributed cache
+
+=item *
+
+L<CHI::Driver::Memcached|CHI::Driver::DBI> - Database-based cache
+
+=back
+
+This list is likely incomplete. A complete set of drivers can be found on CPAN by
+searching for "CHI::Driver".
 
 =for readme stop
 
