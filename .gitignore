@@ -16,6 +16,7 @@ cover_db
 cp.yml
 data
 dist
+docs
 inc
 pm_to_blib*
 tmp
