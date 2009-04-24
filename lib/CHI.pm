@@ -511,9 +511,32 @@ The following methods are deprecated and will be removed in a later version:
 
     expire_if
 
+=head1 DURATION EXPRESSIONS
+
+Duration expressions, which appear in the L</set> command and various other parts of the
+API, are parsed by L<Time::Duration::Parse|Time::Duration::Parse>. A duration is either a
+plain number, which is treated like a number of seconds, or a number and a string
+representing time units where the string is one of:
+
+    s second seconds sec secs
+    m minute minutes min mins
+    h hr hour hours
+    d day days
+    w week weeks
+    M month months
+    y year years
+
+e.g. the following are all valid duration expressions:
+
+    25
+    3s
+    5 seconds
+    1 minute and ten seconds
+    1 hour
+
 =head1 SUBCACHES
 
-It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches hardcoded into CHI: L1 and mirror. We'd like to make this more flexible in the future.
+It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches hardcoded into CHI: I<L1> and I<mirror>. We'd like to make this more flexible in the future.
 
 =head2 L1 cache
 
@@ -562,7 +585,12 @@ As illustrated above, you create subcaches by passing the C<l1_cache> and/or C<m
 
 The following options are automatically inherited by the subcache from the parent cache, if they are not specified explicitly:
 
-    expires_at expires_in expires_variance namespace on_get_error on_set_error
+    expires_at
+    expires_in
+    expires_variance
+    namespace
+    on_get_error
+    on_set_error
 
 All other options are initialized in the subcache as normal, irrespective of their values in the parent.
 
@@ -574,11 +602,21 @@ These behaviors hold regardless of the type of subcache.
 
 The following methods are distributed to both the primary cache and subcache:
 
-    C<clear>, C<expire>, C<purge>, C<remove>
+    clear
+    expire
+    purge
+    remove
 
 The following methods return information solely from the primary cache. However, you are free to call them explicitly on the subcache. (Trying to merge in subcache information automatically would require too much guessing about the caller's intent.)
 
-    C<get_keys>, C<get_namespaces>, C<get_object>, C<get_expires_at>, C<exists_and_is_expired>, C<is_valid>, C<dump_as_hash>, C<is_empty>
+    get_keys
+    get_namespaces
+    get_object
+    get_expires_at
+    exists_and_is_expired
+    is_valid
+    dump_as_hash
+    is_empty
 
 =head2 Multiple subcaches
 
@@ -626,29 +664,6 @@ If this is a subcache, returns the parent cache (weakened to prevent circular re
 
 =back
 
-=head1 DURATION EXPRESSIONS
-
-Duration expressions, which appear in the L</set> command and various other parts of the
-API, are parsed by L<Time::Duration::Parse|Time::Duration::Parse>. A duration is either a
-plain number, which is treated like a number of seconds, or a number and a string
-representing time units where the string is one of:
-
-    s second seconds sec secs
-    m minute minutes min mins
-    h hr hour hours
-    d day days
-    w week weeks
-    M month months
-    y year years
-
-e.g. the following are all valid duration expressions:
-
-    25
-    3s
-    5 seconds
-    1 minute and ten seconds
-    1 hour
-
 =for readme continue
 
 =head1 AVAILABILITY OF DRIVERS
@@ -680,6 +695,8 @@ L<CHI::Driver::CacheCache|CHI::Driver::CacheCache> - CHI wrapper for Cache::Cach
 =back
 
 The following drivers are currently available as separate CPAN distributions:
+
+=over
 
 =item *
 
