@@ -4,7 +4,12 @@ Revision history for CHI
 
 0.11  Mar  6, 2009
 
-- Standardized log and error format
+- ** Removed CHI::Driver::Multilevel, replaced with the more intuitive and practical
+     subcache mechanism - l1_cache and mirror_cache
+- ** ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
+     class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
+     can be automatically wrapped
+- Add customizable cache label, used in logs and error messages
 
 0.102  Mar 6, 2009
 
