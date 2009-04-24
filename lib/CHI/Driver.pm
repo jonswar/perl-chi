@@ -34,7 +34,7 @@ coerce 'Serializer' => from 'Str' => via {
 use constant Max_Time => 0xffffffff;
 
 has 'chi_root_class' => ( is => 'ro' );
-has 'desc'           => ( is => 'rw', builder => '_build_desc' );
+has 'label'          => ( is => 'rw', builder => '_build_label' );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
@@ -45,7 +45,7 @@ has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'parent_cache' => ( is => 'ro' );
 has 'serializer'   => (
-    is      => 'rw',
+    is      => 'ro',
     isa     => 'Serializer',
     coerce  => 1,
     default => sub { $default_serializer }
@@ -109,7 +109,7 @@ sub _build_short_driver_name {
     return $name;
 }
 
-sub _build_desc {
+sub _build_label {
     my ($self) = @_;
 
     return $self->_build_short_driver_name;
@@ -140,9 +140,9 @@ sub BUILD {
             my $chi_root_class = $self->chi_root_class;
             my %inherited_params =
               slice_exists( $params, @subcache_inherited_param_keys );
-            my $default_desc = $self->desc . ":$subcache_type";
-            my $subcache     = $chi_root_class->new(
-                desc => $default_desc,
+            my $default_label = $self->label . ":$subcache_type";
+            my $subcache      = $chi_root_class->new(
+                label => $default_label,
                 %inherited_params, %$subcache_params
             );
             $subcache->{subcache_type} = $subcache_type;
@@ -571,7 +571,7 @@ sub _describe_cache_get {
     my ( $self, $key ) = @_;
 
     return sprintf( "cache get for namespace='%s', key='%s', cache='%s'",
-        $self->{namespace}, $key, $self->{desc} );
+        $self->{namespace}, $key, $self->{label} );
 }
 
 sub _describe_cache_set {
@@ -587,7 +587,7 @@ sub _describe_cache_set {
             Time::Duration::duration_exact($expires_in)
           )
         : 'never',
-        $self->{desc}
+        $self->{label}
     );
 }
 
