@@ -32,4 +32,18 @@ sub test_option_inheritance : Tests(8) {
     is( $cache->l1_cache->depth, 2, 'l1 cache depth' );
 }
 
+sub test_bad_subcache_option : Tests(1) {
+    my $self = shift;
+    throws_ok(
+        sub {
+            CHI->new(
+                driver   => 'Memory',
+                l1_cache => CHI->new( driver => 'Memory' )
+            );
+        },
+        qr/Validation failed/,
+        'cannot pass cache object as subcache'
+    );
+}
+
 1;
