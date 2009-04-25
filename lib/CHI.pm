@@ -536,7 +536,7 @@ e.g. the following are all valid duration expressions:
 
 =head1 SUBCACHES
 
-It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches hardcoded into CHI: I<L1> and I<mirror>. We'd like to make this more flexible in the future.
+It is possible to a cache to have one or more I<subcaches>. There are currently two types of subcaches: I<L1> and I<mirror>.
 
 =head2 L1 cache
 
@@ -663,6 +663,10 @@ If this is a subcache, returns the type of subcache as a string, e.g. 'l1_cache'
 If this is a subcache, returns the parent cache (weakened to prevent circular reference), otherwise undef.
 
 =back
+
+=head2 Developing new kinds of subcaches
+
+At this time, subcache behavior is hardcoded into CHI::Driver, so there is no easy way to modify the behavior of existing subcache types or create new ones. We'd like to make this more flexible eventually.
 
 =for readme continue
 
