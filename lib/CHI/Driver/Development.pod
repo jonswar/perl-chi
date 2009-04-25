@@ -184,7 +184,8 @@ Remove the data associated with the I<$key> in the namespace.
 
 =item clear ( $self )
 
-Remove all data associated with the namespace.
+Remove all data associated with the namespace. (Technically not required, but the default implementation,
+which iterates over all keys and calls L</remove> for each, is very inefficient).
 
 =back
 
