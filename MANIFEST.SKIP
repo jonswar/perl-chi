@@ -4,6 +4,7 @@
 ^data
 ^dist
 ^docs
+^git
 ^inc/\.author
 ^lib/Test
 ^misc
