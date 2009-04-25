@@ -22,15 +22,15 @@ Revision history for CHI
 
 0.10  Feb 28, 2009
 
+- ** Deprecate expire_if method - this can easily be done manually, and it now differs
+    deceptively from the expire_if option to get()
+- ** Change expire_if option to simply return undef, without actually expiring the item
 - Switch to Mouse instead of Moose, to reduce install dependencies and overhead. Eliminate
   Moose-isms as needed. Eventually may switch to Any::Moose but want to get comfortable
   with Mouse first.
 - Eliminate dependencies on Data::Serializer, File::Slurp, and Module::Find
 - Revert Memory driver implementation to more readable and illustrative form
 - Handle value-too-large errors in FastMmap driver
-- Change expire_if option to simply return undef, without actually expiring the item
-- Deprecate expire_if method - this can easily be done manually, and it now differs
-  deceptively from the expire_if option to get()
 - When serializer passed as a string, use raw=>1 so as not to hex-encode or insert token
 - Allow serializer to be passed as a hashref
 - Fix bug when specifying serializer with multilevel driver
