@@ -1,6 +1,5 @@
 package CHI::Driver;
 use Carp;
-use Carp::Assert;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
@@ -17,6 +16,8 @@ use warnings;
 type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)$/ };
 
 subtype Duration => as 'Int' => where { $_ > 0 };
+
+subtype UnblessedHashRef => as 'HashRef' => where { !blessed($_) };
 
 coerce 'Duration' => from 'Str' => via { parse_duration($_) };
 
@@ -38,9 +39,9 @@ has 'label'          => ( is => 'rw', builder => '_build_label' );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'l1_cache'         => ( is => 'ro' );
-has 'mirror_cache'     => ( is => 'ro' );
-has 'namespace'    => ( is => 'ro', isa => 'Str',     default => 'Default' );
+has 'l1_cache'         => ( is => 'ro', isa     => 'UnblessedHashRef' );
+has 'mirror_cache'     => ( is => 'ro', isa     => 'UnblessedHashRef' );
+has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'parent_cache' => ( is => 'ro' );
@@ -82,7 +83,7 @@ sub non_common_constructor_params {
 }
 
 # These methods must be implemented by subclass
-foreach my $method (qw(clear fetch store remove get_keys get_namespaces)) {
+foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
       sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
@@ -134,9 +135,6 @@ sub BUILD {
     #
     foreach my $subcache_type (@subcache_types) {
         if ( my $subcache_params = $params->{$subcache_type} ) {
-            affirm {
-                !blessed($subcache_params) && ref($subcache_params) eq 'HASH';
-            };
             my $chi_root_class = $self->chi_root_class;
             my %inherited_params =
               slice_exists( $params, @subcache_inherited_param_keys );
@@ -356,8 +354,7 @@ sub set {
 }
 
 sub expire {
-    my $self = shift;
-    my ($key) = @_;
+    my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
 
     my $time = $Test_Time || time();
@@ -435,6 +432,12 @@ sub remove_multi {
     foreach my $key (@$keys) {
         $self->remove($key);
     }
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub purge {
