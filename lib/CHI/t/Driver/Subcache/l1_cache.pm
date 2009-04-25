@@ -14,7 +14,8 @@ sub new_cache_options {
       tempdir( "chi-driver-subcache-l1-XXXX", TMPDIR => 1, CLEANUP => 1 );
     return (
         $self->SUPER::new_cache_options(),
-        driver   => 'Memory',
+        driver   => 'File',
+        root_dir => $root_dir,
         l1_cache => { driver => 'Memory' },
     );
 }
