@@ -311,21 +311,29 @@ sub test_expires_defaults : Test(4) {
     my $cache;
 
     my $set_and_confirm_expires_at = sub {
-        my ($expected_expires_at) = @_;
+        my ( $expected_expires_at, $desc ) = @_;
         my ( $key, $value ) = ( random_string(10), random_string(10) );
         $cache->set( $key, $value );
-        is( $cache->get_expires_at($key), $expected_expires_at );
+        is( $cache->get_expires_at($key), $expected_expires_at, $desc );
     };
 
     $cache = $self->new_cache( expires_in => 10 );
-    $set_and_confirm_expires_at->( $start_time + 10 );
+    $set_and_confirm_expires_at->(
+        $start_time + 10,
+        "after expires_in constructor option"
+    );
     $cache->expires_in(20);
-    $set_and_confirm_expires_at->( $start_time + 20 );
+    $set_and_confirm_expires_at->( $start_time + 20,
+        "after expires_in method" );
 
     $cache = $self->new_cache( expires_at => $start_time + 30 );
-    $set_and_confirm_expires_at->( $start_time + 30 );
+    $set_and_confirm_expires_at->(
+        $start_time + 30,
+        "after expires_at constructor option"
+    );
     $cache->expires_at( $start_time + 40 );
-    $set_and_confirm_expires_at->( $start_time + 40 );
+    $set_and_confirm_expires_at->( $start_time + 40,
+        "after expires_at method" );
 }
 
 sub test_expires_manually : Test(3) {
