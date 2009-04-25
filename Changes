@@ -8,7 +8,8 @@ Revision history for CHI
 - ** ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
      class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
      can be automatically wrapped
-- Added a more practical and intuitive subcache mechanism - l1_cache and mirror_cache
+- Added a more practical and intuitive multi-level cache mechanism: subcaches. l1_cache
+  and mirror_cache are the first two supported subcaches
 - Added customizable cache label, used in logs and error messages
 
 0.102  Mar 6, 2009
