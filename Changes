@@ -4,8 +4,6 @@ Revision history for CHI
 
 0.2  Apr 25, 2009
 
-0.2  Mar  6, 2009
-
 - ** Removed CHI::Driver::Multilevel, replaced with subcaches
 - ** ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
      class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
