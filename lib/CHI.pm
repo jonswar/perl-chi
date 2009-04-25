@@ -700,11 +700,11 @@ The following drivers are currently available as separate CPAN distributions:
 
 =item *
 
-L<CHI::Driver::Memcached|CHI::Driver::Memcached> - The L<http://www.danga.com/memcached/|memcached> distributed cache
+L<CHI::Driver::Memcached|CHI::Driver::Memcached> - Distributed memory-based cache
 
 =item *
 
-L<CHI::Driver::Memcached|CHI::Driver::DBI> - Database-based cache
+L<CHI::Driver::DBI|CHI::Driver::DBI> - Database-based cache
 
 =back
 
@@ -735,8 +735,8 @@ for logging, and
 for checking whether a message would be logged at that level. This is compatible with L<Log::Log4perl|Log::Log4perl>
 and L<Catalyst::Log|Catalyst::Log> among others.
 
-Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with Log::Any
-(L<http://use.perl.org/~jonswar/journal/34366>).
+Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this with 
+Log::Any - see http://use.perl.org/~jonswar/journal/34366
 
 =for readme continue
 
@@ -844,7 +844,7 @@ Perform cache benchmarks comparing both CHI and non-CHI cache implementations
 
 =item *
 
-Release BerkeleyDB and DBI drivers as separate CPAN distributions
+Release BerkeleyDB drivers as separate CPAN distributions
 
 =item *
 
