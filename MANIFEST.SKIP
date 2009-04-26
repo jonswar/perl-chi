@@ -16,6 +16,9 @@
 ^TODO
 ^VERSION
 
+# pod2html files
+\.pm\.html
+
 # Backup files, etc.
 ~$
 (^|/)#
