@@ -79,6 +79,9 @@ CHI::Wrapped::CHI::Driver::Memory.
 Now, when we call a method like get() or remove(), CHI::Driver::Wrapper has an opportunity to
 handle it first; if not, it goes to the native driver, in this case CHI::Driver::Memory.
 
+This is an accidental reinvention of Moose's runtime application of roles to instances
+(see Moose::Cookbook::Roles::Recipe3), which is not currently supported by Mouse.
+
 =head1 SEE ALSO
 
 CHI
