@@ -33,8 +33,8 @@ CHI::Driver::Null - nothing is cached
 
 =head1 DESCRIPTION
 
-This cache driver implements the full CHI interface without ever actually storing
-items. Useful for disabling caching in an application, for example.
+This cache driver implements the full CHI interface without ever actually
+storing items. Useful for disabling caching in an application, for example.
 
 =head1 AUTHOR
 
@@ -44,7 +44,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

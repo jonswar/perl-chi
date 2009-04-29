@@ -1,3 +1,4 @@
+
 =head1 NAME
 
 CHI::Driver::Development -- Manual for developing new CHI drivers
@@ -55,29 +56,30 @@ L<CHI::Driver::FastMmap|CHI::Driver::FastMmap>.
 
 =head1 NAMING
 
-If you are going to publicly release your driver, call it 'CHI::Driver::I<something>' so
-that users can create it with
+If you are going to publicly release your driver, call it
+'CHI::Driver::I<something>' so that users can create it with
 
     CHI->new(driver => 'I<something>');
 
-If it's an internal driver, you can call it whatever you like and create it like
+If it's an internal driver, you can call it whatever you like and create it
+like
 
     CHI->new(driver_class => 'My::Internal::CHI::Driver');
 
 =head1 MOUSE
 
-CHI driver classes are L<Mouse|Mouse> based. Since Mouse plays well with L<Moose|Moose>
-and standard OO classes, you can choose what to use in your driver, though we recommend
-Mouse or Moose for consistency and clarity.
+CHI driver classes are L<Mouse|Mouse> based. Since Mouse plays well with
+L<Moose|Moose> and standard OO classes, you can choose what to use in your
+driver, though we recommend Mouse or Moose for consistency and clarity.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
 =head1 NAMESPACE
 
 All cache handles have an assigned namespace that you can access with
-C<$self-E<gt>namespace>. You should use the namespace to partition your data store.
-That is, two cache objects with different namespaces should be able to access
-the same key without any collision.
+C<$self-E<gt>namespace>. You should use the namespace to partition your data
+store. That is, two cache objects with different namespaces should be able to
+access the same key without any collision.
 
 Examples:
 
@@ -85,7 +87,8 @@ Examples:
 
 =item *
 
-The Memory driver uses a separate sub-hash inside its main memory hash for each namespace.
+The Memory driver uses a separate sub-hash inside its main memory hash for each
+namespace.
 
 =item *
 
@@ -99,8 +102,8 @@ The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
 
 =head1 TESTING
 
-CHI has a standard set of unit tests that should be used to ensure your driver is fully
-implementing the CHI API.
+CHI has a standard set of unit tests that should be used to ensure your driver
+is fully implementing the CHI API.
 
 To use CHI's tests (replacing I<MyDriver> with the name of your driver):
 
@@ -108,11 +111,13 @@ To use CHI's tests (replacing I<MyDriver> with the name of your driver):
 
 =item *
 
-Install Test::Class, and add Test::Class to the build dependencies for your distribution.
+Install Test::Class, and add Test::Class to the build dependencies for your
+distribution.
 
 =item *
 
-Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your distribution containing:
+Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your
+distribution containing:
 
     package CHI::Driver::MyDriver::t::CHIDriverTests;
     use strict;
@@ -135,7 +140,8 @@ Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your distribu
 
 =item *
 
-Add a test script called I<t/CHI-driver-tests.t> to your distribution containing:
+Add a test script called I<t/CHI-driver-tests.t> to your distribution
+containing:
 
     #!perl -w
     use strict;
@@ -145,9 +151,10 @@ Add a test script called I<t/CHI-driver-tests.t> to your distribution containing
 
 =item *
 
-You may need to override other methods in I<CHI::Driver::MyDriver::t::CHIDriverTests>,
-e.g. to skip tests that do not apply to your driver. See CHI::t::Driver::Memory
-and CHI::t::Driver::File in this distribution for examples.
+You may need to override other methods in
+I<CHI::Driver::MyDriver::t::CHIDriverTests>, e.g. to skip tests that do not
+apply to your driver. See CHI::t::Driver::Memory and CHI::t::Driver::File in
+this distribution for examples.
 
 =back
 
@@ -155,28 +162,30 @@ and CHI::t::Driver::File in this distribution for examples.
 
 =head2 Required methods
 
-The following methods have no default implementation, and MUST be defined by your subclass:
+The following methods have no default implementation, and MUST be defined by
+your subclass:
 
 =over
 
 =item store ( $self, $key, $data, $expires_at, $options )
 
-Associate I<$data> with I<$key> in the namespace, overwriting any existing entry.  Called
-by L</set>. I<$data> will contain any necessary metadata, including expiration options, so
-you can just store it as a single block.
+Associate I<$data> with I<$key> in the namespace, overwriting any existing
+entry.  Called by L</set>. I<$data> will contain any necessary metadata,
+including expiration options, so you can just store it as a single block.
 
-The I<$expires_at> epoch value is provided in case you are working with an existing
-cache implementation (like memcached) that also has an interest in storing the
-expiration time for its own purposes. Normally, you can ignore this.
+The I<$expires_at> epoch value is provided in case you are working with an
+existing cache implementation (like memcached) that also has an interest in
+storing the expiration time for its own purposes. Normally, you can ignore
+this.
 
-<$options> contains the hash of options passed to L</set>, in case you want to implement
-driver-specific set options. Normally, you can ignore this.
+<$options> contains the hash of options passed to L</set>, in case you want to
+implement driver-specific set options. Normally, you can ignore this.
 
 =item fetch ( $self, $key )
 
-Returns the data associated with I<$key> in the namespace. Called by L</"get">. The main
-CHI::Driver superclass will take care of extracting out metadata like expiration options
-and determining if the value has expired.
+Returns the data associated with I<$key> in the namespace. Called by L</"get">.
+The main CHI::Driver superclass will take care of extracting out metadata like
+expiration options and determining if the value has expired.
 
 =item remove ( $self, $key )
 
@@ -184,52 +193,57 @@ Remove the data associated with the I<$key> in the namespace.
 
 =item clear ( $self )
 
-Remove all data associated with the namespace. (Technically not required, but the default implementation,
-which iterates over all keys and calls L</remove> for each, is very inefficient).
+Remove all data associated with the namespace. (Technically not required, but
+the default implementation, which iterates over all keys and calls L</remove>
+for each, is very inefficient).
 
 =back
 
 =head2 Overridable methods
 
-The following methods have a default implementation, but MAY be overriden by your subclass:
+The following methods have a default implementation, but MAY be overriden by
+your subclass:
 
 =over
 
 =item BUILD ( $self, $options )
 
-Define Mouse's BUILD method if you want to process any options specific to your driver.
+Define Mouse's BUILD method if you want to process any options specific to your
+driver.
 
 =item fetch_multi_arrayref ( $keys )
 
-Override this if you want to efficiently process multiple fetches. Return an array
-reference of data or undef corresponding to I<$keys>. The default will iterate over
-I<$keys> and call fetch for each.
+Override this if you want to efficiently process multiple fetches. Return an
+array reference of data or undef corresponding to I<$keys>. The default will
+iterate over I<$keys> and call fetch for each.
 
-Overriding this method will affect fetch_multi_array and fetch_multi_hash as well.
+Overriding this method will affect fetch_multi_array and fetch_multi_hash as
+well.
 
 =item store_multi ( $key_data, $options )
 
-Override this if you want to efficiently process multiple stores. I<$key_data> is a hash
-of keys and data that should be stored. The default will iterate over I<$key_data> and
-call store for each pair.
+Override this if you want to efficiently process multiple stores. I<$key_data>
+is a hash of keys and data that should be stored. The default will iterate over
+I<$key_data> and call store for each pair.
 
 =back
 
 =head2 Optional methods
 
-The following methods have no default implementation, and MAY be defined by your subclass,
-but are not required for basic cache operations.
+The following methods have no default implementation, and MAY be defined by
+your subclass, but are not required for basic cache operations.
 
 =over
 
 =item get_keys ( $self )
 
-Return all keys in the namespace. It is acceptable to either include or omit expired keys.
+Return all keys in the namespace. It is acceptable to either include or omit
+expired keys.
 
 =item get_namespaces ( $self )
 
-Return namespaces associated with the cache. It is acceptable to either include or omit
-namespaces with no valid keys.
+Return namespaces associated with the cache. It is acceptable to either include
+or omit namespaces with no valid keys.
 
 =back
 
@@ -245,11 +259,11 @@ L<CHI|CHI>, L<CHI::Driver|CHI::Driver>
 
 Copyright (C) 2007 Jonathan Swartz.
 
-CHI is provided "as is" and without any express or implied warranties, including, without
-limitation, the implied warranties of merchantibility and fitness for a particular
-purpose.
+CHI is provided "as is" and without any express or implied warranties,
+including, without limitation, the implied warranties of merchantibility and
+fitness for a particular purpose.
 
-This program is free software; you can redistribute it and/or modify it under the same
-terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

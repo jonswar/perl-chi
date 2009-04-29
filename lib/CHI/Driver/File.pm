@@ -263,7 +263,8 @@ __END__
 
 =head1 NAME
 
-CHI::Driver::File -- File-based cache using one file per entry in a multi-level directory structure
+CHI::Driver::File -- File-based cache using one file per entry in a multi-level
+directory structure
 
 =head1 SYNOPSIS
 
@@ -273,37 +274,40 @@ CHI::Driver::File -- File-based cache using one file per entry in a multi-level 
 
 =head1 DESCRIPTION
 
-This cache driver stores data on the filesystem, so that it can be shared between
-processes on a single machine, or even on multiple machines if using NFS.
+This cache driver stores data on the filesystem, so that it can be shared
+between processes on a single machine, or even on multiple machines if using
+NFS.
 
-Each item is stored in its own file. By default, during a set, a temporary file is created
-and then atomically renamed to the proper file. While not the most efficient, it
-eliminates the need for locking (with multiple overlapping sets, the last one "wins") and
-makes this cache usable in environments like NFS where locking might normally be
-undesirable.
+Each item is stored in its own file. By default, during a set, a temporary file
+is created and then atomically renamed to the proper file. While not the most
+efficient, it eliminates the need for locking (with multiple overlapping sets,
+the last one "wins") and makes this cache usable in environments like NFS where
+locking might normally be undesirable.
 
-The base filename is the key itself, with unsafe characters replaced with an escape
-sequence similar to URI escaping. The filename length is capped at 255 characters, which
-is the maximum for most Unix systems, so gets/sets for keys that escape to longer than 255
-characters will fail.
+The base filename is the key itself, with unsafe characters replaced with an
+escape sequence similar to URI escaping. The filename length is capped at 255
+characters, which is the maximum for most Unix systems, so gets/sets for keys
+that escape to longer than 255 characters will fail.
 
-The files are evenly distributed within a multi-level directory structure with a
-customizable depth, to minimize the time needed to search for a given entry.
+The files are evenly distributed within a multi-level directory structure with
+a customizable depth, to minimize the time needed to search for a given entry.
 
 =head1 CONSTRUCTOR OPTIONS
 
-When using this driver, the following options can be passed to CHI->new() in addition to the
-L<CHI|general constructor options/constructor>.
-    
+When using this driver, the following options can be passed to CHI->new() in
+addition to the L<CHI|general constructor options/constructor>.
+
 =over
 
 =item root_dir
 
-The location in the filesystem that will hold the root of the cache.  Defaults to a
-directory called 'chi-driver-file' under the OS default temp directory (e.g. '/tmp'
-on UNIX). This directory will be created as needed on the first cache set.
+The location in the filesystem that will hold the root of the cache.  Defaults
+to a directory called 'chi-driver-file' under the OS default temp directory
+(e.g. '/tmp' on UNIX). This directory will be created as needed on the first
+cache set.
 
-For backward compatibility with Cache::FileCache, this can also be specified as C<cache_root>.
+For backward compatibility with Cache::FileCache, this can also be specified as
+C<cache_root>.
 
 =item dir_create_mode
 
@@ -311,15 +315,15 @@ Permissions mode to use when creating directories. Defaults to 0775.
 
 =item file_create_mode
 
-Permissions mode to use when creating files, modified by the current umask. Defaults to
-0666.
+Permissions mode to use when creating files, modified by the current umask.
+Defaults to 0666.
 
 =item depth
 
-The number of subdirectories deep to place cache files. Defaults to 2. This should be
-large enough that no leaf directory has more than a few hundred files. At present, each
-non-leaf directory contains up to 16 subdirectories, meaning a potential of 256 leaf
-directories.
+The number of subdirectories deep to place cache files. Defaults to 2. This
+should be large enough that no leaf directory has more than a few hundred
+files. At present, each non-leaf directory contains up to 16 subdirectories,
+meaning a potential of 256 leaf directories.
 
 =back
     
@@ -329,23 +333,24 @@ directories.
 
 =item path_to_key ( $key )
 
-Returns the full path to the cache file representing $key, whether or not that entry
-exists. Returns the empty list if a valid path cannot be computed, for example if the key
-is too long.
+Returns the full path to the cache file representing $key, whether or not that
+entry exists. Returns the empty list if a valid path cannot be computed, for
+example if the key is too long.
 
 =item path_to_namespace
 
-Returns the full path to the directory representing this cache's namespace, whether or not
-it has any entries.
+Returns the full path to the directory representing this cache's namespace,
+whether or not it has any entries.
 
 =back
 
 =head1 TEMPORARY FILE RENAME
 
-By default, during a set, a temporary file is created and then atomically renamed to the
-proper file.  This eliminates the need for locking. You can subclass and override method
-I<generate_temporary_filename> to either change the path of the temporary filename, or
-skip the temporary file and rename altogether by having it return undef.
+By default, during a set, a temporary file is created and then atomically
+renamed to the proper file.  This eliminates the need for locking. You can
+subclass and override method I<generate_temporary_filename> to either change
+the path of the temporary filename, or skip the temporary file and rename
+altogether by having it return undef.
 
 =head1 SEE ALSO
 
@@ -359,7 +364,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

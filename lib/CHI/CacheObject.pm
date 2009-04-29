@@ -138,15 +138,16 @@ CHI::CacheObject -- Contains information about cache entries.
 
 =head1 DESCRIPTION
 
-The L<CHI|get_object> method returns this object if the key exists.  The object will be
-returned even if the entry has expired, as long as it has not been removed.
+The L<CHI|get_object> method returns this object if the key exists.  The object
+will be returned even if the entry has expired, as long as it has not been
+removed.
 
 There is currently no public API for creating one of these objects directly.
 
 =head1 METHODS
 
-All methods are read-only. The get_* methods are provided for backward compatibility
-with Cache::Cache's Cache::Object.
+All methods are read-only. The get_* methods are provided for backward
+compatibility with Cache::Cache's Cache::Object.
 
 =over
 
@@ -172,8 +173,8 @@ Epoch time at which item was last written to.
 
 =item is_expired
 
-Returns boolean indicating whether item has expired. This may be probabilistically
-determined if an L</expires_variance> was used.
+Returns boolean indicating whether item has expired. This may be
+probabilistically determined if an L</expires_variance> was used.
 
 =back
 
@@ -189,7 +190,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

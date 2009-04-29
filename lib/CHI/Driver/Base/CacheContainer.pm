@@ -59,8 +59,8 @@ CHI::Driver::Role::CacheContainer
 
 =head1 DESCRIPTION
 
-Role for CHI drivers with an internal '_contained_cache' slot that itself adheres to
-the Cache::Cache API, partially or completely.
+Role for CHI drivers with an internal '_contained_cache' slot that itself
+adheres to the Cache::Cache API, partially or completely.
 
 =head1 AUTHOR
 
@@ -70,7 +70,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

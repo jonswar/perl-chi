@@ -59,9 +59,9 @@ This driver wraps any Cache::Cache cache.
 
 =head1 CONSTRUCTOR OPTIONS
 
-When using this driver, the following options can be passed to CHI->new() in addition to the
-L<CHI|general constructor options/constructor>.
-    
+When using this driver, the following options can be passed to CHI->new() in
+addition to the L<CHI|general constructor options/constructor>.
+
 =over
 
 =item cc_class
@@ -76,8 +76,7 @@ Hashref of options to pass to Cache::Cache constructor. Required.
 
 =head1 SEE ALSO
 
-Cache::Cache
-CHI
+Cache::Cache CHI
 
 =head1 AUTHOR
 
@@ -87,7 +86,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut

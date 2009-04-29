@@ -100,15 +100,16 @@ CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed files
 
 =head1 DESCRIPTION
 
-This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is very fast,
-and can be used to share data between processes on a single host, though not between hosts.
+This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is
+very fast, and can be used to share data between processes on a single host,
+though not between hosts.
 
-To support namespaces, this driver takes a directory parameter rather than a file, and
-creates one Cache::FastMMap file for each namespace.
+To support namespaces, this driver takes a directory parameter rather than a
+file, and creates one Cache::FastMMap file for each namespace.
 
-Because CHI handles serialization automatically, we pass the C<raw_values> flag as 1; and
-to conform to the CHI API, we pass C<unlink_on_exit> as 0, so that all cache files are
-permanent.
+Because CHI handles serialization automatically, we pass the C<raw_values> flag
+as 1; and to conform to the CHI API, we pass C<unlink_on_exit> as 0, so that
+all cache files are permanent.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -116,9 +117,9 @@ permanent.
 
 =item root_dir
 
-Path to the directory that will contain the share files, one per namespace. Defaults to a
-directory called 'chi-driver-fastmmap' under the OS default temp directory (e.g. '/tmp'
-on UNIX).
+Path to the directory that will contain the share files, one per namespace.
+Defaults to a directory called 'chi-driver-fastmmap' under the OS default temp
+directory (e.g. '/tmp' on UNIX).
 
 =item dir_create_mode
 
@@ -126,17 +127,17 @@ Permissions mode to use when creating directories. Defaults to 0775.
 
 =back
 
-Any other constructor options L<not recognized by CHI|CHI/constructor> are passed along to
-L<Cache::FastMmap-E<gt>new>.
-    
+Any other constructor options L<not recognized by CHI|CHI/constructor> are
+passed along to L<Cache::FastMmap-E<gt>new>.
+
 =head1 METHODS
 
 =over
 
 =item fm_cache
 
-Returns a handle to the underlying Cache::FastMmap object. You can use this to call
-FastMmap-specific methods that are not supported by the general API, e.g.
+Returns a handle to the underlying Cache::FastMmap object. You can use this to
+call FastMmap-specific methods that are not supported by the general API, e.g.
 
     $self->fm_cache->get_and_set("key", sub { ... });
 
@@ -144,8 +145,7 @@ FastMmap-specific methods that are not supported by the general API, e.g.
 
 =head1 SEE ALSO
 
-Cache::FastMmap
-CHI
+Cache::FastMmap CHI
 
 =head1 AUTHOR
 
@@ -155,7 +155,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
