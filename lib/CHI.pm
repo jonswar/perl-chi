@@ -63,26 +63,30 @@ CHI -- Unified cache interface
     # Choose a standard driver
     #
     my $cache = CHI->new( driver => 'Memory' );
-    my $cache = CHI->new( driver => 'File', cache_root => '/path/to/root' );
-    my $cache = CHI->new(
-        driver     => 'FastMmap',
+    my $cache = CHI->new( driver => 'File',
+        cache_root => '/path/to/root'
+    );
+    my $cache = CHI->new( driver => 'FastMmap',
         root_dir   => '/path/to/root',
         cache_size => '1k'
     );
-    my $cache = CHI->new(
-        driver  => 'Memcached',
+    my $cache = CHI->new( driver  => 'Memcached',
         servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
         l1_cache => { driver => 'FastMmap', root_dir => '/path/to/root' }
     );
-    my $cache = CHI->new( driver => 'DBI', dbh => $dbh );
+    my $cache = CHI->new( driver => 'DBI',
+        dbh => $dbh
+    );
+
+    # (These drivers coming soon...)
+    #
+    my $cache = CHI->new( driver => 'BerkeleyDB',
+        root_dir => '/path/to/root'
+    );
 
     # Create your own driver
     # 
     my $cache = CHI->new( driver_class => 'My::Special::Driver' );
-
-    # (These drivers coming soon...)
-    #
-    my $cache = CHI->new( driver => 'BerkeleyDB', root_dir => '/path/to/root' );
 
     # Basic cache operations
     #
