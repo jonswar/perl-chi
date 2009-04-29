@@ -15,8 +15,9 @@ use File::Signature;
 use File::Slurp;
 use Test::More tests => 1;
 
-# Ensure a standard version of Perl::Tidy
+# Ensure a standard version of Perl::Tidy and Pod::Tidy
 use Perl::Tidy 20071205;
+use Pod::Tidy 0.10;
 
 my $root   = dirname( dirname( realpath($0) ) );
 my $rcfile = "$root/perltidyrc";
@@ -47,14 +48,20 @@ my $cache = CHI->new(
 my $tidied = 0;
 foreach my $file (@files) {
     if ( ( $cache->get($file) || '' ) ne sig($file) ) {
+        my $source_contents = read_file($file);
         Perl::Tidy::perltidy(
-            source      => $file,
+            source      => \$source_contents,
             destination => \my $result,
             perltidyrc  => $rcfile
         );
-        if ( read_file($file) ne $result ) {
+        write_file($file, $result);
+        Pod::Tidy::tidy_files(
+            files    => [$file],
+            inplace  => 1,
+            nobackup => 1
+        );
+        if ( read_file($file) ne $source_contents ) {
             diag "$file was not tidy (tidying now)\n";
-            write_file( $file, $result );
             $tidied++;
         }
         $cache->set( $file, sig($file) );
