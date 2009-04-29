@@ -8,8 +8,10 @@ Some tests are internal only, meaning you will run them, but not end-users. Thes
 marked with 'use CHI::Test::InternalOnly' in the case of .t files, or 'sub internal_only {
 1 }' in the case of Test::Class classes.
 
-You should install the following modules to ensure you can run the full suite of tests:
-* Perl::Tidy (latest)
-* Perl::Critic (latest)
+You should install the latest versions of the following modules to ensure you can run the
+full suite of tests:
+* Perl::Tidy
+* Perl::Critic
+* Pod::Tidy
 * Cache::FastMmap
-* Memcached
+* Cache::Memcached
