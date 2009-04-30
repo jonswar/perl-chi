@@ -160,4 +160,3 @@ sub test_root_dir_does_not_exist : Test(4) {
 }
 
 1;
-

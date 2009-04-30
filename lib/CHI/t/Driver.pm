@@ -706,7 +706,8 @@ sub test_l1_cache : Test(228) {
 
     # Test with current cache in primary position...
     #
-    $cache = $self->new_cache( l1_cache => { driver => 'Memory' } );
+    $cache =
+      $self->new_cache( l1_cache => { driver => 'Memory', global => 1 } );
     $l1_cache = $cache->l1_cache;
     isa_ok( $cache,    $self->testing_driver_class );
     isa_ok( $l1_cache, 'CHI::Driver::Memory' );
@@ -716,6 +717,7 @@ sub test_l1_cache : Test(228) {
     #
     $cache = CHI->new(
         driver   => 'Memory',
+        global   => 1,
         l1_cache => { $self->new_cache_options() }
     );
     $l1_cache = $cache->l1_cache;

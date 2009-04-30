@@ -1,20 +1,26 @@
 package CHI::Driver::Memory;
+use Carp;
 use Mouse;
 use strict;
 use warnings;
 
 extends 'CHI::Driver';
 
-my $Default_Datastore = {};
-
-has 'datastore' =>
-  ( is => 'ro', isa => 'HashRef', default => sub { $Default_Datastore } );
+has 'datastore' => ( is => 'ro', isa => 'HashRef' );
+has 'global'    => ( is => 'ro', isa => 'Bool' );
 
 __PACKAGE__->meta->make_immutable();
+
+our $Global_Datastore = {};
 
 sub BUILD {
     my ( $self, $params ) = @_;
 
+    if ( $self->{global} ) {
+        $self->{datastore} = $Global_Datastore;
+    }
+    croak "must specify either 'datastore' hashref or 'global' flag"
+      if !$self->{datastore};
     $self->{datastore}->{ $self->namespace } ||= {};
     $self->{datastore_for_namespace} = $self->{datastore}->{ $self->namespace };
 }
@@ -70,10 +76,10 @@ CHI::Driver::Memory -- In-process memory based cache.
 
     use CHI;
 
-    my $cache = CHI->new(driver => 'Memory');
-
     my $hash = {};
-    my $cache = CHI->new(driver => 'Memory', datastore => $hash);
+    my $cache = CHI->new( driver => 'Memory', datastore => $hash );
+
+    my $cache = CHI->new( driver => 'Memory', global => 1 );
 
 =head1 DESCRIPTION
 
@@ -88,15 +94,16 @@ affect the data structure stored in the cache, and vica versa.
 =head1 CONSTRUCTOR OPTIONS
 
 When using this driver, the following options can be passed to CHI->new() in
-addition to the L<CHI|general constructor options/constructor>.
+addition to the L<CHI|general constructor options/constructor>. One of
+I<datastore> or I<global> must be specified.
 
 =over
 
-=item datastore
+=item datastore [HASH]
 
 A hash to be used for storage. Within the hash, each namespace is used as a key
 to a second-level hash.  This hash may be passed to multiple
-CHI::Driver::Memory constructors. By default a single global hash will be used.
+CHI::Driver::Memory constructors.
 
 For example, it can be useful to create a memory cache that lasts for a single
 web request. If you using a web framework with a request object which goes out
@@ -109,6 +116,13 @@ request object.  e.g.
 
 This eliminates the danger of "forgetting" to clear the cache at the end of the
 request.
+
+=item global [BOOL]
+
+Use a standard global datastore. Multiple caches created with this flag will
+see the same data. Before 0.21, this was the default behavior; now it must be
+specified explicitly (to avoid accidentally sharing the same datastore in
+unrelated code).
 
 =back
 
