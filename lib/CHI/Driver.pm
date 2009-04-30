@@ -502,7 +502,8 @@ sub is_empty {
     sub is_escaped_for_filename {
         my ( $self, $text ) = @_;
 
-        return $text !~ /[^\w\=\-\~\+]/;
+        return $self->escape_for_filename( $self->unescape_for_filename($text) )
+          eq $text;
     }
 }
 

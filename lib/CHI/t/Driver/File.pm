@@ -164,12 +164,12 @@ sub test_ignore_bad_namespaces : Tests(1) {
     my $self  = shift;
     my $cache = $self->{cache};
 
-    foreach my $dir ( ".etc", "+2eetc", "plain" ) {
+    foreach my $dir ( ".etc", "+2eetd", 'a@b', 'a+40c', "plain" ) {
         mkpath( join( "/", $cache->root_dir, $dir ) );
     }
     cmp_set(
         [ $cache->get_namespaces ],
-        [ '.etc', 'plain' ],
+        [ '.etd', 'a@c', 'plain' ],
         'only valid dirs shown as namespaces'
     );
 }
