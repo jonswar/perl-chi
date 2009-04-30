@@ -11,7 +11,7 @@ has 'global'    => ( is => 'ro', isa => 'Bool' );
 
 __PACKAGE__->meta->make_immutable();
 
-our $Global_Datastore = {};
+our $Global_Datastore = {};    ## no critic (ProhibitPackageVars)
 
 sub BUILD {
     my ( $self, $params ) = @_;
