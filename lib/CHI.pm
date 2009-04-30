@@ -112,6 +112,36 @@ L<Cache::Cache|Cache::Cache> package, adhering to the basic Cache API but
 adding new features and addressing limitations in the Cache::Cache
 implementation.
 
+=head1 FEATURES
+
+=over
+
+=item
+
+* Easy to create new drivers
+
+=item
+
+* Uniform support for namespaces
+
+=item
+
+* Automatic [de]serialization of data
+
+=item
+
+* Multilevel caches
+
+=item
+
+* Probabilistic expiration and busy locks, to reduce cache miss stampedes
+
+=item
+
+* Optional logging of cache activity
+
+=back
+
 =for readme stop
 
 =head1 CONSTRUCTOR
