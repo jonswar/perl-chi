@@ -498,6 +498,12 @@ sub is_empty {
         $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
         $str;
     }
+
+    sub is_escaped_for_filename {
+        my ( $self, $text ) = @_;
+
+        return $text !~ /[^\w\=\-\~\+]/;
+    }
 }
 
 sub call_method_on_subcaches {

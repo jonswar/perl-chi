@@ -3,8 +3,9 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Util qw(random_string);
-use CHI::Util qw(fast_catdir unique_id);
+use CHI::Util qw(fast_catdir unique_id dp);
 use File::Basename;
+use File::Path;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 
@@ -157,6 +158,20 @@ sub test_root_dir_does_not_exist : Test(4) {
     $cache->set( 'foo', 5 );
     is( $cache->get('foo'), 5, 'hit' );
     ok( -d $non_existent_root, "$non_existent_root exists after set" );
+}
+
+sub test_ignore_bad_namespaces : Tests(1) {
+    my $self  = shift;
+    my $cache = $self->{cache};
+
+    foreach my $dir ( ".etc", "+2eetc", "plain" ) {
+        mkpath( join( "/", $cache->root_dir, $dir ) );
+    }
+    cmp_set(
+        [ $cache->get_namespaces ],
+        [ '.etc', 'plain' ],
+        'only valid dirs shown as namespaces'
+    );
 }
 
 1;
