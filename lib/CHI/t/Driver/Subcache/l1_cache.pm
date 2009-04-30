@@ -16,7 +16,7 @@ sub new_cache_options {
         $self->SUPER::new_cache_options(),
         driver   => 'File',
         root_dir => $root_dir,
-        l1_cache => { driver => 'Memory' },
+        l1_cache => { driver => 'Memory', global => 1 },
     );
 }
 
