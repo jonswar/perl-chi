@@ -7,7 +7,8 @@ Revision history for CHI
 - ** CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
      to accidentally share the same datstore in unrelated code. Either a datastore or the
      'global' flag must be specified.
-- Tidied pod
+- Fixed get_namespaces for File driver to ignore non-standard dir names
+- Tidied pod with Pod::Tidy
 
 0.2  Apr 25, 2009
 
