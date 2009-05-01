@@ -2,6 +2,7 @@ package CHI::t::Driver::Memory;
 use strict;
 use warnings;
 use CHI::Test;
+use Test::Warn;
 use base qw(CHI::t::Driver);
 
 # Skip multiple process test
@@ -21,7 +22,7 @@ sub test_short_driver_name : Tests(1) {
 }
 
 sub test_global_or_default_required : Tests(1) {
-    throws_ok( sub { my $cache = CHI->new( driver => 'Memory' ) },
+    warning_like( sub { my $cache = CHI->new( driver => 'Memory' ) },
         qr/must specify either/ );
 }
 
