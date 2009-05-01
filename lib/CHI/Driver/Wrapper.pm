@@ -1,4 +1,5 @@
 package CHI::Driver::Wrapper;
+use CHI::Util qw(dp);
 use Carp;
 use strict;
 use warnings;
@@ -13,6 +14,26 @@ foreach my $method (qw(remove expire expire_if clear purge)) {
         $self->call_method_on_subcaches( $method, @_ );
         return $retval;
     };
+}
+
+# Call on l1 cache first, then call on primary cache with remainder of keys
+#
+sub get_multi_hashref {
+    my $self = shift;
+    my ($keys) = @_;
+
+    my $l1_cache = $self->l1_cache;
+    if ( defined($l1_cache) ) {
+        my $l1_result = $l1_cache->get_multi_hashref($keys);
+        my @primary_keys = grep { !defined( $l1_result->{$_} ) } @$keys;
+        my $primary_result =
+          $self->call_native_driver( 'get_multi_hashref', \@primary_keys );
+        my $result = { %$l1_result, %$primary_result };
+        return $result;
+    }
+    else {
+        return $self->call_native_driver( 'get_multi_hashref', $keys );
+    }
 }
 
 # Call the specified $method on the native driver class, e.g. CHI::Driver::Memory.  SUPER
