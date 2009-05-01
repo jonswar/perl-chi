@@ -97,8 +97,8 @@ affect the data structure stored in the cache, and vica versa.
 
 When using this driver, the following options can be passed to CHI->new() in
 addition to the L<CHI|general constructor options/constructor>. One of
-I<datastore> or I<global> must be specified, or else a warning (eventually an
-error) will be thrown.
+I<datastore> or I<global> must be specified, or else a warning (possibly an
+error eventually) will be thrown.
 
 =over
 
