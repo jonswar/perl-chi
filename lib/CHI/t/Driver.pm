@@ -1109,6 +1109,24 @@ sub test_obj_ref : Tests(8) {
     $validate_obj->($obj);
 }
 
+sub test_scalar_return_values : Tests(5) {
+    my $self  = shift;
+    my $cache = $self->{cache};
+
+    my $check = sub {
+        my ($code)        = @_;
+        my $scalar_result = $code->();
+        my @list          = $code->();
+        cmp_deeply( \@list, [$scalar_result] );
+    };
+
+    $check->( sub { $cache->fetch('a') } );
+    $check->( sub { $cache->get('a') } );
+    $check->( sub { $cache->set( 'a', 5 ) } );
+    $check->( sub { $cache->fetch('a') } );
+    $check->( sub { $cache->get('a') } );
+}
+
 sub test_no_leak : Tests(2) {
     my ($self) = @_;
 
