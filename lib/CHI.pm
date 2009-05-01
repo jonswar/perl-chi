@@ -487,11 +487,6 @@ efficient implementations.
 Get the keys in list reference I<$keys>, and return a list reference of the
 same length with corresponding values or undefs.
 
-=item get_multi_array( $keys )
-
-Like L</get_multi_arrayref>, but returns an array instead of an array
-reference.
-
 =item get_multi_hashref( $keys )
 
 Like L</get_multi_arrayref>, but returns a hash reference with each key in
