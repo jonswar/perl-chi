@@ -54,8 +54,8 @@ sub _build_path_to_namespace {
 sub fetch {
     my ( $self, $key ) = @_;
 
-    my $file = $self->path_to_key($key) or return undef;
-    return unless -f $file;
+    my $file = $self->path_to_key($key);
+    return undef unless defined $file && -f $file;
 
     # Fast slurp, adapted from File::Slurp::read, with unnecessary options removed
     #
