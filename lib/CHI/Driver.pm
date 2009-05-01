@@ -395,25 +395,32 @@ sub compute {
     return $value;
 }
 
-sub get_multi_arrayref {
+sub fetch_multi_hashref {
     my ( $self, $keys ) = @_;
-    croak "must specify keys" unless defined($keys);
 
-    return [ map { scalar( $self->get($_) ) } @$keys ];
-}
-
-sub get_multi_array {
-    my $self = shift;
-    return @{ $self->get_multi_arrayref(@_) };
+    return { map { ( $_, $self->fetch($_) ) } @$keys };
 }
 
 sub get_multi_hashref {
     my ( $self, $keys ) = @_;
     croak "must specify keys" unless defined($keys);
 
-    my $values = $self->get_multi_arrayref($keys);
-    my %hash = pairwise { ( $a => $b ) } @$keys, @$values;
-    return \%hash;
+    my $keyvals = $self->fetch_multi_hashref($keys);
+    return { map { ( $_, $self->get( $_, data => $keyvals->{$_} ) ) } @$keys };
+}
+
+# DEPRECATED
+sub get_multi_array {
+    my $self = shift;
+    return @{ $self->get_multi_arrayref(@_) };
+}
+
+sub get_multi_arrayref {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
+
+    my $keyvals = $self->get_multi_hashref($keys);
+    return [ map { $keyvals->{$_} } @$keys ];
 }
 
 sub set_multi {
