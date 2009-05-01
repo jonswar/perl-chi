@@ -21,9 +21,16 @@ sub test_short_driver_name : Tests(1) {
     is( $cache->short_driver_name, 'Memory' );
 }
 
-sub test_global_or_default_required : Tests(1) {
-    warning_like( sub { my $cache = CHI->new( driver => 'Memory' ) },
+# Warn if global or datastore not passed, but still use global datastore by default
+#
+sub test_global_or_datastore_required : Tests(3) {
+    my ( $cache, $cache2 );
+    warning_like( sub { $cache = CHI->new( driver => 'Memory' ) },
         qr/must specify either/ );
+    warning_like( sub { $cache2 = CHI->new( driver => 'Memory' ) },
+        qr/must specify either/ );
+    $cache->set( 'foo', 5 );
+    is( $cache2->get('foo'), 5, "defaulted to global datastore" );
 }
 
 sub test_different_datastores : Tests(1) {

@@ -6,12 +6,12 @@ use warnings;
 
 extends 'CHI::Driver';
 
+our $Global_Datastore = {};    ## no critic (ProhibitPackageVars)
+
 has 'datastore' => ( is => 'ro', isa => 'HashRef' );
 has 'global'    => ( is => 'ro', isa => 'Bool' );
 
 __PACKAGE__->meta->make_immutable();
-
-our $Global_Datastore = {};    ## no critic (ProhibitPackageVars)
 
 sub BUILD {
     my ( $self, $params ) = @_;
@@ -19,8 +19,10 @@ sub BUILD {
     if ( $self->{global} ) {
         $self->{datastore} = $Global_Datastore;
     }
-    cluck "must specify either 'datastore' hashref or 'global' flag"
-      if !$self->{datastore};
+    if ( !defined( $self->{datastore} ) ) {
+        cluck "must specify either 'datastore' hashref or 'global' flag";
+        $self->{datastore} = $Global_Datastore;
+    }
     $self->{datastore}->{ $self->namespace } ||= {};
     $self->{datastore_for_namespace} = $self->{datastore}->{ $self->namespace };
 }
