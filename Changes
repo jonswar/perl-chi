@@ -12,6 +12,7 @@ Revision history for CHI
 - Fixed get_namespaces for File driver to ignore non-standard dir names
 - Drivers can now define fetch_multi_hashref, which is the backend for get_multi_hashref
   and get_multi_array
+- Made get_multi_* work optimally with l1 caches
 - Tidied pod with Pod::Tidy
 - Mention Chris Leishman's Cache in docs
 
