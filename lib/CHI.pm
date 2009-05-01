@@ -880,6 +880,15 @@ performance overhead and minimum of glue code required.
 
 =back
 
+=head2 Cache
+
+The L<Cache|Cache> distribution is another redesign and implementation of
+Cache, created by Chris Leishman in 2003. Like CHI, it improves performance and
+reduces the barrier to implementing new cache drivers. It breaks with the
+Cache::Cache interface in a few ways that I considered non-negotiable - for
+example, get/set do not serialize data, and namespaces are an optional feature
+that drivers may decide not to implement.
+
 =head2 Cache::Memcached, Cache::FastMmap, etc.
 
 CPAN sports a variety of full-featured standalone cache modules representing
