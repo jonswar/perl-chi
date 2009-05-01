@@ -214,9 +214,9 @@ driver.
 =item fetch_multi_hashref ( $keys )
 
 Override this if you want to efficiently process multiple fetches. Return a
-hash reference from keys to fetched data. If a key is not available, it may
-be left out of the hash or paired with undef. The default method will
-iterate over I<$keys> and call fetch for each.
+hash reference from keys to fetched data. If a key is not available, it may be
+left out of the hash or paired with undef. The default method will iterate over
+I<$keys> and call fetch for each.
 
 This method is called by L<get_multi_arrayref> and L<get_multi_hashref>.
 
