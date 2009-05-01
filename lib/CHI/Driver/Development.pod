@@ -183,7 +183,7 @@ implement driver-specific set options. Normally, you can ignore this.
 
 =item fetch ( $self, $key )
 
-Returns the data associated with I<$key> in the namespace. Called by L</"get">.
+Returns the data associated with I<$key> in the namespace. Called by L</get>.
 The main CHI::Driver superclass will take care of extracting out metadata like
 expiration options and determining if the value has expired.
 
@@ -211,20 +211,22 @@ your subclass:
 Define Mouse's BUILD method if you want to process any options specific to your
 driver.
 
-=item fetch_multi_arrayref ( $keys )
+=item fetch_multi_hashref ( $keys )
 
-Override this if you want to efficiently process multiple fetches. Return an
-array reference of data or undef corresponding to I<$keys>. The default will
+Override this if you want to efficiently process multiple fetches. Return a
+hash reference from keys to fetched data. If a key is not available, it may
+be left out of the hash or paired with undef. The default method will
 iterate over I<$keys> and call fetch for each.
 
-Overriding this method will affect fetch_multi_array and fetch_multi_hash as
-well.
+This method is called by L<get_multi_arrayref> and L<get_multi_hashref>.
 
 =item store_multi ( $key_data, $options )
 
 Override this if you want to efficiently process multiple stores. I<$key_data>
 is a hash of keys and data that should be stored. The default will iterate over
 I<$key_data> and call store for each pair.
+
+This method is called by L<set_multi>.
 
 =back
 
