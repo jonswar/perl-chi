@@ -9,7 +9,8 @@ sub readonly_cache {
 
     return CHI->new(
         driver_class => 'CHI::Test::Driver::Readonly',
-        on_set_error => $on_set_error
+        on_set_error => $on_set_error,
+        global       => 1
     );
 }
 

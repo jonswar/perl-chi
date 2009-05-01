@@ -38,7 +38,8 @@ sub test_bad_subcache_option : Tests(1) {
         sub {
             CHI->new(
                 driver   => 'Memory',
-                l1_cache => CHI->new( driver => 'Memory' )
+                global   => 1,
+                l1_cache => CHI->new( driver => 'Memory', global => 1 )
             );
         },
         qr/Validation failed/,

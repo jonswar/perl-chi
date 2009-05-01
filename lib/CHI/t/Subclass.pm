@@ -16,8 +16,10 @@ use base qw(CHI::Test::Class);
 }
 
 sub test_unsupported : Tests(2) {
-    my $cache =
-      CHI->new( driver_class => 'CHI::t::Subclass::Driver::HasUnsupported' );
+    my $cache = CHI->new(
+        driver_class => 'CHI::t::Subclass::Driver::HasUnsupported',
+        global       => 1
+    );
     lives_ok( sub { $cache->get_keys }, 'get_keys lives' );
     throws_ok(
         sub { $cache->get_namespaces },

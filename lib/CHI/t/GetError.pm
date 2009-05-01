@@ -9,7 +9,8 @@ sub writeonly_cache {
 
     return CHI->new(
         driver_class => 'CHI::Test::Driver::Writeonly',
-        on_get_error => $on_get_error
+        on_get_error => $on_get_error,
+        global       => 1,
     );
 }
 
