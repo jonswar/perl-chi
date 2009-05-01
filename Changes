@@ -7,8 +7,12 @@ Revision history for CHI
 - ** CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
      to accidentally share the same datstore in unrelated code. Either a datastore or the
      'global' flag must be specified.
+- ** Deprecate get_multi_array - silly to have this along with get_multi_arrayref
 - Fixed get_namespaces for File driver to ignore non-standard dir names
+- Drivers can now define fetch_multi_hashref, which is the backend for get_multi_hashref
+  and get_multi_array
 - Tidied pod with Pod::Tidy
+- Mention Chris Leishman's Cache in docs
 
 0.2  Apr 25, 2009
 
