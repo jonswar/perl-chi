@@ -9,9 +9,9 @@ Revision history for CHI
      'global' flag must be specified. Right now the absence of either will issue a warning,
      eventually this may become an error.
 - ** Deprecate get_multi_array - silly to have this along with get_multi_arrayref
+- Eliminated t/Multilevel.t which was causing test failures on new installations
 - Fixed get_namespaces for File driver to ignore non-standard dir names
-- Drivers can now define fetch_multi_hashref, which is the backend for get_multi_hashref
-  and get_multi_array
+- To implement get_multi_*, drivers now define the simpler fetch_multi_hashref
 - Made get_multi_* work optimally with l1 caches
 - Tidied pod with Pod::Tidy
 - Mention Chris Leishman's Cache in docs
