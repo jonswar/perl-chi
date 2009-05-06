@@ -4,8 +4,6 @@ Revision history for CHI
 
 0.22  May 5, 2009
 
-0.22  May  5, 2009
-
 0.21  May 5, 2009
 
 - ** CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
