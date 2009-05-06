@@ -14,7 +14,7 @@ Revision history for CHI
 - To implement get_multi_*, drivers now define the simpler fetch_multi_hashref
 - Made get_multi_* work optimally with l1 caches
 - Tidied pod with Pod::Tidy
-- Mention Chris Leishman's Cache in docs
+- Added Features section and mention of Chris Leishman's Cache to docs
 
 0.2  Apr 25, 2009
 
