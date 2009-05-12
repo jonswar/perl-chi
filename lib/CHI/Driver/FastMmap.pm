@@ -4,7 +4,7 @@ use Cache::FastMmap;
 use CHI::Util qw(read_dir);
 use File::Path qw(mkpath);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use Mouse;
+use Any::Moose;
 use strict;
 use warnings;
 

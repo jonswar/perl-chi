@@ -6,7 +6,7 @@ CHI::Driver::Development -- Manual for developing new CHI drivers
 =head1 SYNOPSIS
 
     package CHI::Driver::MyDriver;
-    use Mouse;
+    use Any::Moose;
     use strict;
     use warnings;
 
@@ -66,11 +66,13 @@ like
 
     CHI->new(driver_class => 'My::Internal::CHI::Driver');
 
-=head1 MOUSE
+=head1 MOOSE/MOUSE
 
-CHI driver classes are L<Mouse|Mouse> based. Since Mouse plays well with
-L<Moose|Moose> and standard OO classes, you can choose what to use in your
-driver, though we recommend Mouse or Moose for consistency and clarity.
+CHI driver classes are L<Any::Moose|Any::Moose> based, meaning that they
+will use L<Moose|Moose> if it is loaded, otherwise L<Mouse|Mouse>. We
+recommend that you also use L<Any::Moose> for consistency and clarity, but
+since Moose/Mouse play well with standard OO classes, you are not required
+to do so.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
@@ -208,8 +210,8 @@ your subclass:
 
 =item BUILD ( $self, $options )
 
-Define Mouse's BUILD method if you want to process any options specific to your
-driver.
+Define the Moose/Mouse BUILD method if you want to process any options
+specific to your driver.
 
 =item fetch_multi_hashref ( $keys )
 

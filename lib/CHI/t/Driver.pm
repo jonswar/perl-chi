@@ -1142,7 +1142,7 @@ sub test_no_leak : Tests(2) {
 }
 
 ## no critic
-{ package My::CHI; use Mouse; extends 'CHI' }
+{ package My::CHI; use Any::Moose; extends 'CHI' }
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;
