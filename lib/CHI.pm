@@ -2,7 +2,6 @@ package CHI;
 use 5.006;
 use Carp;
 use CHI::NullLogger;
-use CHI::Driver::Wrapper;
 use CHI::Util qw(require_dynamic);
 use strict;
 use warnings;
@@ -38,12 +37,7 @@ sub new {
         require_dynamic($driver_class);
     }
 
-    # Get the wrapper class for this driver class, creating it if necessary.
-    # See CHI::Driver::Wrapper for details.
-    #
-    my $wrapped_driver_class =
-      CHI::Driver::Wrapper->create_wrapped_driver_class($driver_class);
-    return $wrapped_driver_class->new( chi_root_class => $class, %params );
+    return $driver_class->new( chi_root_class => $class, %params );
 }
 
 1;
