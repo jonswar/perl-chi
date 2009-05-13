@@ -126,13 +126,12 @@ sub test_simple : Test(1) {
     is( $cache->get( $self->{keys}->{medium} ), $self->{values}->{medium} );
 }
 
-sub test_driver_class : Tests(4) {
+sub test_driver_class : Tests(3) {
     my $self  = shift;
     my $cache = $self->{cache};
 
     isa_ok( $cache, 'CHI::Driver' );
     isa_ok( $cache, $cache->driver_class );
-    isa_ok( $cache, 'CHI::Driver::Wrapper' );
     can_ok( $cache, 'get', 'set', 'remove', 'clear', 'expire' );
 }
 
@@ -1059,15 +1058,11 @@ sub test_cache_object : Test(6) {
     );
 }
 
-sub test_size_awareness : Test(100) {
+sub test_size_awareness : Test(9) {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
 
     ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
-    ok(
-        !defined( $self->{cache}->get_size() ),
-        "get_size returns undef for non-size-aware"
-    );
 
     my $cache = $self->new_cache( is_size_aware => 1 );
     is( $cache->get_size(), 0, "size is 0 for empty" );
@@ -1077,10 +1072,14 @@ sub test_size_awareness : Test(100) {
     is_about( $cache->get_size, 45, "size is 45 after overwrite" );
     $cache->set( $key, scalar( $value x 5 ) );
     is_about( $cache->get_size, 45, "size is still 45 after same overwrite" );
-    $cache->set( $key, $value );
-    is_about( $cache->get_size, 20, "size is 20 again after overwrite" );
+    $cache->set( $key, scalar( $value x 2 ) );
+    is_about( $cache->get_size, 26, "size is 26 after overwrite" );
     $cache->remove($key);
     is( $cache->get_size, 0, "size is 0 again after removing key" );
+    $cache->set( $key, $value );
+    is_about( $cache->get_size, 20, "size is about 20 with one value" );
+    $cache->clear();
+    is( $cache->get_size, 0, "size is 0 again after clear" );
 }
 
 sub test_max_size : Test(21) {

@@ -1,13 +1,42 @@
 package CHI::Driver::Role::HasSubcaches;
-use Class::Method::Modifiers;
+use Any::Moose qw(::Role);
+use Hash::MoreUtils qw(slice_exists);
+use Scalar::Util qw(weaken);
 use strict;
 use warnings;
+
+# List of parameters that are automatically inherited by a subcache
+#
+my @subcache_inherited_param_keys = (
+    qw(expires_at expires_in expires_variance namespace on_get_error on_set_error)
+);
+
+# Add a subcache with the specified type and params - called from
+# CHI::Driver::BUILD
+#
+sub add_subcache {
+    my ( $self, $params, $subcache_type, $subcache_params ) = @_;
+
+    my $chi_root_class = $self->chi_root_class;
+    my %inherited_params =
+      slice_exists( $params, @subcache_inherited_param_keys );
+    my $default_label = $self->label . ":$subcache_type";
+    my $subcache      = $chi_root_class->new(
+        label => $default_label,
+        %inherited_params, %$subcache_params
+    );
+    $subcache->{subcache_type} = $subcache_type;
+    $subcache->{parent_cache}  = $self;
+    weaken( $subcache->{parent_cache} );
+    $self->{$subcache_type} = $subcache;
+    push( @{ $self->{subcaches} }, $subcache );
+}
 
 # Call these methods first on the main cache, then on any subcaches.
 #
 foreach my $method (qw(clear expire expire_if purge remove set)) {
     after $method => sub {
-        my $self = shift;
+        my $self      = shift;
         my $subcaches = $self->subcaches;
         foreach my $subcache (@$subcaches) {
             $subcache->$method(@_);

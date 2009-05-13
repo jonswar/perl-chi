@@ -1,95 +1,86 @@
 package CHI::Driver::Role::SizeAware;
+use Any::Moose qw(::Role);
 use strict;
 use warnings;
 
+use constant Reserved_Key_Prefix =>
+  '_CHI_RESERVED_';    # XXX could use a better name
 use constant Size_Key => Reserved_Key_Prefix . 'SIZE';
+
+sub initialize_size_awareness {
+    my $self = shift;
+
+    $self->{is_size_aware} = 1;
+}
 
 around 'get_keys' => sub {
     my $orig = shift;
     my $self = shift;
 
     # Call driver get_keys, then filter out reserved CHI keys
-    if ( !$self->is_size_aware() ) {
-        return $self->$orig(@_);
-    }
-    else {
-        return grep { index( $_, Reserved_Key_Prefix ) == -1 } $self->$orig(@_);
-    }
+    return grep { index( $_, Reserved_Key_Prefix ) == -1 } $self->$orig(@_);
 };
 
 after 'clear' => sub {
     my $self = shift;
 
-    if ( $self->is_size_aware() ) {
-        $self->_set_size(0);
-    }
+    $self->_set_size(0);
 };
 
 around 'remove' => sub {
-    my $orig = shift;
-    my $self = shift;
+    my $orig  = shift;
+    my $self  = shift;
+    my ($key) = @_;
 
-    if ( !$self->is_size_aware() ) {
-        $self->$orig(@_);
+    my $size_delta;
+    if ( my $data = $self->fetch($key) ) {
+        $size_delta = -1 * length($data);
     }
-    else {
-        my $size_delta;
-        if ( my $data = $self->fetch($key) ) {
-            $size_delta = -1 * length($data);
-        }
-        $self->$orig(@_);
-        if ($size_delta) {
-            $self->_add_to_size($size_delta);
-        }
+    $self->$orig(@_);
+    if ($size_delta) {
+        $self->_add_to_size($size_delta);
     }
 };
 
 around 'set' => sub {
-    my $orig = shift;
-    my $self = shift;
+    my $orig  = shift;
+    my $self  = shift;
+    my ($key) = @_;
 
-    if ( !$self->is_size_aware() ) {
-        $self->$orig(@_);
+    # If item exists, record its size so we can subtract it below
+    #
+    my $size_delta = 0;
+    if ( my $data = $self->fetch($key) ) {
+        $size_delta = -1 * length($data);
     }
-    else {
 
-        # If item exists, record its size so we can subtract it below
-        #
-        my $size_aware = $self->is_size_aware();
-        my $size_delta = 0;
-        if ( my $data = $self->fetch($key) ) {
-            $size_delta = -1 * length($data);
-        }
+    my $result = $self->$orig( @_, { obj_ref => \my $obj } );
 
-        my $result = $self->$orig(@_, obj_ref => \my $obj);
-
-        # Add to size and reduce size if over the maximum
-        #
-        $size_delta += $obj->size;
-        my $namespace_size = $self->_add_to_size($size_delta);
-        if ( defined( $self->max_size )
-            && $namespace_size > $self->max_size )
-        {
-            $self->reduce_to_size(
-                $self->max_size * $self->size_reduction_factor );
-        }
-
-        return $result;
+    # Add to size and reduce size if over the maximum
+    #
+    $size_delta += $obj->size;
+    my $namespace_size = $self->_add_to_size($size_delta);
+    if ( defined( $self->max_size )
+        && $namespace_size > $self->max_size )
+    {
+        $self->reduce_to_size( $self->max_size * $self->size_reduction_factor );
     }
+
+    return $result;
 };
 
 sub get_size {
     my ($self) = @_;
 
-    return $self->get(Size_Key);
+    return $self->get(Size_Key) || 0;
 }
 
 sub _set_size {
     my ( $self, $new_size ) = @_;
 
     my $obj =
-      CHI::CacheObject->new( Size_Key, $new_size, time(), Max_Time, Max_Time,
-        $self->serializer );
+      CHI::CacheObject->new( Size_Key, $new_size, time(), CHI::Driver::Max_Time,
+        CHI::Driver::Max_Time, $self->serializer );
     $self->_set_object( Size_Key, $obj );
 }
 
@@ -115,7 +106,7 @@ sub reduce_to_size {
     while ( $size > $ceiling ) {
         if ( defined( my $key = $ejection_iterator->() ) ) {
             if ( my $data = $self->fetch($key) ) {
-                $self->_remove($key);
+                $self->remove($key);
                 $size -= length($data);
             }
         }

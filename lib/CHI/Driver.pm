@@ -3,12 +3,10 @@ use Carp;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration dp);
-use Hash::MoreUtils qw(slice_exists);
-use List::MoreUtils qw(pairwise);
 use Module::Load::Conditional qw(can_load);
 use Any::Moose;
 use Any::Moose qw(::Util::TypeConstraints);
-use Scalar::Util qw(blessed weaken);
+use Scalar::Util qw(blessed);
 use Time::Duration;
 use strict;
 use warnings;
@@ -33,8 +31,6 @@ coerce 'Serializer' => from 'Str' => via {
 };
 
 use constant Max_Time => 0xffffffff;
-use constant Reserved_Key_Prefix =>
-  '_CHI_RESERVED_';    # XXX could use a better name
 
 has 'chi_root_class' => ( is => 'ro' );
 has 'label'          => ( is => 'rw', builder => '_build_label' );
@@ -55,9 +51,9 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
-has 'max_size'              => ( is => 'rw', isa => 'Int',  default => undef );
-has 'is_size_aware'         => ( is => 'ro', isa => 'Bool', default => undef );
-has 'size_reduction_factor' => ( is => 'rw', isa => 'Num',  default => 0.8 );
+has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
+has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'ejection_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
@@ -73,11 +69,7 @@ my %common_params =
 #
 my @subcache_types = qw(l1_cache mirror_cache);
 
-# List of parameters that are automatically inherited by a subcache
-#
-my @subcache_inherited_param_keys = (
-    qw(expires_at expires_in expires_variance namespace on_get_error on_set_error)
-);
+sub driver_class { my $self = shift; return ref($self) }
 
 sub non_common_constructor_params {
     my ( $class, $params ) = @_;
@@ -137,26 +129,23 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     # Turn on is_size_aware automatically if max_size is defined
-    $self->{is_size_aware} ||= defined( $self->{max_size} );
+    #
+    if ( defined( $self->{max_size} ) || defined( $self->{is_size_aware} ) ) {
+        require CHI::Driver::Role::SizeAware;
+        CHI::Driver::Role::SizeAware->meta->apply($self);
+        $self->initialize_size_awareness($params);
+    }
 
     # Create subcaches as necessary (l1_cache, mirror_cache)
     # Eventually might allow existing caches to be passed
     #
     foreach my $subcache_type (@subcache_types) {
         if ( my $subcache_params = $params->{$subcache_type} ) {
-            my $chi_root_class = $self->chi_root_class;
-            my %inherited_params =
-              slice_exists( $params, @subcache_inherited_param_keys );
-            my $default_label = $self->label . ":$subcache_type";
-            my $subcache      = $chi_root_class->new(
-                label => $default_label,
-                %inherited_params, %$subcache_params
-            );
-            $subcache->{subcache_type} = $subcache_type;
-            $subcache->{parent_cache}  = $self;
-            weaken( $subcache->{parent_cache} );
-            $self->{$subcache_type} = $subcache;
-            push( @{ $self->{subcaches} }, $subcache );
+            if ( !@{ $self->{subcaches} } ) {
+                require CHI::Driver::Role::HasSubcaches;
+                CHI::Driver::Role::HasSubcaches->meta->apply($self);
+            }
+            $self->add_subcache( $params, $subcache_type, $subcache_params );
         }
     }
 }
