@@ -62,9 +62,9 @@ sub new {
 sub unpack_from_data {
     my ( $class, $key, $data, $serializer ) = @_;
 
-    my $metadata = substr( $data, 0, $Metadata_Length );
+    my $metadata  = substr( $data, 0, $Metadata_Length );
     my $raw_value = substr( $data, $Metadata_Length );
-    my $obj = bless [
+    my $obj       = bless [
         $key, $raw_value,
         $serializer, unpack( $Metadata_Format, $metadata )
       ],
