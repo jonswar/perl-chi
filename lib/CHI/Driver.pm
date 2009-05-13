@@ -33,6 +33,8 @@ coerce 'Serializer' => from 'Str' => via {
 };
 
 use constant Max_Time => 0xffffffff;
+use constant Reserved_Key_Prefix =>
+  '_CHI_RESERVED_';    # XXX could use a better name
 
 has 'chi_root_class' => ( is => 'ro' );
 has 'label'          => ( is => 'rw', builder => '_build_label' );
@@ -53,6 +55,10 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
+has 'max_size'              => ( is => 'rw', isa => 'Int',  default => undef );
+has 'is_size_aware'         => ( is => 'ro', isa => 'Bool', default => undef );
+has 'size_reduction_factor' => ( is => 'rw', isa => 'Num',  default => 0.8 );
+has 'ejection_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
 
@@ -130,6 +136,9 @@ sub _build_data_serializer {
 sub BUILD {
     my ( $self, $params ) = @_;
 
+    # Turn on is_size_aware automatically if max_size is defined
+    $self->{is_size_aware} ||= defined( $self->{max_size} );
+
     # Create subcaches as necessary (l1_cache, mirror_cache)
     # Eventually might allow existing caches to be passed
     #
@@ -162,15 +171,6 @@ sub logger {
 sub get {
     my ( $self, $key, %params ) = @_;
     croak "must specify key" unless defined($key);
-    my $l1_cache = $self->{l1_cache};
-
-    # Consult l1 cache first if present
-    #
-    if ( defined($l1_cache) ) {
-        if ( defined( my $result = $l1_cache->get( $key, %params ) ) ) {
-            return $result;
-        }
-    }
 
     # Fetch cache object
     #
@@ -214,20 +214,6 @@ sub get {
         return undef;
     }
 
-    # Success - write back to l1 cache if present, and return result
-    #
-    if ( defined($l1_cache) ) {
-
-        # ** Should call store directly if caches are object-compatible
-        $l1_cache->set(
-            $key,
-            $obj->value,
-            {
-                expires_at       => $obj->expires_at,
-                early_expires_at => $obj->early_expires_at
-            }
-        );
-    }
     $self->_log_get_result( $log, "HIT", $key ) if $log->is_debug;
     return $obj->value;
 }
@@ -341,6 +327,8 @@ sub set {
         return;
     }
 
+    # Log the set
+    #
     my $log = $self->logger();
     if ( $log->is_debug ) {
         my $log_expires_in =
@@ -348,9 +336,21 @@ sub set {
         $self->_log_set_result( $log, $key, $value, $log_expires_in );
     }
 
-    $self->call_method_on_subcaches( 'set', @_ );
-
     return $value;
+}
+
+sub get_keys_iterator {
+    my ($self) = @_;
+
+    my @keys = $self->get_keys();
+    my $iterator = sub { shift(@keys) };
+    return $iterator;
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub expire {
@@ -441,12 +441,6 @@ sub remove_multi {
     }
 }
 
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
-}
-
 sub purge {
     my ($self) = @_;
 
@@ -514,17 +508,6 @@ sub is_empty {
     }
 }
 
-sub call_method_on_subcaches {
-    my $self      = shift;
-    my $method    = shift;
-    my $subcaches = $self->subcaches;
-    return unless $subcaches;
-
-    foreach my $subcache (@$subcaches) {
-        $subcache->$method(@_);
-    }
-}
-
 sub is_subcache {
     my ($self) = @_;
 
@@ -536,6 +519,7 @@ sub _set_object {
 
     my $data = $obj->pack_to_data();
     $self->store( $key, $data );
+    return length($data);
 }
 
 sub _log_get_result {

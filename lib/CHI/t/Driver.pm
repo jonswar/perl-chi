@@ -1059,6 +1059,61 @@ sub test_cache_object : Test(6) {
     );
 }
 
+sub test_size_awareness : Test(100) {
+    my $self = shift;
+    my ( $key, $value ) = $self->kvpair();
+
+    ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
+    ok(
+        !defined( $self->{cache}->get_size() ),
+        "get_size returns undef for non-size-aware"
+    );
+
+    my $cache = $self->new_cache( is_size_aware => 1 );
+    is( $cache->get_size(), 0, "size is 0 for empty" );
+    $cache->set( $key, $value );
+    is_about( $cache->get_size, 20, "size is about 20 with one value" );
+    $cache->set( $key, scalar( $value x 5 ) );
+    is_about( $cache->get_size, 45, "size is 45 after overwrite" );
+    $cache->set( $key, scalar( $value x 5 ) );
+    is_about( $cache->get_size, 45, "size is still 45 after same overwrite" );
+    $cache->set( $key, $value );
+    is_about( $cache->get_size, 20, "size is 20 again after overwrite" );
+    $cache->remove($key);
+    is( $cache->get_size, 0, "size is 0 again after removing key" );
+}
+
+sub test_max_size : Test(21) {
+    my $self = shift;
+
+    my $cache = $self->new_cache( max_size => 99 );
+    ok( $cache->is_size_aware, "is size aware when max_size specified" );
+    my $value_20 = 'x' x 6;
+
+    for ( my $i = 0 ; $i < 5 ; $i++ ) {
+        $cache->set( $i, $value_20 );
+    }
+    for ( my $i = 0 ; $i < 10 ; $i++ ) {
+        $cache->set( int( rand(10) ), $value_20 );
+        is_between( $cache->get_size, 60, 99,
+            "after iteration $i, size = " . $cache->get_size );
+        is_between( scalar( $cache->get_keys ),
+            3, 5, "after iteration $i, keys = " . scalar( $cache->get_keys ) );
+    }
+}
+
+sub is_about {
+    my ( $value, $expected, $msg ) = @_;
+
+    my $margin = int( $expected * 0.1 );
+    if ( abs( $value - $expected ) <= $margin ) {
+        pass($msg);
+    }
+    else {
+        fail("$msg - got $value, expected $expected");
+    }
+}
+
 sub test_busy_lock : Test(5) {
     my $self  = shift;
     my $cache = $self->{cache};

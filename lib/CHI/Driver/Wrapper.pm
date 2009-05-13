@@ -4,38 +4,6 @@ use Carp;
 use strict;
 use warnings;
 
-# Call these methods first on the main cache, then on any subcaches.
-#
-foreach my $method (qw(remove expire expire_if clear purge)) {
-    no strict 'refs';
-    *{ __PACKAGE__ . "::$method" } = sub {
-        my $self = shift;
-        my $retval = $self->call_native_driver( $method, @_ );
-        $self->call_method_on_subcaches( $method, @_ );
-        return $retval;
-    };
-}
-
-# Call on l1 cache first, then call on primary cache with remainder of keys
-#
-sub get_multi_hashref {
-    my $self = shift;
-    my ($keys) = @_;
-
-    my $l1_cache = $self->l1_cache;
-    if ( defined($l1_cache) ) {
-        my $l1_result = $l1_cache->get_multi_hashref($keys);
-        my @primary_keys = grep { !defined( $l1_result->{$_} ) } @$keys;
-        my $primary_result =
-          $self->call_native_driver( 'get_multi_hashref', \@primary_keys );
-        my $result = { %$l1_result, %$primary_result };
-        return $result;
-    }
-    else {
-        return $self->call_native_driver( 'get_multi_hashref', $keys );
-    }
-}
-
 # Call the specified $method on the native driver class, e.g. CHI::Driver::Memory.  SUPER
 # cannot be used because it refers to the superclass(es) of the current package and not to
 # the superclass(es) of the object - see perlobj.
