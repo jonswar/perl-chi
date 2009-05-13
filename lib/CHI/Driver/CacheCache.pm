@@ -2,7 +2,7 @@ package CHI::Driver::CacheCache;
 use Cache::Cache;
 use Carp;
 use CHI::Util qw(require_dynamic);
-use Mouse;
+use Any::Moose;
 use strict;
 use warnings;
 

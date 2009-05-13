@@ -2,7 +2,7 @@
 # Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::Storable;
-use Mouse;
+use Any::Moose;
 use Storable;
 use strict;
 use warnings;

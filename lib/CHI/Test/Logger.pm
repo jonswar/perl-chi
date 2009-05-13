@@ -4,7 +4,7 @@ use List::MoreUtils qw(first_index);
 use Test::Deep qw(cmp_deeply);
 use strict;
 use warnings;
-use Mouse;
+use Any::Moose;
 use strict;
 use warnings;
 

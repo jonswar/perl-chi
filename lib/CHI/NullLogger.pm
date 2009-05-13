@@ -1,5 +1,5 @@
 package CHI::NullLogger;
-use Mouse;
+use Any::Moose;
 use strict;
 use warnings;
 
