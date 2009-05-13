@@ -68,11 +68,10 @@ like
 
 =head1 MOOSE/MOUSE
 
-CHI driver classes are L<Any::Moose|Any::Moose> based, meaning that they
-will use L<Moose|Moose> if it is loaded, otherwise L<Mouse|Mouse>. We
-recommend that you also use L<Any::Moose> for consistency and clarity, but
-since Moose/Mouse play well with standard OO classes, you are not required
-to do so.
+CHI driver classes are L<Any::Moose|Any::Moose> based, meaning that they will
+use L<Moose|Moose> if it is loaded, otherwise L<Mouse|Mouse>. We recommend that
+you also use L<Any::Moose> for consistency and clarity, but since Moose/Mouse
+play well with standard OO classes, you are not required to do so.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
@@ -210,8 +209,8 @@ your subclass:
 
 =item BUILD ( $self, $options )
 
-Define the Moose/Mouse BUILD method if you want to process any options
-specific to your driver.
+Define the Moose/Mouse BUILD method if you want to process any options specific
+to your driver.
 
 =item fetch_multi_hashref ( $keys )
 
