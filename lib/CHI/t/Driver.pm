@@ -706,7 +706,7 @@ sub test_l1_cache : Test(228) {
     # Test with current cache in primary position...
     #
     $cache =
-      $self->new_cache( l1_cache => { driver => 'Memory', global => 1 } );
+      $self->new_cache( l1_cache => { driver => 'Memory', datastore => {} } );
     $l1_cache = $cache->l1_cache;
     isa_ok( $cache,    $self->testing_driver_class );
     isa_ok( $l1_cache, 'CHI::Driver::Memory' );
@@ -715,9 +715,9 @@ sub test_l1_cache : Test(228) {
     # and in l1 position
     #
     $cache = CHI->new(
-        driver   => 'Memory',
-        global   => 1,
-        l1_cache => { $self->new_cache_options() }
+        driver    => 'Memory',
+        datastore => {},
+        l1_cache  => { $self->new_cache_options() }
     );
     $l1_cache = $cache->l1_cache;
     isa_ok( $cache,    'CHI::Driver::Memory' );
@@ -1099,6 +1099,76 @@ sub test_max_size : Test(21) {
         is_between( scalar( $cache->get_keys ),
             3, 5, "after iteration $i, keys = " . scalar( $cache->get_keys ) );
     }
+}
+
+sub test_size_awareness_with_subcaches : Test(19) {
+    my $self = shift;
+
+    my ( $cache, $l1_cache );
+    my $set_values = sub {
+        my $value_20 = 'x' x 6;
+        for ( my $i = 0 ; $i < 20 ; $i++ ) {
+            $cache->set( "key$i", $value_20 );
+        }
+        $l1_cache = $cache->l1_cache;
+    };
+    my $is_size_aware = sub {
+        my $c     = shift;
+        my $label = $c->label;
+
+        ok( $c->is_size_aware, "$label is size aware" );
+        my $max_size = $c->max_size;
+        ok( $max_size > 0, "$label has max size" );
+        is_between( $c->get_size, $max_size - 40,
+            $max_size, "$label size = " . $c->get_size );
+        is_between(
+            scalar( $c->get_keys ),
+            ( $max_size + 1 ) / 20 - 2,
+            ( $max_size + 1 ) / 20,
+            "$label keys = " . scalar( $c->get_keys )
+        );
+    };
+    my $is_not_size_aware = sub {
+        my $c     = shift;
+        my $label = $c->label;
+
+        ok( !$c->is_size_aware, "$label is not size aware" );
+        is( $c->get_keys, 20, "$label keys = 20" );
+    };
+
+    $cache = $self->new_cache(
+        datastore => {},
+        l1_cache  => { driver => 'Memory', datastore => {}, max_size => 99 }
+    );
+    $set_values->();
+    $is_not_size_aware->($cache);
+    $is_size_aware->($l1_cache);
+
+    $cache = $self->new_cache(
+        datastore => {},
+        l1_cache  => { driver => 'Memory', datastore => {}, max_size => 99 },
+        max_size  => 199
+    );
+    $set_values->();
+    $is_size_aware->($cache);
+    $is_size_aware->($l1_cache);
+
+    $cache = $self->new_cache(
+        datastore => {},
+        l1_cache  => { driver => 'Memory', datastore => {} },
+        max_size  => 199
+    );
+    $set_values->();
+    $is_size_aware->($cache);
+
+    # Cannot call is_not_size_aware because the get_keys check will
+    # fail. Keys will be removed from the l1_cache when they are removed
+    # from the main cache, even though l1_cache does not have a max
+    # size. Not sure if this is the correct behavior, but for now, we're not
+    # going to test it. Normally, l1 caches will be more size limited than
+    # their parent caches.
+    #
+    ok(!$l1_cache->is_size_aware, $l1_cache->label . " is not size aware");
 }
 
 sub is_about {
