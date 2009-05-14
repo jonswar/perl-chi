@@ -1,5 +1,6 @@
 package CHI::Driver::Role::SizeAware;
-use Any::Moose qw(::Role);
+use CHI::Util qw(dp);
+use Moose::Role;
 use strict;
 use warnings;
 
@@ -60,6 +61,7 @@ around 'set' => sub {
     #
     $size_delta += $obj->size;
     my $namespace_size = $self->_add_to_size($size_delta);
+
     if ( defined( $self->max_size )
         && $namespace_size > $self->max_size )
     {
@@ -72,16 +74,14 @@ around 'set' => sub {
 sub get_size {
     my ($self) = @_;
 
-    return $self->get(Size_Key) || 0;
+    my $size = $self->fetch(Size_Key) || 0;
+    return $size;
 }
 
 sub _set_size {
     my ( $self, $new_size ) = @_;
 
-    my $obj =
-      CHI::CacheObject->new( Size_Key, $new_size, time(), CHI::Driver::Max_Time,
-        CHI::Driver::Max_Time, $self->serializer );
-    $self->_set_object( Size_Key, $obj );
+    $self->store( Size_Key, $new_size );
 }
 
 sub _add_to_size {
@@ -111,6 +111,7 @@ sub reduce_to_size {
             }
         }
         else {
+            ## no critic (RequireCarping)
             die "should be empty!" unless $self->is_empty();
             last;
         }
