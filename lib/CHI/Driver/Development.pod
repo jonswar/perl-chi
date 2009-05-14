@@ -69,8 +69,8 @@ like
 =head1 MOOSE/MOUSE
 
 CHI driver classes are L<Moose|Moose> based. We recommend that you also use
-L<Moose> for consistency and for its many features, but since Moose plays
-well with standard OO classes, you are not required to do so.
+L<Moose> for consistency and for its many features, but since Moose plays well
+with standard OO classes, you are not required to do so.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
@@ -208,8 +208,8 @@ your subclass:
 
 =item BUILD ( $self, $options )
 
-Define the Moose BUILD method if you want to process any options specific
-to your driver.
+Define the Moose BUILD method if you want to process any options specific to
+your driver.
 
 =item fetch_multi_hashref ( $keys )
 

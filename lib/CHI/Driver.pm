@@ -51,10 +51,6 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
-has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
-has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
-has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
-has 'ejection_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
 
@@ -127,14 +123,6 @@ sub _build_data_serializer {
 
 sub BUILD {
     my ( $self, $params ) = @_;
-
-    # Turn on is_size_aware automatically if max_size is defined
-    #
-    if ( defined( $self->{max_size} ) || defined( $self->{is_size_aware} ) ) {
-        require CHI::Driver::Role::SizeAware;
-        CHI::Driver::Role::SizeAware->meta->apply($self);
-        $self->initialize_size_awareness($params);
-    }
 
     # Create subcaches as necessary (l1_cache, mirror_cache)
     # Eventually might allow existing caches to be passed
