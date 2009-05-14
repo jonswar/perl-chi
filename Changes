@@ -1,5 +1,7 @@
 Revision history for CHI
 
+** denotes an incompatible change
+
 0.22  May 13, 2009
 
 * Implementation
@@ -12,8 +14,8 @@ Revision history for CHI
 0.21  May 5, 2009
 
 ** Incompatible Changes **
-  - Deprecate get_multi_array - silly to have this along with get_multi_arrayref
-  - CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
+  - ** Deprecate get_multi_array - silly to have this along with get_multi_arrayref
+  - ** CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
     to accidentally share the same datstore in unrelated code. Either a datastore or the
     'global' flag must be specified. Right now the absence of either will issue a warning,
     eventually this may become an error.
@@ -33,8 +35,8 @@ Revision history for CHI
 0.2  Apr 25, 2009
 
 ** Incompatibile Changes **
-  - Removed CHI::Driver::Multilevel, replaced with subcaches
-  - ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
+  - ** Removed CHI::Driver::Multilevel, replaced with subcaches
+  - ** ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
     class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
     can be automatically wrapped
 
