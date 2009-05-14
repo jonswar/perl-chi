@@ -1,45 +1,57 @@
 Revision history for CHI
 
-** denotes an incompatible change
-
 0.22  May 13, 2009
 
-- Switch from Mouse back to Moose - six week experiment over. Once we started using roles,
-  Mouse became an increasingly unattractive option. We can hope (or help see) that Moose
-  installation and startup time improves.
+* Implementation
+  - Switch from Mouse back to Moose - six week experiment over. Once we started using roles,
+    Mouse became an increasingly unattractive option. We can hope (or help ensure) that Moose
+    installation and startup time improves.
+  - Moved subcache code to a separate role, CHI::Driver::Role::HasSubcaches
 
 0.21  May 5, 2009
 
-- ** CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
-     to accidentally share the same datstore in unrelated code. Either a datastore or the
-     'global' flag must be specified. Right now the absence of either will issue a warning,
-     eventually this may become an error.
-- ** Deprecate get_multi_array - silly to have this along with get_multi_arrayref
-- Eliminated t/Multilevel.t which was causing test failures on new installations
-- Fixed get_namespaces for File driver to ignore non-standard dir names
-- To implement get_multi_*, drivers now define the simpler fetch_multi_hashref
-- Made get_multi_* work optimally with l1 caches
-- Tidied pod with Pod::Tidy
-- Added Features section and mention of Chris Leishman's Cache to docs
+** Incompatible Changes **
+  - Deprecate get_multi_array - silly to have this along with get_multi_arrayref
+  - CHI::Driver::Memory will no longer use a global datastore by default - it was too easy
+    to accidentally share the same datstore in unrelated code. Either a datastore or the
+    'global' flag must be specified. Right now the absence of either will issue a warning,
+    eventually this may become an error.
+
+* Improvements
+  - To implement get_multi_*, drivers now define the simpler fetch_multi_hashref
+  - Made get_multi_* work optimally with l1 caches
+
+* Fixes
+  - Eliminated t/Multilevel.t which was causing test failures on new installations
+  - Fixed get_namespaces for File driver to ignore non-standard dir names
+
+* Docs
+  - Tidied pod with Pod::Tidy
+  - Added Features section and mention of Chris Leishman's Cache to docs
 
 0.2  Apr 25, 2009
 
-- ** Removed CHI::Driver::Multilevel, replaced with subcaches
-- ** ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
-     class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
-     can be automatically wrapped
-- Added a more practical and intuitive multi-level cache mechanism: subcaches. l1_cache
-  and mirror_cache are the first two supported subcaches
-- Added customizable cache label, used in logs and error messages
+** Incompatibile Changes **
+  - Removed CHI::Driver::Multilevel, replaced with subcaches
+  - ref($driver) is no longer simply the driver class, it is an auto-generated wrapper
+    class like CHI::Wrapped::CHI::Driver::Memory - this is so that certain driver methods
+    can be automatically wrapped
+
+* Improvements
+  - Added a more practical and intuitive multi-level cache mechanism: subcaches. l1_cache
+    and mirror_cache are the first two supported subcaches
+  - Added customizable cache label, used in logs and error messages
 
 0.102  Mar 6, 2009
 
-- Skip get_namespaces in tests with drivers that don't support it
-- Eliminate unconditional use of Data::Serializer in tests; improve error when Data::Serializer not installed
+* Fixes
+  - Skip get_namespaces in tests with drivers that don't support it
+  - Eliminate unconditional use of Data::Serializer in tests; improve error when Data::Serializer not installed
 
 0.101  Mar 2, 2009
 
-- Don't use Data::Serializer up front
+* Fixes
+  - Don't use Data::Serializer up front
 
 0.10  Feb 28, 2009
 
