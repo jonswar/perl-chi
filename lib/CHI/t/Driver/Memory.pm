@@ -14,6 +14,17 @@ sub new_cache_options {
     return ( $self->SUPER::new_cache_options(), global => 1 );
 }
 
+# If new_cache called with datastore, ignore global flag (otherwise would be an error)
+#
+sub new_cache {
+    my $self = shift;
+    my %params = @_;
+    if ($params{datastore}) {
+        $params{global} = 0;
+    }
+    return CHI->new( $self->new_cache_options(), %params );
+}
+
 sub test_short_driver_name : Tests(1) {
     my ($self) = @_;
 
