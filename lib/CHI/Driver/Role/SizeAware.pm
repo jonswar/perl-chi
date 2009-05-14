@@ -117,14 +117,14 @@ sub reduce_to_size {
         }
     };
     $self->_set_size($size);
-    die $@ if $@;  ## no critic (RequireCarping)
+    die $@ if $@;    ## no critic (RequireCarping)
 }
 
 sub _get_iterator_for_discard_policy {
     my ( $self, $discard_policy ) = @_;
 
     if ( ref($discard_policy) eq 'CODE' ) {
-        return $discard_policy;
+        return $discard_policy->($self);
     }
     else {
         my $discard_sub = "discard_iterator_" . $discard_policy;

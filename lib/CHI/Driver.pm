@@ -17,6 +17,8 @@ subtype Duration => as 'Int' => where { $_ > 0 };
 
 subtype UnblessedHashRef => as 'HashRef' => where { !blessed($_) };
 
+type DiscardPolicy => where { !ref($_) || ref($_) eq 'CODE' };
+
 coerce 'Duration' => from 'Str' => via { parse_duration($_) };
 
 my $default_serializer = CHI::Serializer::Storable->new();
@@ -55,8 +57,11 @@ has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
 has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 )
   ;    # xx These should go in role...
-has 'discard_policy' =>
-  ( is => 'ro', isa => 'Str', builder => 'default_discard_policy' );
+has 'discard_policy' => (
+    is      => 'ro',
+    isa     => 'Maybe[DiscardPolicy]',
+    builder => 'default_discard_policy'
+);
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
 

@@ -1101,6 +1101,33 @@ sub test_max_size : Test(21) {
     }
 }
 
+sub test_custom_discard_policy : Test(10) {
+    my $self          = shift;
+    my $value_20      = 'x' x 6;
+    my $highest_first = sub {
+        my $c           = shift;
+        my @sorted_keys = sort( $c->get_keys );
+        return sub { pop(@sorted_keys) };
+    };
+    my $cache =
+      $self->new_cache( is_size_aware => 1, discard_policy => $highest_first );
+    for ( my $j = 0 ; $j < 10 ; $j += 2 ) {
+        $cache->clear();
+        for ( my $i = 0 ; $i < 10 ; $i++ ) {
+            my $k = ( $i + $j ) % 10;
+            $cache->set( "key$k", $value_20 );
+        }
+        $cache->reduce_to_size(100);
+        cmp_set(
+            [ $cache->get_keys ],
+            [ map { "key$_" } ( 0 .. 4 ) ],
+            "5 lowest"
+        );
+        $cache->reduce_to_size(20);
+        cmp_set( [ $cache->get_keys ], ["key0"], "1 lowest" );
+    }
+}
+
 sub test_size_awareness_with_subcaches : Test(19) {
     my $self = shift;
 
