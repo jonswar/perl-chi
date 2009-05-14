@@ -51,6 +51,10 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
+has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
+has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
+has 'ejection_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
 
@@ -123,6 +127,14 @@ sub _build_data_serializer {
 
 sub BUILD {
     my ( $self, $params ) = @_;
+
+    # Turn on is_size_aware automatically if max_size is defined
+    #
+    if ( defined( $self->{max_size} ) || defined( $self->{is_size_aware} ) ) {
+        require CHI::Driver::Role::SizeAware;
+        CHI::Driver::Role::SizeAware->meta->apply($self);
+        $self->initialize_size_awareness($params);
+    }
 
     # Create subcaches as necessary (l1_cache, mirror_cache)
     # Eventually might allow existing caches to be passed
@@ -316,6 +328,20 @@ sub set {
     return $value;
 }
 
+sub get_keys_iterator {
+    my ($self) = @_;
+
+    my @keys = $self->get_keys();
+    my $iterator = sub { shift(@keys) };
+    return $iterator;
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
+}
+
 sub expire {
     my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
@@ -344,12 +370,6 @@ sub expire_if {
     else {
         return 1;
     }
-}
-
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub compute {
@@ -488,6 +508,7 @@ sub _set_object {
 
     my $data = $obj->pack_to_data();
     $self->store( $key, $data );
+    return length($data);
 }
 
 sub _log_get_result {

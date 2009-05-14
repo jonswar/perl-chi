@@ -1058,6 +1058,49 @@ sub test_cache_object : Test(6) {
     );
 }
 
+sub test_size_awareness : Test(9) {
+    my $self = shift;
+    my ( $key, $value ) = $self->kvpair();
+
+    ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
+
+    my $cache = $self->new_cache( is_size_aware => 1 );
+    is( $cache->get_size(), 0, "size is 0 for empty" );
+    $cache->set( $key, $value );
+    is_about( $cache->get_size, 20, "size is about 20 with one value" );
+    $cache->set( $key, scalar( $value x 5 ) );
+    is_about( $cache->get_size, 45, "size is 45 after overwrite" );
+    $cache->set( $key, scalar( $value x 5 ) );
+    is_about( $cache->get_size, 45, "size is still 45 after same overwrite" );
+    $cache->set( $key, scalar( $value x 2 ) );
+    is_about( $cache->get_size, 26, "size is 26 after overwrite" );
+    $cache->remove($key);
+    is( $cache->get_size, 0, "size is 0 again after removing key" );
+    $cache->set( $key, $value );
+    is_about( $cache->get_size, 20, "size is about 20 with one value" );
+    $cache->clear();
+    is( $cache->get_size, 0, "size is 0 again after clear" );
+}
+
+sub test_max_size : Test(21) {
+    my $self = shift;
+
+    my $cache = $self->new_cache( max_size => 99 );
+    ok( $cache->is_size_aware, "is size aware when max_size specified" );
+    my $value_20 = 'x' x 6;
+
+    for ( my $i = 0 ; $i < 5 ; $i++ ) {
+        $cache->set( "key$i", $value_20 );
+    }
+    for ( my $i = 0 ; $i < 10 ; $i++ ) {
+        $cache->set( "key" . int( rand(10) ), $value_20 );
+        is_between( $cache->get_size, 60, 99,
+            "after iteration $i, size = " . $cache->get_size );
+        is_between( scalar( $cache->get_keys ),
+            3, 5, "after iteration $i, keys = " . scalar( $cache->get_keys ) );
+    }
+}
+
 sub is_about {
     my ( $value, $expected, $msg ) = @_;
 
