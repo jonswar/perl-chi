@@ -1,5 +1,5 @@
 package CHI::Driver::Memory;
-use Carp qw(cluck);
+use Carp qw(cluck croak);
 use Moose;
 use strict;
 use warnings;
@@ -17,8 +17,10 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     if ( $self->{global} ) {
-        $self->{datastore} = $Global_Datastore;
+        croak "cannot specify both 'datastore' and 'global'"
+          if ( defined( $self->{datastore} ) );
     }
+    $self->{datastore} = $Global_Datastore;
     if ( !defined( $self->{datastore} ) ) {
         cluck "must specify either 'datastore' hashref or 'global' flag";
         $self->{datastore} = $Global_Datastore;
@@ -142,6 +144,8 @@ Jonathan Swartz
 Copyright (C) 2007 Jonathan Swartz.
 
 This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+the same terms as Perl
+
+itself.
 
 =cut
