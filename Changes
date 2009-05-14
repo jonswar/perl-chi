@@ -4,9 +4,10 @@ Revision history for CHI
 
 * Implementation
   - Switch from Mouse back to Moose - six week experiment over. Once we started using roles,
-    Mouse became an increasingly unattractive option. We can hope (or help ensure) that Moose
-    installation and startup time improves.
-  - Moved subcache code to a separate role, CHI::Driver::Role::HasSubcaches
+    Mouse became increasingly unattractive and the Moose community encouraged us not to go
+    further with it. We can hope (or help ensure) that Moose installation and startup time improves.
+  - Moved subcache code to a separate role, CHI::Driver::Role::HasSubcaches. API remains
+    the same -- activated via l1_cache and mirror_cache options to CHI->new.
 
 0.21  May 5, 2009
 

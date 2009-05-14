@@ -316,20 +316,6 @@ sub set {
     return $value;
 }
 
-sub get_keys_iterator {
-    my ($self) = @_;
-
-    my @keys = $self->get_keys();
-    my $iterator = sub { shift(@keys) };
-    return $iterator;
-}
-
-sub clear {
-    my ($self) = @_;
-
-    $self->remove_multi( [ $self->get_keys() ] );
-}
-
 sub expire {
     my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
@@ -358,6 +344,12 @@ sub expire_if {
     else {
         return 1;
     }
+}
+
+sub clear {
+    my ($self) = @_;
+
+    $self->remove_multi( [ $self->get_keys() ] );
 }
 
 sub compute {
@@ -496,7 +488,6 @@ sub _set_object {
 
     my $data = $obj->pack_to_data();
     $self->store( $key, $data );
-    return length($data);
 }
 
 sub _log_get_result {
