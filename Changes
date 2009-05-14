@@ -4,9 +4,9 @@ Revision history for CHI
 
 0.22  May 13, 2009
 
-- The six week Mouse experiment is over; once we started using roles, support was too
-  spotty. Back to Moose. Apologies for the installation and startup time hit, but
-  these will no doubt improve.
+- Switch from Mouse back to Moose - six week experiment over. Once we started using roles,
+  Mouse became an increasingly unattractive option. We can hope (or help see) that Moose
+  installation and startup time improves.
 
 0.21  May 5, 2009
 
