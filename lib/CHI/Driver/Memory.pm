@@ -19,8 +19,8 @@ sub BUILD {
     if ( $self->{global} ) {
         croak "cannot specify both 'datastore' and 'global'"
           if ( defined( $self->{datastore} ) );
+        $self->{datastore} = $Global_Datastore;
     }
-    $self->{datastore} = $Global_Datastore;
     if ( !defined( $self->{datastore} ) ) {
         cluck "must specify either 'datastore' hashref or 'global' flag";
         $self->{datastore} = $Global_Datastore;
