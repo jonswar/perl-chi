@@ -1090,10 +1090,10 @@ sub test_max_size : Test(21) {
     my $value_20 = 'x' x 6;
 
     for ( my $i = 0 ; $i < 5 ; $i++ ) {
-        $cache->set( $i, $value_20 );
+        $cache->set( "key$i", $value_20 );
     }
     for ( my $i = 0 ; $i < 10 ; $i++ ) {
-        $cache->set( int( rand(10) ), $value_20 );
+        $cache->set( "key" . int( rand(10) ), $value_20 );
         is_between( $cache->get_size, 60, 99,
             "after iteration $i, size = " . $cache->get_size );
         is_between( scalar( $cache->get_keys ),
@@ -1196,7 +1196,7 @@ sub test_no_leak : Tests(2) {
 }
 
 ## no critic
-{ package My::CHI; use Any::Moose; extends 'CHI' }
+{ package My::CHI; use Moose; extends 'CHI' }
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;
