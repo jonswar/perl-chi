@@ -53,17 +53,24 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
-has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
-has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
-has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 )
-  ;    # xx These should go in role...
+has 'subcache_type' => ( is => 'ro' );
+has 'subcaches'     => ( is => 'ro', default => sub { [] } );
+has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
+
+# xx These should go in SizeAware role, but cannot right now because of the way
+# xx we apply role to instance
+has 'max_size' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'discard_policy' => (
     is      => 'ro',
     isa     => 'Maybe[DiscardPolicy]',
     builder => 'default_discard_policy'
 );
-has 'subcache_type' => ( is => 'ro' );
-has 'subcaches' => ( is => 'ro', default => sub { [] } );
+has 'discard_timeout' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 10
+);
 
 __PACKAGE__->meta->make_immutable();
 
@@ -91,7 +98,7 @@ sub non_common_constructor_params {
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
     no strict 'refs';
     *{ __PACKAGE__ . "::$method" } =
-      sub { die "method '$method' must be implemented by subclass" }; ## no critic (RequireCarping)
+      sub { die "method '$method' must be implemented by subclass" };
 }
 
 sub declare_unsupported_methods {

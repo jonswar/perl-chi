@@ -1117,15 +1117,31 @@ sub test_custom_discard_policy : Test(10) {
             my $k = ( $i + $j ) % 10;
             $cache->set( "key$k", $value_20 );
         }
-        $cache->reduce_to_size(100);
+        $cache->discard_to_size(100);
         cmp_set(
             [ $cache->get_keys ],
             [ map { "key$_" } ( 0 .. 4 ) ],
             "5 lowest"
         );
-        $cache->reduce_to_size(20);
+        $cache->discard_to_size(20);
         cmp_set( [ $cache->get_keys ], ["key0"], "1 lowest" );
     }
+}
+
+sub test_discard_timeout : Test(3) {
+    my $self       = shift;
+    my $bad_policy = sub {
+        return sub { '1' };
+    };
+    my $cache =
+      $self->new_cache( is_size_aware => 1, discard_policy => $bad_policy );
+    ok(defined($cache->discard_timeout) && $cache->discard_timeout > 1, "positive discard timeout");
+    $cache->discard_timeout(2);
+    is($cache->discard_timeout, 2, "can set timeout");
+    my $start_time = time;
+    $cache->set(2, 2);
+    throws_ok { $cache->discard_to_size(0) } qr/discard timeout .* reached/;
+    ok(time > $start_time && time < $start_time+5, "timed out in 2 seconds");
 }
 
 sub test_size_awareness_with_subcaches : Test(19) {

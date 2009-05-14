@@ -59,7 +59,8 @@ around 'set' => sub {
     if ( defined( $self->max_size )
         && $namespace_size > $self->max_size )
     {
-        $self->reduce_to_size( $self->max_size * $self->size_reduction_factor );
+        $self->discard_to_size(
+            $self->max_size * $self->size_reduction_factor );
     }
 
     return $result;
@@ -87,7 +88,7 @@ sub _add_to_size {
     return $new_size;
 }
 
-sub reduce_to_size {
+sub discard_to_size {
     my ( $self, $ceiling ) = @_;
 
     # Get an iterator that produces keys in the order they should be removed
@@ -96,8 +97,10 @@ sub reduce_to_size {
       $self->_get_iterator_for_discard_policy( $self->discard_policy );
 
     # Remove keys until we are under $ceiling. Temporarily turn off size
-    # setting on remove because we will set size once at end.
+    # setting on remove because we will set size once at end. Check if
+    # we exceed discard timeout.
     #
+    my $end_time = time + $self->discard_timeout;
     local $self->{_no_set_size_on_remove} = 1;
     my $size = $self->get_size();
     eval {
@@ -114,10 +117,14 @@ sub reduce_to_size {
                 "iterator returned undef, cache should be empty";
                 last;
             }
+            if ( time > $end_time ) {
+                die sprintf( "discard timeout (%s sec) reached",
+                    $self->discard_timeout );
+            }
         }
     };
     $self->_set_size($size);
-    die $@ if $@;    ## no critic (RequireCarping)
+    die $@ if $@;
 }
 
 sub _get_iterator_for_discard_policy {
@@ -132,7 +139,6 @@ sub _get_iterator_for_discard_policy {
             return $self->$discard_sub();
         }
         else {
-            ## no critic (RequireCarping)
             die sprintf( "cannot get iterator for discard policy '%s' ('%s')",
                 $discard_policy, $discard_sub );
         }

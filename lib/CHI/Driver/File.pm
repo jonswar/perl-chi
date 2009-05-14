@@ -129,7 +129,6 @@ sub store {
         if ( -f $temp_file ) {
             my $error = $!;
             unlink($temp_file);
-            ## no critic (RequireCarping)
             die "could not rename '$temp_file' to '$file': $error";
         }
     }
@@ -140,7 +139,6 @@ sub remove {
 
     my $file = $self->path_to_key($key) or return undef;
     unlink($file);
-    ## no critic (RequireCarping)
     die "could not unlink '$file'" if -f $file;
 }
 
@@ -149,7 +147,6 @@ sub clear {
 
     my $namespace_dir = $self->path_to_namespace;
     rmtree($namespace_dir);
-    ## no critic (RequireCarping)
     die "could not remove '$namespace_dir'"
       if -d $namespace_dir;
 }
