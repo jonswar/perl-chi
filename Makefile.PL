@@ -13,6 +13,7 @@ build_requires 'Test::Deep'  => 0;
 build_requires 'Test::More'  => 0;
 
 requires 'Any::Moose'                => '0.07';
+requires 'Carp::Assert'              => '0.20';
 requires 'Data::UUID'                => 0;
 requires 'Digest::JHash'             => 0;
 requires 'File::Spec'                => '0.80';
