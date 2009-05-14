@@ -1,5 +1,5 @@
 package CHI::Driver::Role::SizeAware;
-use CHI::Util qw(dp);
+use Carp::Assert;
 use Moose::Role;
 use strict;
 use warnings;
@@ -7,12 +7,6 @@ use warnings;
 use constant Reserved_Key_Prefix =>
   '_CHI_RESERVED_';    # XXX could use a better name
 use constant Size_Key => Reserved_Key_Prefix . 'SIZE';
-
-sub initialize_size_awareness {
-    my $self = shift;
-
-    $self->{is_size_aware} = 1;
-}
 
 around 'get_keys' => sub {
     my $orig = shift;
@@ -33,8 +27,8 @@ around 'remove' => sub {
     my $self  = shift;
     my ($key) = @_;
 
-    my $size_delta;
-    if ( my $data = $self->fetch($key) ) {
+    my ( $size_delta, $data );
+    if ( !$self->{_no_set_size_on_remove} && ( $data = $self->fetch($key) ) ) {
         $size_delta = -1 * length($data);
     }
     $self->$orig(@_);
@@ -98,43 +92,54 @@ sub reduce_to_size {
 
     # Get an iterator that produces keys in the order they should be removed
     #
-    my $ejection_iterator = $self->_get_ejection_iterator_for_policy();
+    my $discard_iterator =
+      $self->_get_iterator_for_discard_policy( $self->discard_policy );
 
-    # Remove keys until we are under $ceiling
+    # Remove keys until we are under $ceiling. Temporarily turn off size
+    # setting on remove because we will set size once at end.
     #
+    local $self->{_no_set_size_on_remove} = 1;
     my $size = $self->get_size();
-    while ( $size > $ceiling ) {
-        if ( defined( my $key = $ejection_iterator->() ) ) {
-            if ( my $data = $self->fetch($key) ) {
-                $self->remove($key);
-                $size -= length($data);
+    eval {
+        while ( $size > $ceiling )
+        {
+            if ( defined( my $key = $discard_iterator->() ) ) {
+                if ( my $data = $self->fetch($key) ) {
+                    $self->remove($key);
+                    $size -= length($data);
+                }
             }
+            else {
+                affirm { $self->is_empty }
+                "iterator returned undef, cache should be empty";
+                last;
+            }
+        }
+    };
+    $self->_set_size($size);
+    die $@ if $@;
+}
+
+sub _get_iterator_for_discard_policy {
+    my ( $self, $discard_policy ) = @_;
+
+    if ( ref($discard_policy) eq 'CODE' ) {
+        return $discard_policy;
+    }
+    else {
+        my $discard_sub = "discard_iterator_" . $discard_policy;
+        if ( $self->can($discard_sub) ) {
+            return $self->$discard_sub();
         }
         else {
             ## no critic (RequireCarping)
-            die "should be empty!" unless $self->is_empty();
-            last;
+            die sprintf( "cannot get iterator for discard policy '%s' ('%s')",
+                $discard_policy, $discard_sub );
         }
     }
-    $self->_set_size($size);
 }
 
-sub _get_ejection_iterator_for_policy {
-    my ($self) = @_;
-
-    my $ejection_sub =
-      sprintf( "ejection_iterator_%s", $self->ejection_policy );
-    if ( $self->can($ejection_sub) ) {
-        return $self->$ejection_sub();
-    }
-    else {
-        ## no critic (RequireCarping)
-        die sprintf( "cannot get ejection iterator for policy '%s' ('%s')",
-            $self->ejection_policy, $ejection_sub );
-    }
-}
-
-sub ejection_iterator_arbitrary {
+sub discard_iterator_arbitrary {
     my ($self) = @_;
 
     return $self->get_keys_iterator();
