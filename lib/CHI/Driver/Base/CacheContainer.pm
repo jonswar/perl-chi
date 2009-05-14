@@ -1,6 +1,6 @@
 package CHI::Driver::Base::CacheContainer;
-use Any::Moose;
-use Any::Moose qw(::Util::TypeConstraints);
+use Moose;
+use Moose::Util::TypeConstraints;
 use List::MoreUtils qw( all );
 use strict;
 use warnings;

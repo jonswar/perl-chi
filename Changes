@@ -2,9 +2,11 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.22  May 5, 2009
+0.22  May 13, 2009
 
-- Switch from Mouse to Any::Moose, which will use Moose if it is loaded, otherwise Mouse.
+- The six week Mouse experiment is over; once we started using roles, support was too
+  spotty. Back to Moose. Apologies for the installation and startup time hit, but
+  these will no doubt improve.
 
 0.21  May 5, 2009
 

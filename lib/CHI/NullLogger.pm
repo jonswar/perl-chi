@@ -1,5 +1,5 @@
 package CHI::NullLogger;
-use Any::Moose;
+use Moose;
 use strict;
 use warnings;
 

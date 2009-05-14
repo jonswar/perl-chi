@@ -8,7 +8,7 @@ use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use Any::Moose;
+use Moose;
 use strict;
 use warnings;
 

@@ -1,5 +1,5 @@
 package CHI::Driver::Null;
-use Any::Moose;
+use Moose;
 use strict;
 use warnings;
 

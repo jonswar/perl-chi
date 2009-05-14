@@ -2,10 +2,12 @@
 # Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::Storable;
-use Any::Moose;
+use Moose;
 use Storable;
 use strict;
 use warnings;
+
+__PACKAGE__->meta->make_immutable;
 
 sub serialize {
     return Storable::freeze( $_[1] );

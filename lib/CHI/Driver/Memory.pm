@@ -1,6 +1,6 @@
 package CHI::Driver::Memory;
 use Carp qw(cluck);
-use Any::Moose;
+use Moose;
 use strict;
 use warnings;
 
