@@ -55,7 +55,8 @@ has 'max_size'      => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool',       default => undef );
 has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 )
   ;    # xx These should go in role...
-has 'discard_policy' => ( is => 'ro', isa => 'Str', default => 'arbitrary' );
+has 'discard_policy' =>
+  ( is => 'ro', isa => 'Str', builder => 'default_discard_policy' );
 has 'subcache_type' => ( is => 'ro' );
 has 'subcaches' => ( is => 'ro', default => sub { [] } );
 
@@ -157,6 +158,8 @@ sub logger {
     ## no critic (ProhibitPackageVars)
     return $CHI::Logger;
 }
+
+sub default_discard_policy { 'arbitrary' }
 
 sub get {
     my ( $self, $key, %params ) = @_;

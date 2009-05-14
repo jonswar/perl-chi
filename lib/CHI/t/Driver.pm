@@ -1168,7 +1168,7 @@ sub test_size_awareness_with_subcaches : Test(19) {
     # going to test it. Normally, l1 caches will be more size limited than
     # their parent caches.
     #
-    ok(!$l1_cache->is_size_aware, $l1_cache->label . " is not size aware");
+    ok( !$l1_cache->is_size_aware, $l1_cache->label . " is not size aware" );
 }
 
 sub is_about {

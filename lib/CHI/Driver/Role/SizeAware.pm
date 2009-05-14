@@ -117,7 +117,7 @@ sub reduce_to_size {
         }
     };
     $self->_set_size($size);
-    die $@ if $@;
+    die $@ if $@;  ## no critic (RequireCarping)
 }
 
 sub _get_iterator_for_discard_policy {

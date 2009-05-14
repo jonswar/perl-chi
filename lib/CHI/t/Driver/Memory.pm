@@ -17,9 +17,9 @@ sub new_cache_options {
 # If new_cache called with datastore, ignore global flag (otherwise would be an error)
 #
 sub new_cache {
-    my $self = shift;
+    my $self   = shift;
     my %params = @_;
-    if ($params{datastore}) {
+    if ( $params{datastore} ) {
         $params{global} = 0;
     }
     return CHI->new( $self->new_cache_options(), %params );
@@ -44,12 +44,25 @@ sub test_global_or_datastore_required : Tests(3) {
     is( $cache2->get('foo'), 5, "defaulted to global datastore" );
 }
 
+# Make sure two caches don't share datastore
+#
 sub test_different_datastores : Tests(1) {
     my $self   = shift;
     my $cache1 = CHI->new( driver => 'Memory', datastore => {} );
     my $cache2 = CHI->new( driver => 'Memory', datastore => {} );
     $self->set_some_keys($cache1);
     ok( $cache2->is_empty() );
+}
+
+sub test_lru_discard : Tests(2) {
+    my $self = shift;
+    my $cache = $self->new_cache( max_size => 41 );
+    is( $cache->discard_policy, 'lru' );
+    my $value_20 = 'x' x 6;
+    foreach my $key ( map { "key$_" } qw(1 2 3 4 5 6 5 6 5 3 2) ) {
+        $cache->set( $key, $value_20 );
+    }
+    cmp_set( [ $cache->get_keys ], [ "key2", "key3" ] );
 }
 
 1;
