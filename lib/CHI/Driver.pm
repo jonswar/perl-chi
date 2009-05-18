@@ -2,7 +2,7 @@ package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
 use CHI::Serializer::Storable;
-use CHI::Util qw(parse_duration dp);
+use CHI::Util qw(parse_duration parse_memory_size dp);
 use Module::Load::Conditional qw(can_load);
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -13,13 +13,15 @@ use warnings;
 
 type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)$/ };
 
-subtype Duration => as 'Int' => where { $_ > 0 };
+subtype 'CHI::Duration' => as 'Int' => where { $_ > 0 };
+coerce 'CHI::Duration' => from 'Str' => via { parse_duration($_) };
 
-subtype UnblessedHashRef => as 'HashRef' => where { !blessed($_) };
+subtype 'CHI::MemorySize' => as 'Int' => where { $_ > 0 };
+coerce 'CHI::MemorySize' => from 'Str' => via { parse_memory_size($_) };
 
-type DiscardPolicy => where { !ref($_) || ref($_) eq 'CODE' };
+subtype 'CHI::UnblessedHashRef' => as 'HashRef' => where { !blessed($_) };
 
-coerce 'Duration' => from 'Str' => via { parse_duration($_) };
+type 'CHI::DiscardPolicy' => where { !ref($_) || ref($_) eq 'CODE' };
 
 my $default_serializer = CHI::Serializer::Storable->new();
 my $data_serializer_loaded =
@@ -37,10 +39,10 @@ use constant Max_Time => 0xffffffff;
 has 'chi_root_class' => ( is => 'ro' );
 has 'label'          => ( is => 'rw', builder => '_build_label' );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
-has 'expires_in'     => ( is => 'rw', isa => 'Duration', coerce => 1 );
+has 'expires_in'     => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'l1_cache'         => ( is => 'ro', isa     => 'UnblessedHashRef' );
-has 'mirror_cache'     => ( is => 'ro', isa     => 'UnblessedHashRef' );
+has 'l1_cache'         => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
+has 'mirror_cache'     => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
 has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
@@ -59,11 +61,11 @@ has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
 
 # xx These should go in SizeAware role, but cannot right now because of the way
 # xx we apply role to instance
-has 'max_size' => ( is => 'rw', isa => 'Maybe[Int]', default => undef );
+has 'max_size' => ( is => 'rw', isa => 'CHI::MemorySize', coerce => 1 );
 has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'discard_policy' => (
     is      => 'ro',
-    isa     => 'Maybe[DiscardPolicy]',
+    isa     => 'Maybe[CHI::DiscardPolicy]',
     builder => 'default_discard_policy'
 );
 has 'discard_timeout' => (
