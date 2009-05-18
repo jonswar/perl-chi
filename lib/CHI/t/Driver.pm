@@ -1082,9 +1082,11 @@ sub test_size_awareness : Test(9) {
     is( $cache->get_size, 0, "size is 0 again after clear" );
 }
 
-sub test_max_size : Test(21) {
+sub test_max_size : Test(22) {
     my $self = shift;
 
+    is($self->new_cache(max_size=>'30k')->max_size, 30*1024, 'max_size parsing');
+    
     my $cache = $self->new_cache( max_size => 99 );
     ok( $cache->is_size_aware, "is size aware when max_size specified" );
     my $value_20 = 'x' x 6;

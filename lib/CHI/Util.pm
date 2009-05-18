@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
   fast_catdir
   fast_catfile
   parse_duration
+  parse_memory_size
   read_dir
   require_dynamic
   unique_id
@@ -86,6 +87,20 @@ sub require_dynamic {
 
     sub fast_catfile {
         return $File_Spec_Using_Unix ? join( "/", @_ ) : catfile(@_);
+    }
+}
+
+my %memory_size_units = ( 'k' => 1024, 'm' => 1024 * 1024 );
+sub parse_memory_size {
+    my $size = shift;
+    if ($size =~ /^\d+b?$/) {
+        return $size;
+    }
+    elsif (my ($quantity, $unit) = ($size =~ /^(\d+)\s*([km])b?$/i)) {
+        return $quantity * $memory_size_units{lc($unit)};
+    }
+    else {
+        croak "cannot parse memory size '$size'";
     }
 }
 
