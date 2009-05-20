@@ -110,29 +110,29 @@ implementation.
 
 =over
 
-=item
+=item *
 
-* Easy to create new drivers
+Easy to create new drivers
 
-=item
+=item *
 
-* Uniform support for namespaces
+Uniform support for namespaces
 
-=item
+=item *
 
-* Automatic [de]serialization of data
+Automatic [de]serialization of data
 
-=item
+=item *
 
-* Multilevel caches
+Multilevel caches
 
-=item
+=item *
 
-* Probabilistic expiration and busy locks, to reduce cache miss stampedes
+Probabilistic expiration and busy locks, to reduce cache miss stampedes
 
-=item
+=item *
 
-* Optional logging of cache activity
+Optional logging of cache activity
 
 =back
 
