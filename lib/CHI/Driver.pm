@@ -37,6 +37,7 @@ coerce 'Serializer' => from 'Str' => via {
 use constant Max_Time => 0xffffffff;
 
 has 'chi_root_class' => ( is => 'ro', init_arg => undef );
+has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
@@ -143,6 +144,11 @@ sub _build_data_serializer {
 
 sub BUILD {
     my ( $self, $params ) = @_;
+
+    # Save off constructor params. Used to create metacache, for
+    # example. Hopefully this will not cause circular references...
+    #
+    $self->{constructor_params} = $params;
 
     # Turn on is_size_aware automatically if max_size is defined
     #
