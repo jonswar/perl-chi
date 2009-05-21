@@ -36,17 +36,17 @@ coerce 'Serializer' => from 'Str' => via {
 
 use constant Max_Time => 0xffffffff;
 
-has 'chi_root_class' => ( is => 'ro' );
-has 'label'          => ( is => 'rw', builder => '_build_label' );
+has 'chi_root_class' => ( is => 'ro', init_arg => undef );
 has 'expires_at'     => ( is => 'rw', default => Max_Time );
 has 'expires_in'     => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
+has 'label'          => ( is => 'rw', builder => '_build_label' );
 has 'l1_cache'         => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
 has 'mirror_cache'     => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
 has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'parent_cache' => ( is => 'ro' );
+has 'parent_cache' => ( is => 'ro', init_arg => undef );
 has 'serializer'   => (
     is      => 'ro',
     isa     => 'Serializer',
@@ -55,8 +55,8 @@ has 'serializer'   => (
 );
 has 'short_driver_name' =>
   ( is => 'ro', builder => '_build_short_driver_name' );
-has 'subcache_type' => ( is => 'ro' );
-has 'subcaches'     => ( is => 'ro', default => sub { [] } );
+has 'subcache_type' => ( is => 'ro', init_arg => undef );
+has 'subcaches'     => ( is => 'ro', default => sub { [] }, init_arg => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
 
 # xx These should go in SizeAware role, but cannot right now because of the way
