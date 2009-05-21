@@ -60,7 +60,7 @@ around 'set' => sub {
         && $namespace_size > $self->max_size )
     {
         $self->discard_to_size(
-            $self->max_size * $self->size_reduction_factor );
+            $self->max_size * $self->max_size_reduction_factor );
     }
 
     return $result;

@@ -62,7 +62,7 @@ has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
 # xx These should go in SizeAware role, but cannot right now because of the way
 # xx we apply role to instance
 has 'max_size' => ( is => 'rw', isa => 'CHI::MemorySize', coerce => 1 );
-has 'size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
+has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'discard_policy' => (
     is      => 'ro',
     isa     => 'Maybe[CHI::DiscardPolicy]',
