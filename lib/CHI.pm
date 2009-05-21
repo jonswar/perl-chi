@@ -744,6 +744,43 @@ We'd like to make this more flexible eventually.
 
 =for readme continue
 
+=head1 SIZE AWARENESS
+
+If L</is_size_aware> or L</max_size> are passed to the constructor, the cache
+will be I<size aware> - that is, it will keep track of its own size (in bytes)
+as items are added and removed. You can get a cache's size with L</get_size>.
+
+Size aware caches generally keep track of their size in a separate meta-key,
+and have to do an extra store whenever the size changes (e.g. on each set and
+remove).
+
+=head2 Maximum size and discard policies
+
+If a cache's size rises above its L</max_size>, items are discarded until the
+cache size is sufficiently below the max size. (See L</max_size_reduction_factor> for
+how to fine-tune this.)
+
+The order in which items are discarded is controlled with L</discard_policy>.
+The default discard policy is 'arbitrary', which discards items in an arbitrary
+order.  The available policies and default policy can differ with each driver,
+e.g. the L<CHI::Driver::Memory|Memory> driver provides and defaults to an 'LRU' policy.
+
+=head2 Appropriate drivers
+
+Size awareness was chiefly designed for, and works well with, the
+L<CHI::Driver::Memory|Memory> driver: one often needs to enforce a maximum
+size on a memory cache, and the overhead of tracking size in memory is
+negligible. However, the capability may be useful with other drivers.
+
+Some drivers - for example, L<CHI::Driver::FastMmap|FastMmap> and
+L<CHI::Driver::Memcached|Memcached> - inherently keep track of their size
+and enforce a maximum size, and it makes no sense to turn on CHI's size
+awareness for these. 
+
+Also, for drivers that cannot atomically read and update a value - for
+example, L<CHI::Driver::File|File> - there is a race condition in the
+updating of size that can cause the size to grow inaccurate over time.
+
 =head1 AVAILABILITY OF DRIVERS
 
 The following drivers are currently available as part of this distribution:
