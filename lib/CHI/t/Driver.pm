@@ -646,6 +646,8 @@ sub test_l1_cache : Test(228) {
     my @values = map { "value$_" } ( 0 .. 2 );
     my ( $cache, $l1_cache );
 
+    return "skipping - no support for clear" unless $self->supports_clear();
+    
     my $test_l1_cache = sub {
 
         is( $l1_cache->subcache_type, "l1_cache" );
@@ -729,6 +731,8 @@ sub test_mirror_cache : Test(206) {
     my $self = shift;
     my ( $cache, $mirror_cache );
     my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
+
+    return "skipping - no support for clear" unless $self->supports_clear();
 
     my $test_mirror_cache = sub {
 
@@ -962,10 +966,12 @@ sub _test_common_subcache_features {
 sub test_clear : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
-    $self->num_tests( $self->{key_count} + 2 );
+    my $cache2 = $self->new_cache(namespace => 'other');
+    $self->num_tests( $self->{key_count} + 3 );
 
     if ( $self->supports_clear() ) {
         $self->set_some_keys($cache);
+        $self->set_some_keys($cache2);
         $cache->clear();
         cmp_deeply( [ $cache->get_keys ], [], "get_keys after clear" );
         is( scalar( $cache->get_keys ), 0, "scalar(get_keys) = 0 after clear" );
@@ -973,6 +979,7 @@ sub test_clear : Tests {
             ok( !defined $cache->get($key),
                 "key '$keyname' no longer defined after clear" );
         }
+        cmp_set([$cache2->get_keys], [values(%{ $self->{keys}})], 'cache2 untouched by clear');
     }
     else {
         throws_ok(
