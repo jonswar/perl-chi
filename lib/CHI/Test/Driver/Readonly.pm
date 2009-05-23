@@ -1,8 +1,10 @@
 package CHI::Test::Driver::Readonly;
 use Carp;
+use Moose;
 use strict;
 use warnings;
-use base qw(CHI::Driver::Memory);
+extends 'CHI::Driver::Memory';
+__PACKAGE__->meta->make_immutable();
 
 sub store {
     my ( $self, $key, $data ) = @_;
