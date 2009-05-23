@@ -34,7 +34,7 @@ Jonathan Swartz
 
 Copyright (C) 2007 Jonathan Swartz, all rights reserved.
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
