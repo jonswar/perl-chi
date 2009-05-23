@@ -7,6 +7,10 @@ use base qw(CHI::t::Driver::Subcache);
 
 my $root_dir;
 
+sub testing_driver_class {
+    return 'CHI::Driver::File';
+}
+
 sub new_cache_options {
     my $self = shift;
 
@@ -14,7 +18,6 @@ sub new_cache_options {
       tempdir( "chi-driver-subcache-mirror-XXXX", TMPDIR => 1, CLEANUP => 1 );
     return (
         $self->SUPER::new_cache_options(),
-        driver          => 'File',
         depth           => 2,
         root_dir        => $root_dir,
         mirror_to_cache => { driver => 'File', depth => 3 },
