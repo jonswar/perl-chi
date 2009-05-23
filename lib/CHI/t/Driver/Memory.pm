@@ -56,7 +56,7 @@ sub test_different_datastores : Tests(1) {
 
 sub test_lru_discard : Tests(2) {
     my $self = shift;
-    my $cache = $self->new_cache( max_size => 41 );
+    my $cache = $self->new_cleared_cache( max_size => 41 );
     is( $cache->discard_policy, 'lru' );
     my $value_20 = 'x' x 6;
     foreach my $key ( map { "key$_" } qw(1 2 3 4 5 6 5 6 5 3 2) ) {
