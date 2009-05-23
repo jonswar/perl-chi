@@ -78,6 +78,12 @@ has 'discard_timeout' => (
     default => 10
 );
 
+# These methods must be implemented by subclass
+foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
+    __PACKAGE__->meta->add_method( $method =>
+          sub { die "method '$method' must be implemented by subclass" } );
+}
+
 __PACKAGE__->meta->make_immutable();
 
 # Given a hash of params, return the subset that are not in CHI's common parameters.
@@ -98,20 +104,12 @@ sub non_common_constructor_params {
     };
 }
 
-# These methods must be implemented by subclass
-foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
-    no strict 'refs';
-    *{ __PACKAGE__ . "::$method" } =
-      sub { die "method '$method' must be implemented by subclass" };
-}
-
 sub declare_unsupported_methods {
     my ( $class, @methods ) = @_;
 
     foreach my $method (@methods) {
-        no strict 'refs';
-        *{ $class . "::$method" } =
-          sub { croak "method '$method' not supported by '$class'" };
+        $class->meta->add_method( $method =>
+              sub { croak "method '$method' not supported by '$class'" } );
     }
 }
 

@@ -11,13 +11,14 @@ use warnings;
 has 'msgs' => ( is => 'ro' );
 
 foreach my $level (qw(fatal error warn info debug)) {
-    no strict 'refs';
-    *{ __PACKAGE__ . "::$level" } = sub {
-        my ( $self, $msg ) = @_;
-        $self->{msgs} ||= [];
-        push( @{ $self->{msgs} }, $msg );
-    };
-    *{ __PACKAGE__ . "::is_$level" } = sub { 1 };
+    __PACKAGE__->meta->add_method(
+        $level => sub {
+            my ( $self, $msg ) = @_;
+            $self->{msgs} ||= [];
+            push( @{ $self->{msgs} }, $msg );
+        }
+    );
+    __PACKAGE__->meta->add_method( "is_$level" => sub { 1 } );
 }
 
 __PACKAGE__->meta->make_immutable();
