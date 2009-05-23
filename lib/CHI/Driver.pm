@@ -155,8 +155,7 @@ sub BUILD {
     #
     $self->{constructor_params} = $params;
 
-    # Every driver gets the Universal role (we could use a 'with', but this is
-    # where the other roles are applied)
+    # Every driver gets the Universal role
     #
     CHI::Driver::Role::Universal->meta->apply($self);
 
