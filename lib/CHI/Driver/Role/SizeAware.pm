@@ -4,17 +4,7 @@ use Moose::Role;
 use strict;
 use warnings;
 
-use constant Reserved_Key_Prefix =>
-  '_CHI_RESERVED_';    # XXX could use a better name
-use constant Size_Key => Reserved_Key_Prefix . 'SIZE';
-
-around 'get_keys' => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    # Call driver get_keys, then filter out reserved CHI keys
-    return grep { index( $_, Reserved_Key_Prefix ) == -1 } $self->$orig(@_);
-};
+use constant Size_Key => 'CHI_SizeAware_size';
 
 after 'clear' => sub {
     my $self = shift;
@@ -69,14 +59,14 @@ around 'set' => sub {
 sub get_size {
     my ($self) = @_;
 
-    my $size = $self->fetch(Size_Key) || 0;
+    my $size = $self->metacache->get(Size_Key) || 0;
     return $size;
 }
 
 sub _set_size {
     my ( $self, $new_size ) = @_;
 
-    $self->store( Size_Key, $new_size );
+    $self->metacache->set( Size_Key, $new_size );
 }
 
 sub _add_to_size {
