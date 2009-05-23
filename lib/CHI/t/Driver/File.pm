@@ -81,7 +81,9 @@ sub test_path_to_key : Test(5) {
 {
 
     package CHI::t::Driver::File::NoTempDriver;
-    use base qw(CHI::Driver::File);
+    use Moose;
+    extends 'CHI::Driver::File';
+    __PACKAGE__->meta->make_immutable;
 
     sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;
@@ -92,7 +94,9 @@ sub test_path_to_key : Test(5) {
 {
 
     package CHI::t::Driver::File::BadTempDriver;
-    use base qw(CHI::Driver::File);
+    use Moose;
+    extends 'CHI::Driver::File';
+    __PACKAGE__->meta->make_immutable;
 
     sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;
@@ -162,7 +166,9 @@ sub test_root_dir_does_not_exist : Test(4) {
 
 sub test_ignore_bad_namespaces : Tests(1) {
     my $self  = shift;
-    my $cache = $self->{cache};
+    my $cache = $self->new_cleared_cache(
+        root_dir => tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 )
+    );
 
     foreach my $dir ( ".etc", "+2eetd", 'a@b', 'a+40c', "plain" ) {
         mkpath( join( "/", $cache->root_dir, $dir ) );
