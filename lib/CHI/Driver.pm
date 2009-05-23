@@ -1,6 +1,8 @@
 package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
+use CHI::Driver::Metacache;
+use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
 use CHI::Util qw(parse_duration parse_memory_size dp);
 use Module::Load::Conditional qw(can_load);
@@ -36,29 +38,30 @@ coerce 'Serializer' => from 'Str' => via {
 
 use constant Max_Time => 0xffffffff;
 
-has 'chi_root_class' => ( is => 'ro', init_arg => undef );
+has 'chi_root_class'     => ( is => 'ro' );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
-has 'expires_at'     => ( is => 'rw', default => Max_Time );
-has 'expires_in'     => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
-has 'expires_variance' => ( is => 'rw', default => 0.0 );
-has 'label'          => ( is => 'rw', builder => '_build_label' );
-has 'l1_cache'         => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
-has 'mirror_cache'     => ( is => 'ro', isa     => 'CHI::UnblessedHashRef' );
+has 'driver_class'       => ( is => 'ro' );
+has 'expires_at'         => ( is => 'rw', default => Max_Time );
+has 'expires_in'         => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
+has 'expires_variance' => ( is => 'rw', default    => 0.0 );
+has 'label'            => ( is => 'rw', lazy_build => 1 );
+has 'l1_cache'         => ( is => 'ro', isa        => 'CHI::UnblessedHashRef' );
+has 'mirror_cache'     => ( is => 'ro', isa        => 'CHI::UnblessedHashRef' );
 has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
 has 'parent_cache' => ( is => 'ro', init_arg => undef );
-has 'serializer'   => (
+has 'serializer' => (
     is      => 'ro',
     isa     => 'Serializer',
     coerce  => 1,
     default => sub { $default_serializer }
 );
-has 'short_driver_name' =>
-  ( is => 'ro', builder => '_build_short_driver_name' );
-has 'subcache_type' => ( is => 'ro', init_arg => undef );
-has 'subcaches'     => ( is => 'ro', default => sub { [] }, init_arg => undef );
+has 'short_driver_name' => ( is => 'ro', lazy_build => 1 );
+has 'subcache_type'     => ( is => 'ro', init_arg   => undef );
+has 'subcaches' => ( is => 'ro', default => sub { [] }, init_arg => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
+has 'metacache' => ( is => 'ro', lazy_build => 1 );
 
 # xx These should go in SizeAware role, but cannot right now because of the way
 # xx we apply role to instance
@@ -85,8 +88,6 @@ my %common_params =
 # List of parameter keys that initialize a subcache
 #
 my @subcache_types = qw(l1_cache mirror_cache);
-
-sub driver_class { my $self = shift; return ref($self) }
 
 sub non_common_constructor_params {
     my ( $class, $params ) = @_;
@@ -128,7 +129,13 @@ sub _build_short_driver_name {
 sub _build_label {
     my ($self) = @_;
 
-    return $self->_build_short_driver_name;
+    return $self->short_driver_name;
+}
+
+sub _build_metacache {
+    my $self = shift;
+
+    return CHI::Driver::Metacache->new( owner_cache => $self );
 }
 
 sub _build_data_serializer {
@@ -149,6 +156,11 @@ sub BUILD {
     # example. Hopefully this will not cause circular references...
     #
     $self->{constructor_params} = $params;
+
+    # Every driver gets the Universal role (we could use a 'with', but this is
+    # where the other roles are applied)
+    #
+    CHI::Driver::Role::Universal->meta->apply($self);
 
     # Turn on is_size_aware automatically if max_size is defined
     #
@@ -524,7 +536,7 @@ sub is_empty {
 sub is_subcache {
     my ($self) = @_;
 
-    return defined( $self->{subcache_type} );
+    return defined( $self->subcache_type );
 }
 
 sub _set_object {
@@ -585,7 +597,7 @@ sub _describe_cache_get {
     my ( $self, $key ) = @_;
 
     return sprintf( "cache get for namespace='%s', key='%s', cache='%s'",
-        $self->{namespace}, $key, $self->{label} );
+        $self->namespace, $key, $self->label );
 }
 
 sub _describe_cache_set {
@@ -593,7 +605,7 @@ sub _describe_cache_set {
 
     return sprintf(
         "cache set for namespace='%s', key='%s', size=%d, expires='%s', cache='%s'",
-        $self->{namespace},
+        $self->namespace,
         $key,
         length($value),
         defined($expires_in)
@@ -601,7 +613,7 @@ sub _describe_cache_set {
             Time::Duration::duration_exact($expires_in)
           )
         : 'never',
-        $self->{label}
+        $self->label
     );
 }
 
@@ -633,6 +645,11 @@ Jonathan Swartz
 Copyright (C) 2007 Jonathan Swartz.
 
 This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+the same terms a
+
+s Perl its
+
+elf.
+
 
 =cut
