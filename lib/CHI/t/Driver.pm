@@ -58,6 +58,14 @@ sub new_cache {
     return CHI->new( $self->new_cache_options(), @_ );
 }
 
+sub new_cleared_cache {
+    my $self = shift;
+
+    my $cache = $self->new_cache(@_);
+    $cache->clear();
+    return $cache;
+}
+
 sub new_cache_options {
     my $self = shift;
 
@@ -647,7 +655,7 @@ sub test_l1_cache : Test(228) {
     my ( $cache, $l1_cache );
 
     return "skipping - no support for clear" unless $self->supports_clear();
-    
+
     my $test_l1_cache = sub {
 
         is( $l1_cache->subcache_type, "l1_cache" );
@@ -964,9 +972,9 @@ sub _test_common_subcache_features {
 }
 
 sub test_clear : Tests {
-    my $self  = shift;
-    my $cache = $self->{cache};
-    my $cache2 = $self->new_cache(namespace => 'other');
+    my $self   = shift;
+    my $cache  = $self->{cache};
+    my $cache2 = $self->new_cache( namespace => 'other' );
     $self->num_tests( $self->{key_count} + 3 );
 
     if ( $self->supports_clear() ) {
@@ -979,7 +987,11 @@ sub test_clear : Tests {
             ok( !defined $cache->get($key),
                 "key '$keyname' no longer defined after clear" );
         }
-        cmp_set([$cache2->get_keys], [values(%{ $self->{keys}})], 'cache2 untouched by clear');
+        cmp_set(
+            [ $cache2->get_keys ],
+            [ values( %{ $self->{keys} } ) ],
+            'cache2 untouched by clear'
+        );
     }
     else {
         throws_ok(
@@ -1071,7 +1083,7 @@ sub test_size_awareness : Test(9) {
 
     ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
 
-    my $cache = $self->new_cache( is_size_aware => 1 );
+    my $cache = $self->new_cleared_cache( is_size_aware => 1 );
     is( $cache->get_size(), 0, "size is 0 for empty" );
     $cache->set( $key, $value );
     is_about( $cache->get_size, 20, "size is about 20 with one value" );
@@ -1092,9 +1104,10 @@ sub test_size_awareness : Test(9) {
 sub test_max_size : Test(22) {
     my $self = shift;
 
-    is($self->new_cache(max_size=>'30k')->max_size, 30*1024, 'max_size parsing');
-    
-    my $cache = $self->new_cache( max_size => 99 );
+    is( $self->new_cache( max_size => '30k' )->max_size,
+        30 * 1024, 'max_size parsing' );
+
+    my $cache = $self->new_cleared_cache( max_size => 99 );
     ok( $cache->is_size_aware, "is size aware when max_size specified" );
     my $value_20 = 'x' x 6;
 
@@ -1118,8 +1131,10 @@ sub test_custom_discard_policy : Test(10) {
         my @sorted_keys = sort( $c->get_keys );
         return sub { pop(@sorted_keys) };
     };
-    my $cache =
-      $self->new_cache( is_size_aware => 1, discard_policy => $highest_first );
+    my $cache = $self->new_cleared_cache(
+        is_size_aware  => 1,
+        discard_policy => $highest_first
+    );
     for ( my $j = 0 ; $j < 10 ; $j += 2 ) {
         $cache->clear();
         for ( my $i = 0 ; $i < 10 ; $i++ ) {
@@ -1137,20 +1152,24 @@ sub test_custom_discard_policy : Test(10) {
     }
 }
 
-sub test_discard_timeout : Test(3) {
+sub test_discard_timeout : Test(4) {
     my $self       = shift;
     my $bad_policy = sub {
         return sub { '1' };
     };
-    my $cache =
-      $self->new_cache( is_size_aware => 1, discard_policy => $bad_policy );
-    ok(defined($cache->discard_timeout) && $cache->discard_timeout > 1, "positive discard timeout");
+    my $cache = $self->new_cleared_cache(
+        is_size_aware  => 1,
+        discard_policy => $bad_policy
+    );
+    ok( defined( $cache->discard_timeout ) && $cache->discard_timeout > 1,
+        "positive discard timeout" );
     $cache->discard_timeout(2);
-    is($cache->discard_timeout, 2, "can set timeout");
+    is( $cache->discard_timeout, 2, "can set timeout" );
     my $start_time = time;
-    $cache->set(2, 2);
+    $cache->set( 2, 2 );
     throws_ok { $cache->discard_to_size(0) } qr/discard timeout .* reached/;
-    ok(time > $start_time && time < $start_time+5, "timed out in 2 seconds");
+    ok( time > $start_time && time < $start_time + 5,
+        "timed out in 2 seconds" );
 }
 
 sub test_size_awareness_with_subcaches : Test(19) {
@@ -1188,27 +1207,23 @@ sub test_size_awareness_with_subcaches : Test(19) {
         is( $c->get_keys, 20, "$label keys = 20" );
     };
 
-    $cache = $self->new_cache(
-        datastore => {},
-        l1_cache  => { driver => 'Memory', datastore => {}, max_size => 99 }
-    );
+    $cache = $self->new_cleared_cache(
+        l1_cache => { driver => 'Memory', datastore => {}, max_size => 99 } );
     $set_values->();
     $is_not_size_aware->($cache);
     $is_size_aware->($l1_cache);
 
-    $cache = $self->new_cache(
-        datastore => {},
-        l1_cache  => { driver => 'Memory', datastore => {}, max_size => 99 },
-        max_size  => 199
+    $cache = $self->new_cleared_cache(
+        l1_cache => { driver => 'Memory', datastore => {}, max_size => 99 },
+        max_size => 199
     );
     $set_values->();
     $is_size_aware->($cache);
     $is_size_aware->($l1_cache);
 
-    $cache = $self->new_cache(
-        datastore => {},
-        l1_cache  => { driver => 'Memory', datastore => {} },
-        max_size  => 199
+    $cache = $self->new_cleared_cache(
+        l1_cache => { driver => 'Memory', datastore => {} },
+        max_size => 199
     );
     $set_values->();
     $is_size_aware->($cache);
@@ -1283,6 +1298,16 @@ sub test_obj_ref : Tests(8) {
     ok( !defined($obj), "obj not defined before get" );
     $cache->get( $key, obj_ref => \$obj );
     $validate_obj->($obj);
+}
+
+sub test_metacache : Tests(3) {
+    my $self  = shift;
+    my $cache = $self->{cache};
+
+    ok( !defined( $cache->{metacache} ), "metacache is lazy" );
+    $cache->metacache->set( 'foo', 5 );
+    ok( defined( $cache->{metacache} ), "metacache autovivified" );
+    is( $cache->metacache->get('foo'), 5 );
 }
 
 sub test_scalar_return_values : Tests(5) {
