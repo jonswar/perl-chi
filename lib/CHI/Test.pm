@@ -8,8 +8,16 @@ use CHI::Util qw(require_dynamic);
 use strict;
 use warnings;
 
+# First package to use CHI::Test becomes the test class
+my $Test_Class;
+
+sub test_class {
+    return $Test_Class;
+}
+
 sub import {
     my $class = shift;
+    $Test_Class ||= caller();
     $class->export_to_level( 1, undef, @_ );
 }
 
