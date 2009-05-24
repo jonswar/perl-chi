@@ -158,6 +158,12 @@ unrelated code).
 
 =back
 
+=head1 DISCARD POLICY
+
+For L<CHI/SIZE AWARENESS|size aware> caches, this driver implements an 'LRU'
+policy, which discards the least recently used items first. This is the default
+policy.
+
 =head1 SEE ALSO
 
 CHI
