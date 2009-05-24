@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
   dump_one_line
   fast_catdir
   fast_catfile
+  has_moose_class
   parse_duration
   parse_memory_size
   read_dir
@@ -108,6 +109,13 @@ sub parse_memory_size {
     else {
         croak "cannot parse memory size '$size'";
     }
+}
+
+sub has_moose_class {
+    my ($obj) = @_;
+
+    my $meta = Class::MOP::class_of($obj);
+    return ( defined $meta && $meta->isa("Moose::Meta::Class") );
 }
 
 1;
