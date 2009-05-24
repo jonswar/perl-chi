@@ -383,8 +383,7 @@ sub get_keys_iterator {
     my ($self) = @_;
 
     my @keys = $self->get_keys();
-    my $iterator = sub { shift(@keys) };
-    return $iterator;
+    return sub { shift(@keys) };
 }
 
 sub clear {
