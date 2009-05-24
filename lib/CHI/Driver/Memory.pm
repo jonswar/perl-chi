@@ -82,7 +82,7 @@ sub get_namespaces {
     return keys( %{ $self->{datastore} } );
 }
 
-sub discard_iterator_lru {
+sub discard_policy_lru {
     my ($self) = @_;
 
     my $last_used_time = $self->{metadata_for_namespace}->{last_used_time};

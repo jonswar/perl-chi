@@ -180,4 +180,10 @@ sub test_ignore_bad_namespaces : Tests(1) {
     );
 }
 
+sub test_default_discard : Tests(1) {
+    my $self = shift;
+    my $cache = $self->new_cleared_cache( is_size_aware => 1 );
+    is( $cache->discard_policy, 'arbitrary' );
+}
+
 1;

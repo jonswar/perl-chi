@@ -124,18 +124,18 @@ sub _get_iterator_for_discard_policy {
         return $discard_policy->($self);
     }
     else {
-        my $discard_sub = "discard_iterator_" . $discard_policy;
-        if ( $self->can($discard_sub) ) {
-            return $self->$discard_sub();
+        my $discard_policy_sub = "discard_policy_" . $discard_policy;
+        if ( $self->can($discard_policy_sub) ) {
+            return $self->$discard_policy_sub();
         }
         else {
             die sprintf( "cannot get iterator for discard policy '%s' ('%s')",
-                $discard_policy, $discard_sub );
+                $discard_policy, $discard_policy_sub );
         }
     }
 }
 
-sub discard_iterator_arbitrary {
+sub discard_policy_arbitrary {
     my ($self) = @_;
 
     return $self->get_keys_iterator();
