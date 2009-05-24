@@ -66,7 +66,7 @@ like
 
     CHI->new(driver_class => 'My::Internal::CHI::Driver');
 
-=head1 MOOSE/MOUSE
+=head1 MOOSE
 
 CHI driver classes must be L<Moose|Moose> based, since we use Moose roles to
 implement various features. For backward compatibility, non-Moose drivers
