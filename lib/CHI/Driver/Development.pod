@@ -69,8 +69,8 @@ like
 =head1 MOOSE
 
 CHI driver classes must be L<Moose|Moose> based, since we use Moose roles to
-implement various features. For backward compatibility, non-Moose drivers
-will still work at a basic level, but you will see an error if using any feature
+implement various features. For backward compatibility, non-Moose drivers will
+still work at a basic level, but you will see an error if using any feature
 requiring a role.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
@@ -98,64 +98,6 @@ The File driver uses a separate top-level directory for each namespace.
 =item *
 
 The FastMmap driver uses a separate Cache::FastMmap file for each namespace.
-
-=back
-
-=head1 TESTING
-
-CHI has a standard set of unit tests that should be used to ensure your driver
-is fully implementing the CHI API.
-
-To use CHI's tests (replacing I<MyDriver> with the name of your driver):
-
-=over
-
-=item *
-
-Install Test::Class, and add Test::Class to the build dependencies for your
-distribution.
-
-=item *
-
-Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your
-distribution containing:
-
-    package CHI::Driver::MyDriver::t::CHIDriverTests;
-    use strict;
-    use warnings;
-    use CHI::Test;
-    use base qw(CHI::t::Driver);
-
-    sub new_cache_options {
-        my $self = shift;
-
-        return (
-            $self->SUPER::new_cache_options(),
-            driver_class => 'CHI::Driver::MyDriver',
-
-            # Any other CHI->new parameters for your test driver
-        );
-    }
-
-    1;
-
-=item *
-
-Add a test script called I<t/CHI-driver-tests.t> to your distribution
-containing:
-
-    #!perl -w
-    use strict;
-    use warnings;
-    use CHI::Driver::MyDriver::t::CHIDriverTests;
-    CHI::Driver::MyDriver::t::CHIDriverTests->runtests;
-
-=item *
-
-You may need to override other methods in
-I<CHI::Driver::MyDriver::t::CHIDriverTests>, e.g. to skip tests that do not
-apply to your driver. See CHI::t::Driver::Memory and CHI::t::Driver::File in
-this distribution for examples.
 
 =back
 
@@ -247,6 +189,94 @@ expired keys.
 
 Return namespaces associated with the cache. It is acceptable to either include
 or omit namespaces with no valid keys.
+
+=back
+
+=head1 DISCARD POLICIES
+
+You can create new discard policies for L<CHI/SIZE AWARENESS|size aware>
+caches, to choose items to discard when the cache gets full. For example, the
+Memory driver implements an LRU policy.
+
+To implement a discard policy I<foo>, define a subroutine
+I<discard_policy_foo>, which takes a driver object and returns a closure that
+returns one key each time it is called. The closure should maintain state so
+that each key is only returned once.
+
+For example, here's the Memory driver's LRU implementation. It utilizes a hash
+containing the last used time for each key.
+
+   sub discard_policy_lru {
+       my ($self) = @_;
+   
+       my $last_used_time = $self->{metadata_for_namespace}->{last_used_time};
+       my @keys_in_lru_order =
+         sort { $last_used_time->{$a} <=> $last_used_time->{$b} } $self->get_keys;
+       return sub {
+           shift(@keys_in_lru_order);
+       };
+   }
+
+You can set the default discard policy for your driver by overriding
+default_discard_policy; otherwise the default is 'arbitrary'.
+
+   sub default_discard_policy { 'lru' }
+
+=head1 TESTING
+
+CHI has a standard set of unit tests that should be used to ensure your driver
+is fully implementing the CHI API.
+
+To use CHI's tests (replacing I<MyDriver> with the name of your driver):
+
+=over
+
+=item *
+
+Install Test::Class, and add Test::Class to the build dependencies for your
+distribution.
+
+=item *
+
+Add a module called I<CHI::Driver::MyDriver::t::CHIDriverTests> to your
+distribution containing:
+
+    package CHI::Driver::MyDriver::t::CHIDriverTests;
+    use strict;
+    use warnings;
+    use CHI::Test;
+    use base qw(CHI::t::Driver);
+
+    sub new_cache_options {
+        my $self = shift;
+
+        return (
+            $self->SUPER::new_cache_options(),
+            driver_class => 'CHI::Driver::MyDriver',
+
+            # Any other CHI->new parameters for your test driver
+        );
+    }
+
+    1;
+
+=item *
+
+Add a test script called I<t/CHI-driver-tests.t> to your distribution
+containing:
+
+    #!perl -w
+    use strict;
+    use warnings;
+    use CHI::Driver::MyDriver::t::CHIDriverTests;
+    CHI::Driver::MyDriver::t::CHIDriverTests->runtests;
+
+=item *
+
+You may need to override other methods in
+I<CHI::Driver::MyDriver::t::CHIDriverTests>, e.g. to skip tests that do not
+apply to your driver. See CHI::t::Driver::Memory and CHI::t::Driver::File in
+this distribution for examples.
 
 =back
 
