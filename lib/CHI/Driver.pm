@@ -4,7 +4,8 @@ use CHI::CacheObject;
 use CHI::Driver::Metacache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
-use CHI::Util qw(parse_duration parse_memory_size dp);
+use CHI::Util
+  qw(has_moose_class parse_duration parse_memory_size require_dynamic);
 use Module::Load::Conditional qw(can_load);
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -155,15 +156,14 @@ sub BUILD {
     #
     $self->{constructor_params} = $params;
 
-    # Every driver gets the Universal role
+    # Every Moose driver gets the Universal role
     #
-    CHI::Driver::Role::Universal->meta->apply($self);
+    $self->_apply_role( 'CHI::Driver::Role::Universal', 1 );
 
     # Turn on is_size_aware automatically if max_size is defined
     #
     if ( defined( $self->{max_size} ) || defined( $self->{is_size_aware} ) ) {
-        require CHI::Driver::Role::SizeAware;
-        CHI::Driver::Role::SizeAware->meta->apply($self);
+        $self->_apply_role( 'CHI::Driver::Role::SizeAware', 0 );
         $self->{is_size_aware} = 1;
     }
 
@@ -173,10 +173,28 @@ sub BUILD {
     foreach my $subcache_type (@subcache_types) {
         if ( my $subcache_params = $params->{$subcache_type} ) {
             if ( !@{ $self->{subcaches} } ) {
-                require CHI::Driver::Role::HasSubcaches;
-                CHI::Driver::Role::HasSubcaches->meta->apply($self);
+                $self->_apply_role( 'CHI::Driver::Role::HasSubcaches', 0 );
             }
             $self->add_subcache( $params, $subcache_type, $subcache_params );
+        }
+    }
+}
+
+sub _apply_role {
+    my ( $self, $role, $ignore_error ) = @_;
+
+    if ( !$role->can('meta') ) {
+        require_dynamic($role);
+    }
+    eval { $role->meta->apply($self) };
+    if ($@) {
+        if ( has_moose_class($self) ) {
+            die $@;
+        }
+        else {
+            if ( !$ignore_error ) {
+                die "cannot apply role to non-Moose driver";
+            }
         }
     }
 }
