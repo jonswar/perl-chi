@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.23  May 13, 2009
+0.23  May 24, 2009
 
 ** Incompatible Changes **
   - ** Drivers must now be Moose based to be fully functional, since we use Moose roles to
