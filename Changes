@@ -16,6 +16,8 @@ Revision history for CHI
 * Implementation
   - Added a metacache, which resides in a separate _CHI_META namespace and stores meta-information
     about caches. Initially for tracking size for size-aware caches.
+  - Added dependency on Carp::Assert
+  - Eliminate boilerplate in test scripts
 
 * Fixes
   - Croak if specify both 'global' and 'datastore' for memory driver
