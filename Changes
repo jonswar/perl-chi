@@ -4,6 +4,22 @@ Revision history for CHI
 
 0.23  May 13, 2009
 
+** Incompatible Changes **
+  - ** Drivers must now be Moose based to be fully functional, since we use Moose roles to
+    implement various features. For backward compatibility, non-Moose drivers will still work
+    at a basic level (for now).
+
+* Improvements
+  - Added concepts of size awareness, maximum size, and discard policies for any driver.
+    See "Size Awareness" section of docs.
+
+* Implementation
+  - Added a metacache, which resides in a separate _CHI_META namespace and stores meta-information
+    about caches. Initially for tracking size for size-aware caches.
+
+* Fixes
+  - Croak if specify both 'global' and 'datastore' for memory driver
+
 0.22  May 13, 2009
 
 * Implementation
