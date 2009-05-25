@@ -68,10 +68,10 @@ like
 
 =head1 MOOSE
 
-CHI driver classes must be L<Moose|Moose> based, since we use Moose roles to
-implement various features. For backward compatibility, non-Moose drivers will
-still work at a basic level, but you will see an error if using any feature
-requiring a role.
+CHI driver classes must be L<Moose|Moose> based to be fully functional, since
+we use Moose roles to implement various features. For backward compatibility,
+non-Moose drivers will still work at a basic level, but you will see an error
+if using any feature requiring a role.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
