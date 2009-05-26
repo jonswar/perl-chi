@@ -11,6 +11,7 @@ build_requires 'Date::Parse' => 0;
 build_requires 'Test::Class' => 0;
 build_requires 'Test::Deep'  => 0;
 build_requires 'Test::More'  => 0;
+build_requires 'Test::Warn'  => 0;
 
 requires 'Carp::Assert'              => '0.20';
 requires 'Data::UUID'                => 0;
