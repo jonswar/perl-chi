@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.24  May 24, 2009
+0.24  May 25, 2009
 
 * Fixes
   - Reverted new test scripts to previous format, as they were causing problems with other
