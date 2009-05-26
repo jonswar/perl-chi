@@ -4,12 +4,8 @@ Revision history for CHI
 
 0.241  May 26, 2009
 
-0.21  May 26, 2009
-
-0.241  May 26, 2009
-
 * Fixes
-  - Actually add Moose to requirements, rather than Any::Moose
+  - Actually add Moose to requirements, in place of Any::Moose
 
 0.24  May 26, 2009
 
