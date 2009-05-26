@@ -487,7 +487,7 @@ sub test_serializers : Tests {
     ok( scalar(@variants), "some variants ok" );
 
     my $initial_count        = 5;
-    my $test_key_types_count = $self->{key_count} * 6 + 1;
+    my $test_key_types_count = $self->{key_count};
     my $test_count           = $initial_count +
       scalar(@variants) * scalar(@modes) * ( 1 + $test_key_types_count );
 
@@ -521,7 +521,15 @@ sub test_serializers : Tests {
             is( $cache->serializer->serializer,
                 $variant, "serializer = $variant, mode = $mode" );
             $self->{cache} = $cache;
-            $self->test_key_types();
+
+            foreach my $keyname ( @{ $self->{keynames} } ) {
+                my $key   = $self->{keys}->{$keyname};
+                my $value = $self->{values}->{$keyname};
+                $cache->set( $key, $value );
+                cmp_deeply( $cache->get($key), $value,
+                    "hit for key '$keyname'" );
+            }
+
             $self->num_tests($test_count);
         }
     }
