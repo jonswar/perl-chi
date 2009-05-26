@@ -12,7 +12,6 @@ BEGIN {
         @INC = uniq( grep { !m{^(/Library|/Network/Library)} } @INC );
         push( @INC,
             map { $_, "$_/darwin-thread-multi-2level" } $ENV{PERL_LOCAL_LIB} );
-        print STDERR "INC = " . join( ", ", @INC ) . "\n";
     }
 }
 use CHI;
