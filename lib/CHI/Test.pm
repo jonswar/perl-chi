@@ -2,6 +2,8 @@
 #
 package CHI::Test;
 use List::MoreUtils qw(uniq);
+use strict;
+use warnings;
 
 BEGIN {
 
@@ -9,17 +11,18 @@ BEGIN {
     # OS X specific for now
     #
     if ( my $local_lib = $ENV{PERL_LOCAL_LIB} ) {
-        @INC = uniq( grep { !m{^(/Library|/Network/Library)} } @INC );
+        my @new_inc = uniq( grep { !m{^(/Library|/Network/Library)} } @INC );
+        @INC = @new_inc;    ## no critic (RequireLocalizedPunctuationVars)
+        warn "\nUsing local lib '$local_lib'\n";
         push( @INC,
-            map { $_, "$_/darwin-thread-multi-2level" } $ENV{PERL_LOCAL_LIB} );
+            map { "$ENV{PERL_LOCAL_LIB}/lib/perl5$_" }
+              ( "", "/darwin-thread-multi-2level" ) );
     }
 }
 use CHI;
 use CHI::Driver::Memory;
 use CHI::Test::Logger;
 use CHI::Util qw(require_dynamic);
-use strict;
-use warnings;
 
 sub import {
     my $class = shift;
