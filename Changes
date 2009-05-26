@@ -4,6 +4,10 @@ Revision history for CHI
 
 0.24  May 24, 2009
 
+* Fixes
+  - Reverted new test scripts to previous format, as they were causing problems with other
+    driver distributions
+
 0.23  May 24, 2009
 
 ** Incompatible Changes **
