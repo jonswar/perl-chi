@@ -1,5 +1,4 @@
 package CHI::Test::Class;
-use CHI::Util qw(require_dynamic);
 use Getopt::Long;
 use Module::Load::Conditional qw(can_load);
 use strict;
