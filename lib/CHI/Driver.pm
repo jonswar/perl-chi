@@ -193,7 +193,8 @@ sub _apply_role {
         }
         else {
             if ( !$ignore_error ) {
-                die "cannot apply role to non-Moose driver";
+                die sprintf( "cannot apply role to non-Moose driver '%s'",
+                    ref($self) );
             }
         }
     }

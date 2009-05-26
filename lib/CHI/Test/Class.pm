@@ -55,9 +55,4 @@ sub required_modules {
     return {};
 }
 
-# magic borrowed from Test::Class::Load
-INIT {
-    CHI::Test->test_class->runtests;
-}
-
 1;
