@@ -18,7 +18,7 @@ data
 dist
 docs
 inc
-localcpan
+localcpan*
 pm_to_blib*
 tmp
 wiki
