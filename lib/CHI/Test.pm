@@ -1,6 +1,20 @@
 # $Id: $
 #
 package CHI::Test;
+use List::MoreUtils qw(uniq);
+
+BEGIN {
+
+    # If PERL_LOCAL_LIB is set, run tests with libs restricted to PERL_LOCAL_LIB
+    # OS X specific for now
+    #
+    if ( my $local_lib = $ENV{PERL_LOCAL_LIB} ) {
+        @INC = uniq( grep { !m{^(/Library|/Network/Library)} } @INC );
+        push( @INC,
+            map { $_, "$_/darwin-thread-multi-2level" } $ENV{PERL_LOCAL_LIB} );
+        print STDERR "INC = " . join( ", ", @INC ) . "\n";
+    }
+}
 use CHI;
 use CHI::Driver::Memory;
 use CHI::Test::Logger;
