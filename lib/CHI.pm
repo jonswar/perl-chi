@@ -17,8 +17,10 @@ sub logger {
     return $Logger;
 }
 
+my %final_class_seen;
+
 sub new {
-    my ( $class, %params ) = @_;
+    my ( $chi_root_class, %params ) = @_;
 
     my $driver_class;
     if ( my $driver = delete( $params{driver} ) ) {
@@ -36,8 +38,31 @@ sub new {
         Class::MOP::load_class($driver_class);
     }
 
-    return $driver_class->new(
-        chi_root_class => $class,
+    # Select roles depending on presence of certain arguments. Everyone gets
+    # the Universal role.
+    #
+    my @roles = ('CHI::Driver::Role::Universal');
+    if ( exists( $params{max_size} ) || exists( $params{is_size_aware} ) ) {
+        push( @roles, 'CHI::Driver::Role::SizeAware' );
+    }
+    if ( exists( $params{l1_cache} ) || exists( $params{mirror_cache} ) ) {
+        push( @roles, 'CHI::Driver::Role::HasSubcaches' );
+    }
+
+    # Select a final class based on the driver class and roles, creating it
+    # if necessary - adapted from MooseX::Traits
+    #
+    my $meta = Moose::Meta::Class->create_anon_class(
+        superclasses => [$driver_class],
+        roles        => \@roles,
+        cache        => 1
+    );
+    my $final_class = $meta->name;
+    $meta->add_method( 'meta' => sub { $meta } )
+      if !$final_class_seen{$final_class}++;
+
+    return $final_class->new(
+        chi_root_class => $chi_root_class,
         driver_class   => $driver_class,
         %params
     );
@@ -1033,7 +1058,9 @@ CHI is provided "as is" and without any express or implied warranties,
 including, without limitation, the implied warranties of merchantibility and
 fitness for a particular purpose.
 
-This program is free software; you can redistribute it and/or modify it under
+This program is free software; you can redistribute
+
+ it and/or modify it under
 the same terms as Perl itself.
 
 =cut

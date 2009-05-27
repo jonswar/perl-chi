@@ -1,9 +1,30 @@
 package CHI::Driver::Role::HasSubcaches;
 use Moose::Role;
 use Hash::MoreUtils qw(slice_exists);
+use CHI::Util qw(dp);
 use Scalar::Util qw(weaken);
 use strict;
 use warnings;
+
+has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+
+# List of parameter keys that initialize a subcache
+#
+my @subcache_types = qw(l1_cache mirror_cache);
+
+after 'BUILD_roles' => sub {
+    my ( $self, $params ) = @_;
+
+    # Create subcaches as necessary (l1_cache, mirror_cache)
+    # Eventually might allow existing caches to be passed
+    #
+    foreach my $subcache_type (@subcache_types) {
+        if ( my $subcache_params = $params->{$subcache_type} ) {
+            $self->add_subcache( $params, $subcache_type, $subcache_params );
+        }
+    }
+};
 
 # List of parameters that are automatically inherited by a subcache
 #
@@ -11,8 +32,7 @@ my @subcache_inherited_param_keys = (
     qw(expires_at expires_in expires_variance namespace on_get_error on_set_error)
 );
 
-# Add a subcache with the specified type and params - called from
-# CHI::Driver::BUILD
+# Add a subcache with the specified type and params - called from BUILD
 #
 sub add_subcache {
     my ( $self, $params, $subcache_type, $subcache_params ) = @_;

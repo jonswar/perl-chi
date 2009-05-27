@@ -4,7 +4,34 @@ use Moose::Role;
 use strict;
 use warnings;
 
+has 'max_size' => ( is => 'rw', isa => 'CHI::Types::MemorySize', coerce => 1 );
+has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
+has 'discard_policy' => (
+    is      => 'ro',
+    isa     => 'Maybe[CHI::Types::DiscardPolicy]',
+    builder => '_build_discard_policy',
+);
+has 'discard_timeout' => (
+    is      => 'rw',
+    isa     => 'Num',
+    default => 10
+);
+
 use constant Size_Key => 'CHI_SizeAware_size';
+
+sub _build_discard_policy {
+    my $self = shift;
+
+    return $self->can('default_discard_policy')
+      ? $self->default_discard_policy
+      : 'arbitrary';
+}
+
+after 'BUILD_roles' => sub {
+    my ( $self, $params ) = @_;
+
+    $self->{is_size_aware} = 1;
+};
 
 after 'clear' => sub {
     my $self = shift;

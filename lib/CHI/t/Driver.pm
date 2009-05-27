@@ -1085,11 +1085,16 @@ sub test_cache_object : Test(6) {
     );
 }
 
-sub test_size_awareness : Test(9) {
+sub test_size_awareness : Test(11) {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
 
-    ok( !$self->{cache}->is_size_aware(), "not size aware by default" );
+    ok( !$self->new_cleared_cache()->is_size_aware(),
+        "not size aware by default" );
+    ok( $self->new_cleared_cache( is_size_aware => 1 )->is_size_aware(),
+        "is_size_aware turns on size awareness" );
+    ok( $self->new_cleared_cache( max_size => 10 )->is_size_aware(),
+        "max_size turns on size awareness" );
 
     my $cache = $self->new_cleared_cache( is_size_aware => 1 );
     is( $cache->get_size(), 0, "size is 0 for empty" );
