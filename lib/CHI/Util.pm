@@ -18,7 +18,6 @@ our @EXPORT_OK = qw(
   parse_duration
   parse_memory_size
   read_dir
-  require_dynamic
   unique_id
 );
 
@@ -56,13 +55,6 @@ sub read_dir {
     local *DIRH;
     opendir( DIRH, $dir ) or croak "cannot open '$dir': $!";
     return grep { $_ ne "." && $_ ne ".." } readdir(DIRH);
-}
-
-sub require_dynamic {
-    my ($class) = @_;
-
-    eval "require $class";    ## no critic (ProhibitStringyEval)
-    croak $@ if $@;
 }
 
 {

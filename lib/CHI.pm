@@ -2,7 +2,6 @@ package CHI;
 use 5.006;
 use Carp;
 use CHI::NullLogger;
-use CHI::Util qw(require_dynamic);
 use strict;
 use warnings;
 
@@ -34,7 +33,7 @@ sub new {
     # Load class if it hasn't been loaded or defined in-line already
     #
     unless ( $driver_class->can('fetch') ) {
-        require_dynamic($driver_class);
+        Class::MOP::load_class($driver_class);
     }
 
     return $driver_class->new(

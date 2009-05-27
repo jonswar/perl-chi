@@ -4,7 +4,7 @@ use CHI::CacheObject;
 use CHI::Driver::Metacache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
-use CHI::Util qw(has_moose_class parse_duration require_dynamic);
+use CHI::Util qw(has_moose_class parse_duration);
 use CHI::Types;
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -153,7 +153,7 @@ sub _apply_role {
     my ( $self, $role, $ignore_error ) = @_;
 
     if ( !$role->can('meta') ) {
-        require_dynamic($role);
+        Class::MOP::load_class($role);
     }
     eval { $role->meta->apply($self) };
     if ($@) {

@@ -1,7 +1,6 @@
 package CHI::Driver::CacheCache;
 use Cache::Cache;
 use Carp;
-use CHI::Util qw(require_dynamic);
 use Moose;
 use strict;
 use warnings;
@@ -26,7 +25,7 @@ sub _build_contained_cache {
     my $cc_options = $self->{cc_options};
     my %subparams  = ( namespace => $self->namespace );
 
-    require_dynamic($cc_class);
+    Class::MOP::load_class($cc_class);
 
     my %final_cc_params = ( %subparams, %{$cc_options} );
 

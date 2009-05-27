@@ -29,6 +29,8 @@ coerce 'CHI::Types::Serializer' => from 'Str' => via {
     _build_data_serializer( { serializer => $_, raw => 1 } );
 };
 
+__PACKAGE__->meta->make_immutable;
+
 my $data_serializer_loaded =
   can_load( modules => { 'Data::Serializer' => undef } );
 
