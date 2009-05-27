@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.25  May 26, 2009
 
+* Implementation
+  - Moved all Moose types to CHI::Types
+
 0.241  May 26, 2009
 
 * Fixes
