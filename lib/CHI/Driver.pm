@@ -4,9 +4,8 @@ use CHI::CacheObject;
 use CHI::Driver::Metacache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
-use CHI::Util
-  qw(has_moose_class parse_duration parse_memory_size require_dynamic);
-use Module::Load::Conditional qw(can_load);
+use CHI::Util qw(has_moose_class parse_duration require_dynamic);
+use CHI::Types;
 use Moose;
 use Moose::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
@@ -14,28 +13,7 @@ use Time::Duration;
 use strict;
 use warnings;
 
-type OnError => where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)$/ };
-
-subtype 'CHI::Duration' => as 'Int' => where { $_ > 0 };
-coerce 'CHI::Duration' => from 'Str' => via { parse_duration($_) };
-
-subtype 'CHI::MemorySize' => as 'Int' => where { $_ > 0 };
-coerce 'CHI::MemorySize' => from 'Str' => via { parse_memory_size($_) };
-
-subtype 'CHI::UnblessedHashRef' => as 'HashRef' => where { !blessed($_) };
-
-type 'CHI::DiscardPolicy' => where { !ref($_) || ref($_) eq 'CODE' };
-
 my $default_serializer = CHI::Serializer::Storable->new();
-my $data_serializer_loaded =
-  can_load( modules => { 'Data::Serializer' => undef } );
-subtype Serializer => as 'Object';
-coerce 'Serializer' => from 'HashRef' => via {
-    _build_data_serializer($_);
-};
-coerce 'Serializer' => from 'Str' => via {
-    _build_data_serializer( { serializer => $_, raw => 1 } );
-};
 
 use constant Max_Time => 0xffffffff;
 
@@ -43,18 +21,20 @@ has 'chi_root_class'     => ( is => 'ro' );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
 has 'expires_at'         => ( is => 'rw', default => Max_Time );
-has 'expires_in'         => ( is => 'rw', isa => 'CHI::Duration', coerce => 1 );
+has 'expires_in' => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default    => 0.0 );
 has 'label'            => ( is => 'rw', lazy_build => 1 );
-has 'l1_cache'         => ( is => 'ro', isa        => 'CHI::UnblessedHashRef' );
-has 'mirror_cache'     => ( is => 'ro', isa        => 'CHI::UnblessedHashRef' );
-has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
-has 'on_get_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
-has 'on_set_error' => ( is => 'rw', isa => 'OnError', default => 'log' );
+has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'namespace'    => ( is => 'ro', isa => 'Str', default => 'Default' );
+has 'on_get_error' =>
+  ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
+has 'on_set_error' =>
+  ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
 has 'parent_cache' => ( is => 'ro', init_arg => undef );
 has 'serializer' => (
     is      => 'ro',
-    isa     => 'Serializer',
+    isa     => 'CHI::Types::Serializer',
     coerce  => 1,
     default => sub { $default_serializer }
 );
@@ -66,11 +46,11 @@ has 'metacache' => ( is => 'ro', lazy_build => 1 );
 
 # xx These should go in SizeAware role, but cannot right now because of the way
 # xx we apply role to instance
-has 'max_size' => ( is => 'rw', isa => 'CHI::MemorySize', coerce => 1 );
+has 'max_size' => ( is => 'rw', isa => 'CHI::Types::MemorySize', coerce => 1 );
 has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'discard_policy' => (
     is      => 'ro',
-    isa     => 'Maybe[CHI::DiscardPolicy]',
+    isa     => 'Maybe[CHI::Types::DiscardPolicy]',
     builder => 'default_discard_policy'
 );
 has 'discard_timeout' => (
@@ -135,17 +115,6 @@ sub _build_metacache {
     my $self = shift;
 
     return CHI::Driver::Metacache->new( owner_cache => $self );
-}
-
-sub _build_data_serializer {
-    my ($params) = @_;
-
-    if ($data_serializer_loaded) {
-        return Data::Serializer->new(%$params);
-    }
-    else {
-        croak "Data::Serializer not loaded, cannot handle serializer argument";
-    }
 }
 
 sub BUILD {
