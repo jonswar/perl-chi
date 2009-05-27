@@ -6,6 +6,7 @@ Revision history for CHI
 
 * Implementation
   - Moved all Moose types to CHI::Types
+  - Replaced require_dynamic with Class::MOP::load_class
 
 0.241  May 26, 2009
 
