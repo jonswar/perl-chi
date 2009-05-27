@@ -4,7 +4,12 @@ Revision history for CHI
 
 0.25  May 26, 2009
 
+* Improvements
+  - Non-Moose drivers should be fully functional again (reversing the change in 0.23)
+
 * Implementation
+  - Moved role composition to CHI.pm factory (ala MooseX::Traits), so that each role can have its
+    own attributes and initialization
   - Moved all Moose types to CHI::Types
   - Replaced require_dynamic with Class::MOP::load_class
 
