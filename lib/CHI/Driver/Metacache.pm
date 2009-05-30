@@ -16,7 +16,7 @@ sub _build_meta_cache {
 
     my $owner_cache = $self->owner_cache;
     my %params      = %{ $owner_cache->constructor_params };
-    delete( @params{qw(l1_cache mirror_cache chi_root_class)} );
+    delete( @params{qw(l1_cache mirror_cache parent_cache chi_root_class)} );
     $params{label}     = $owner_cache->label . " (meta)";
     $params{namespace} = CHI_Meta_Namespace;
     return $owner_cache->chi_root_class->new(%params);
