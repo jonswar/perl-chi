@@ -6,8 +6,9 @@ use Scalar::Util qw(weaken);
 use strict;
 use warnings;
 
-has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
-has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'l1_cache'     => ( is => 'ro', isa     => 'CHI::Types::UnblessedHashRef' );
+has 'mirror_cache' => ( is => 'ro', isa     => 'CHI::Types::UnblessedHashRef' );
+has 'subcaches'    => ( is => 'ro', default => sub { [] }, init_arg => undef );
 
 # List of parameter keys that initialize a subcache
 #
@@ -15,6 +16,8 @@ my @subcache_types = qw(l1_cache mirror_cache);
 
 after 'BUILD_roles' => sub {
     my ( $self, $params ) = @_;
+
+    $self->{has_subcaches} = 1;
 
     # Create subcaches as necessary (l1_cache, mirror_cache)
     # Eventually might allow existing caches to be passed
@@ -41,13 +44,14 @@ sub add_subcache {
     my %inherited_params =
       slice_exists( $params, @subcache_inherited_param_keys );
     my $default_label = $self->label . ":$subcache_type";
-    my $subcache      = $chi_root_class->new(
+
+    my $subcache = $chi_root_class->new(
         label => $default_label,
-        %inherited_params, %$subcache_params
+        %inherited_params, %$subcache_params,
+        is_subcache   => 1,
+        parent_cache  => $self,
+        subcache_type => $subcache_type,
     );
-    $subcache->{subcache_type} = $subcache_type;
-    $subcache->{parent_cache}  = $self;
-    weaken( $subcache->{parent_cache} );
     $self->{$subcache_type} = $subcache;
     push( @{ $self->{subcaches} }, $subcache );
 }
