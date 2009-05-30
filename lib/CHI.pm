@@ -43,10 +43,13 @@ sub new {
     #
     my @roles = ('CHI::Driver::Role::Universal');
     if ( exists( $params{max_size} ) || exists( $params{is_size_aware} ) ) {
-        push( @roles, 'CHI::Driver::Role::SizeAware' );
+        push( @roles, 'CHI::Driver::Role::IsSizeAware' );
     }
     if ( exists( $params{l1_cache} ) || exists( $params{mirror_cache} ) ) {
         push( @roles, 'CHI::Driver::Role::HasSubcaches' );
+    }
+    if ( $params{is_subcache} ) {
+        push( @roles, 'CHI::Driver::Role::IsSubcache' );
     }
 
     # Select a final class based on the driver class and roles, creating it
@@ -573,10 +576,7 @@ e.g.
     
 =item Standard read-only accessors
 
-    l1_cache
-    mirror_cache
     namespace
-    parent_cache
     serializer
     
 =back
@@ -674,6 +674,8 @@ As illustrated above, you create subcaches by passing the C<l1_cache> and/or
 C<mirror_cache> option to the CHI constructor. These options, in turn, should
 contain a hash of options to create the subcache with.
 
+The cache containing the subcache is called the I<parent cache>.
+
 The following options are automatically inherited by the subcache from the
 parent cache, if they are not specified explicitly:
 
@@ -732,35 +734,48 @@ have its own subcaches, and so on. e.g.
         }
     );
 
-=head2 Subcache-related methods
+=head2 Methods for parent caches
 
 =over
 
+=item has_subcaches( )
+
+Returns a boolean indicating whether this cache has subcaches.
+
 =item l1_cache( )
 
-Returns the L1 cache for this cache, if any.
+Returns the L1 cache for this cache, if any. Can only be called if
+I<has_subcaches> is true.
 
 =item mirror_cache( )
 
-Returns the mirror cache for this cache, if any.
+Returns the mirror cache for this cache, if any. Can only be called if
+I<has_subcaches> is true.
 
 =item subcaches( )
 
-Returns the subcaches for this cache, if any. Order is arbitrary.
+Returns the subcaches for this cache, in arbitrary order. Can only be called if
+I<has_subcaches> is true.
+
+=back
+
+=head2 Methods for subcaches
+
+=over
 
 =item is_subcache( )
 
-If this is a subcache, returns true, otherwise false.
+Returns a boolean indicating whether this is a subcache.
 
 =item subcache_type( )
 
-If this is a subcache, returns the type of subcache as a string, e.g.
-'l1_cache' or 'mirror_cache', otherwise undef.
+Returns the type of subcache as a string, e.g. 'l1_cache' or 'mirror_cache'.
+Can only be called if I<is_subcache> is true.
 
 =item parent_cache( )
 
-If this is a subcache, returns the parent cache (weakened to prevent circular
-reference), otherwise undef.
+Returns the parent cache (weakened to prevent circular reference).  Can only be
+called if I<is_subcache> is true.
 
 =back
 
