@@ -23,7 +23,10 @@ has 'driver_class'       => ( is => 'ro' );
 has 'expires_at'         => ( is => 'rw', default => Max_Time );
 has 'expires_in' => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
+has 'has_subcaches' =>
+  ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
+has 'is_subcache'   => ( is => 'ro', isa => 'Bool', default => undef );
 has 'label'     => ( is => 'rw', lazy_build => 1 );
 has 'metacache' => ( is => 'ro', lazy_build => 1 );
 has 'namespace' => ( is => 'ro', isa        => 'Str', default => 'Default' );
@@ -31,7 +34,6 @@ has 'on_get_error' =>
   ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
 has 'on_set_error' =>
   ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
-has 'parent_cache' => ( is => 'ro', init_arg => undef );
 has 'serializer' => (
     is      => 'ro',
     isa     => 'CHI::Types::Serializer',
@@ -39,8 +41,6 @@ has 'serializer' => (
     default => sub { $default_serializer }
 );
 has 'short_driver_name' => ( is => 'ro', lazy_build => 1 );
-has 'subcache_type'     => ( is => 'ro', init_arg   => undef );
-has 'subcaches' => ( is => 'ro', default => sub { [] }, init_arg => undef );
 
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
@@ -83,6 +83,9 @@ sub BUILD {
     # example. Hopefully this will not cause circular references...
     #
     $self->{constructor_params} = $params;
+    foreach my $param (qw(l1_cache mirror_cache parent_cache)) {
+        delete( $self->{constructor_params}->{$param} );
+    }
 
     # Call BUILD_roles on any of the roles that need initialization.
     #
