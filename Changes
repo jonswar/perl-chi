@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.25  Jun 1, 2009
+0.25  Jun 2, 2009
 
 * Improvements
   - Non-Moose drivers should be fully functional again (reversing the change in 0.23)
