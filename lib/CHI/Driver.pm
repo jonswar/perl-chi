@@ -82,7 +82,7 @@ sub BUILD {
     # Save off constructor params. Used to create metacache, for
     # example. Hopefully this will not cause circular references...
     #
-    $self->{constructor_params} = $params;
+    $self->{constructor_params} = {%$params};
     foreach my $param (qw(l1_cache mirror_cache parent_cache)) {
         delete( $self->{constructor_params}->{$param} );
     }
