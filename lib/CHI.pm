@@ -5,7 +5,7 @@ use CHI::NullLogger;
 use strict;
 use warnings;
 
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 
 our $Logger = CHI::NullLogger->new();    ## no critic
 
