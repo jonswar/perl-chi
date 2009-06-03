@@ -2,6 +2,7 @@ package CHI::t::Driver::Memory;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Test::Driver::Role::CheckKeyValidity;
 use Test::Warn;
 use base qw(CHI::t::Driver);
 
@@ -14,15 +15,23 @@ sub new_cache_options {
     return ( $self->SUPER::new_cache_options(), global => 1 );
 }
 
-# If new_cache called with datastore, ignore global flag (otherwise would be an error)
-#
 sub new_cache {
     my $self   = shift;
     my %params = @_;
+
+    # If new_cache called with datastore, ignore global flag (otherwise would be an error)
+    #
     if ( $params{datastore} ) {
         $params{global} = 0;
     }
-    return CHI->new( $self->new_cache_options(), %params );
+
+    # Check test key validity on every get and set - only necessary to do for one driver
+    #
+    $params{roles}       = ['CHI::Test::Driver::Role::CheckKeyValidity'];
+    $params{test_object} = $self;
+
+    my $cache = CHI->new( $self->new_cache_options(), %params );
+    return $cache;
 }
 
 sub test_short_driver_name : Tests(1) {
