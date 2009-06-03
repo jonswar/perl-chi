@@ -42,6 +42,9 @@ sub new {
     # the Universal role.
     #
     my @roles = ('CHI::Driver::Role::Universal');
+    if ( exists( $params{roles} ) ) {
+        push( @roles, @{ delete( $params{roles} ) } );
+    }
     if ( exists( $params{max_size} ) || exists( $params{is_size_aware} ) ) {
         push( @roles, 'CHI::Driver::Role::IsSizeAware' );
     }
