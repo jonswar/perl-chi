@@ -18,10 +18,13 @@ sub standard_keys_and_values : Test(startup) {
     my ($self) = @_;
 
     my ( $keys_ref, $values_ref ) = $self->set_standard_keys_and_values();
-    $self->{keys}      = $keys_ref;
-    $self->{values}    = $values_ref;
-    $self->{keynames}  = [ keys( %{$keys_ref} ) ];
-    $self->{key_count} = scalar( @{ $self->{keynames} } );
+    $self->{keys}          = $keys_ref;
+    $self->{values}        = $values_ref;
+    $self->{keynames}      = [ keys( %{$keys_ref} ) ];
+    $self->{key_count}     = scalar( @{ $self->{keynames} } );
+    $self->{all_test_keys} = [ values(%$keys_ref), $self->extra_test_keys() ];
+    $self->{all_test_keys_hash} =
+      { map { ( $_, 1 ) } @{ $self->{all_test_keys} } };
 }
 
 sub kvpair {
@@ -116,6 +119,20 @@ sub set_standard_keys_and_values {
     $values{hashref} = { foo => 'bar' };
 
     return ( \%keys, \%values );
+}
+
+# Extra keys (beyond the standard keys above) that we may use in these
+# tests. We need to adhere to this for the benefit of drivers that don't
+# support get_keys (like memcached) - they simulate get_keys(), clear(),
+# etc. by using this fixed list of keys.
+#
+sub extra_test_keys {
+    my ($class) = @_;
+    return (
+        '', '2', 'medium2', 'foo',
+        ( map { "done$_" } ( 0 .. 2 ) ),
+        ( map { "key$_" }  ( 0 .. 20 ) )
+    );
 }
 
 sub set_some_keys {
@@ -318,10 +335,11 @@ sub test_expires_defaults : Test(4) {
     my $cache;
 
     my $set_and_confirm_expires_at = sub {
-        my ( $expected_expires_at, $desc ) = @_;
-        my ( $key, $value ) = ( random_string(10), random_string(10) );
+        my ( $expected_expires_at, $desc )  = @_;
+        my ( $key,                 $value ) = $self->kvpair();
         $cache->set( $key, $value );
         is( $cache->get_expires_at($key), $expected_expires_at, $desc );
+        $cache->clear();
     };
 
     $cache = $self->new_cache( expires_in => 10 );
