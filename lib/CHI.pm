@@ -871,7 +871,16 @@ cache
 
 =item *
 
-L<CHI::Driver::DBI|CHI::Driver::DBI> - Database-based cache
+L<CHI::Driver::MemcachedFast|CHI::Driver::MemcachedFast> - Same as above,
+presumably faster client
+
+=item *
+
+L<CHI::Driver::DBI|CHI::Driver::DBI> - Cache in any DBI-supported database
+
+=item *
+
+L<CHI::Driver::FastMmap|CHI::Driver::BerkeleyDB> - Cache in BerkeleyDB files
 
 =back
 
