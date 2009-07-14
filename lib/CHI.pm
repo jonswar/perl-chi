@@ -105,9 +105,6 @@ CHI -- Unified cache interface
     my $cache = CHI->new( driver => 'DBI',
         dbh => $dbh
     );
-
-    # (These drivers coming soon...)
-    #
     my $cache = CHI->new( driver => 'BerkeleyDB',
         root_dir => '/path/to/root'
     );
