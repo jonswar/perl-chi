@@ -5,7 +5,7 @@ Revision history for CHI
 0.26  Jul 14, 2009
 
 * Fixes
-  - Eliminate is_subcache redefinition of attribute (fails under latest Moose)
+  - Eliminate is_subcache redefinition of attribute (causes CHI to fail to load under latest Moose)
 
 * Implementation
   - Make sure that tests are only using keys from a particular list; this is necessary for
