@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.26  Jun 2, 2009
 
+* Fixes
+  - Eliminate is_subcache redefinition of attribute (fails under latest Moose)
+
 0.25  Jun 2, 2009
 
 * Improvements
