@@ -463,12 +463,6 @@ sub is_empty {
     }
 }
 
-sub is_subcache {
-    my ($self) = @_;
-
-    return defined( $self->subcache_type );
-}
-
 sub _set_object {
     my ( $self, $key, $obj ) = @_;
 
