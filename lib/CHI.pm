@@ -847,8 +847,7 @@ cache via mmap'ed files
 
 =item *
 
-L<CHI::Driver::FastMmap|CHI::Driver::Null> - Dummy cache in which nothing is
-stored
+L<CHI::Driver::Null|CHI::Driver::Null> - Dummy cache in which nothing is stored
 
 =item *
 
@@ -877,7 +876,7 @@ L<CHI::Driver::DBI|CHI::Driver::DBI> - Cache in any DBI-supported database
 
 =item *
 
-L<CHI::Driver::FastMmap|CHI::Driver::BerkeleyDB> - Cache in BerkeleyDB files
+L<CHI::Driver::BerkeleyDB|CHI::Driver::BerkeleyDB> - Cache in BerkeleyDB files
 
 =back
 

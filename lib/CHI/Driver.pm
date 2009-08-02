@@ -60,7 +60,7 @@ sub non_common_constructor_params {
 
     return {
         map { ( $_, $params->{$_} ) }
-          grep { !$common_params{$_} } keys(%$params)
+        grep { !$common_params{$_} } keys(%$params)
     };
 }
 
