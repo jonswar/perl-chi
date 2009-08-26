@@ -2,10 +2,13 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.27  Jul 14, 2009
+0.27  Aug 26, 2009
 
 ** Incompatible Changes **
   - ** Switch to using Log::Any for controlling logging, instead of custom CHI->logger()
+
+* Implementation
+  - Move internal tests to xt/release, as per standard
 
 0.26  Jul 14, 2009
 
