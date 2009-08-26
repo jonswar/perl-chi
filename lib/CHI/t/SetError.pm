@@ -2,6 +2,7 @@ package CHI::t::SetError;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Test::Util qw(activate_test_logger);
 use base qw(CHI::Test::Class);
 
 sub readonly_cache {
@@ -19,8 +20,7 @@ sub test_set_errors : Test(14) {
 
     my $error_pattern =
       qr/error during cache set for namespace='.*', key='medium', size=\d+.*: read-only cache/;
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
 
     my $cache;
 

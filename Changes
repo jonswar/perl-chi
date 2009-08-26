@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.27  Jul 14, 2009
 
+** Incompatible Changes **
+  - ** Switch to using Log::Any for controlling logging, instead of custom CHI->logger()
+
 0.26  Jul 14, 2009
 
 * Fixes

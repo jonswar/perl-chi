@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Logger;
-use CHI::Test::Util qw(cmp_bool is_between random_string skip_until);
+use CHI::Test::Util
+  qw(activate_test_logger cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line dp);
 use File::Temp qw(tempdir);
 use Module::Load::Conditional qw(can_load check_install);
@@ -820,8 +821,7 @@ sub _test_logging_with_l1_cache {
     my ( $self, $cache ) = @_;
 
     $cache->clear();
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
     my $driver = $cache->short_driver_name;
@@ -873,8 +873,7 @@ sub _test_logging_with_mirror_cache {
     my ( $self, $cache ) = @_;
 
     $cache->clear();
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
     my $driver = $cache->short_driver_name;
@@ -1039,8 +1038,7 @@ sub test_logging : Test(10) {
     my $self  = shift;
     my $cache = $self->{cache};
 
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
     my $driver = $cache->short_driver_name;

@@ -1,12 +1,20 @@
 package CHI::Test::Util;
 use Date::Parse;
 use Test::Builder;
+use Test::Log::Dispatch;
 use Test::More;
 use strict;
 use warnings;
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(is_between cmp_bool random_string skip_until);
+our @EXPORT_OK =
+  qw(activate_test_logger is_between cmp_bool random_string skip_until);
+
+sub activate_test_logger {
+    my $log = Test::Log::Dispatch->new( min_level => 'debug' );
+    Log::Any->set_adapter( 'Dispatch', dispatcher => $log );
+    return $log;
+}
 
 sub is_between {
     my ( $value, $min, $max, $desc ) = @_;

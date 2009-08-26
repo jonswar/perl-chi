@@ -2,7 +2,7 @@ package CHI::t::Driver::File;
 use strict;
 use warnings;
 use CHI::Test;
-use CHI::Test::Util qw(random_string);
+use CHI::Test::Util qw(random_string activate_test_logger);
 use CHI::Util qw(fast_catdir unique_id dp);
 use File::Basename;
 use File::Path;
@@ -35,8 +35,7 @@ sub test_path_to_key : Test(5) {
 
     my $key;
     my $cache = $self->new_cache( namespace => random_string(10) );
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
 
     $key = "\$20.00 plus 5% = \$25.00";
     my $file = basename( $cache->path_to_key($key) );

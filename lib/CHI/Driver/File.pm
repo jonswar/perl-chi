@@ -8,6 +8,7 @@ use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
+use Log::Any qw($log);
 use Moose;
 use strict;
 use warnings;
@@ -222,10 +223,9 @@ sub path_to_key {
     my $filename = $self->escape_for_filename($key) . ".dat";
     if ( length($filename) > $Max_File_Length ) {
         my $namespace = $self->{namespace};
-        CHI->logger()
-          ->warn(
+        $log->warn(
             "escaped key '$key' in namespace '$namespace' is over $Max_File_Length chars; cannot cache"
-          );
+        );
         return undef;
     }
 
@@ -243,10 +243,9 @@ sub path_to_key {
 
     if ( length($filepath) > $Max_Path_Length ) {
         my $namespace = $self->{namespace};
-        CHI->logger()
-          ->warn(
+        $log->warn(
             "full escaped path for key '$key' in namespace '$namespace' is over $Max_Path_Length chars; cannot cache"
-          );
+        );
         return undef;
     }
 

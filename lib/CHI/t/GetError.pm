@@ -2,6 +2,7 @@ package CHI::t::GetError;
 use strict;
 use warnings;
 use CHI::Test;
+use CHI::Test::Util qw(activate_test_logger);
 use base qw(CHI::Test::Class);
 
 sub writeonly_cache {
@@ -19,8 +20,7 @@ sub test_get_errors : Test(10) {
 
     my $error_pattern =
       qr/error during cache get for namespace='.*', key='medium'.*: write-only cache/;
-    my $log = CHI::Test::Logger->new();
-    CHI->logger($log);
+    my $log = activate_test_logger();
 
     my $cache;
 

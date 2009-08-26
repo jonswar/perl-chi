@@ -7,17 +7,12 @@ use warnings;
 
 our $VERSION = '0.27';
 
-our $Logger = CHI::NullLogger->new();    ## no critic
+my %final_class_seen;
 
 sub logger {
-    my $self = shift;
-    if (@_) {
-        $Logger = shift;
-    }
-    return $Logger;
+    warn
+      "CHI now uses Log::Any for logging - see Log::Any documentation for details";
 }
-
-my %final_class_seen;
 
 sub new {
     my ( $chi_root_class, %params ) = @_;
@@ -280,8 +275,8 @@ may or may not be considered fatal in your application. Options are:
 
 =item *
 
-log (the default) - log an error using the currently set logger, or ignore if
-no logger is set - see L</LOGGING>
+log (the default) - log an error, or ignore if no logger is set - see
+L</LOGGING>
 
 =item *
 
@@ -785,8 +780,6 @@ At this time, subcache behavior is hardcoded into CHI::Driver, so there is no
 easy way to modify the behavior of existing subcache types or create new ones.
 We'd like to make this more flexible eventually.
 
-=for readme continue
-
 =head1 SIZE AWARENESS
 
 If L</is_size_aware> or L</max_size> are passed to the constructor, the cache
@@ -824,6 +817,8 @@ for these.
 Also, for drivers that cannot atomically read and update a value - for example,
 L<CHI::Driver::File|File> - there is a race condition in the updating of size
 that can cause the size to grow inaccurate over time.
+
+=for readme continue
 
 =head1 AVAILABILITY OF DRIVERS
 
@@ -892,25 +887,12 @@ developing new drivers.
 
 =head1 LOGGING
 
-If given a logger object, CHI will log events at various levels - for example,
-a debug log message for every cache get and set. To specify the logger object:
+C<Server::Control> uses L<Log::Any|Log::Any> for logging, so you have control
+over where logs will be sent, if anywhere. See L<Log::Any|Log::Any>
+documentation for details.
 
-    CHI->logger($logger_object);   # Warning: Temporary API, see below
-
-The object must provide the methods
-
-    debug, info, warning, error, fatal
-
-for logging, and
-
-    is_debug, is_info, is_warning, is_error, is_fatal
-
-for checking whether a message would be logged at that level. This is
-compatible with L<Log::Log4perl|Log::Log4perl> and
-L<Catalyst::Log|Catalyst::Log> among others.
-
-Warning: CHI-E<gt>logger is a temporary API. The intention is to replace this
-with  Log::Any - see http://use.perl.org/~jonswar/journal/34366
+If you have activated a logger, CHI will log events at various levels - for
+example, a debug log message for every cache get and set.
 
 =for readme continue
 

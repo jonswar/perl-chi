@@ -6,6 +6,7 @@ use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
 use CHI::Util qw(has_moose_class parse_duration);
 use CHI::Types;
+use Log::Any qw($log);
 use Moose;
 use Moose::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
@@ -117,13 +118,6 @@ sub _build_metacache {
     return CHI::Driver::Metacache->new( owner_cache => $self );
 }
 
-sub logger {
-    my ($self) = @_;
-
-    ## no critic (ProhibitPackageVars)
-    return $CHI::Logger;
-}
-
 sub get {
     my ( $self, $key, %params ) = @_;
     croak "must specify key" unless defined($key);
@@ -136,7 +130,6 @@ sub get {
         return;
     }
 
-    my $log = $self->logger();
     if ( !defined $data ) {
         $self->_log_get_result( $log, "MISS (not in cache)", $key )
           if $log->is_debug;
@@ -285,7 +278,6 @@ sub set {
 
     # Log the set
     #
-    my $log = $self->logger();
     if ( $log->is_debug ) {
         my $log_expires_in =
           defined($expires_at) ? ( $expires_at - $created_at ) : undef;
@@ -510,7 +502,7 @@ sub _dispatch_error_msg {
     for ($on_error) {
         ( ref($_) eq 'CODE' ) && do { $_->( $msg, $key, $error ) };
         /^log$/
-          && do { my $log = $self->logger; $log->error($msg) };
+          && do { $log->error($msg) };
         /^ignore$/ && do { };
         /^warn$/   && do { carp $msg };
         /^die$/    && do { croak $msg };
