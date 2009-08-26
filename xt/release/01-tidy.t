@@ -19,7 +19,7 @@ use Test::More tests => 1;
 use Perl::Tidy 20071205;
 use Pod::Tidy 0.10;
 
-my $root   = dirname( dirname( realpath($0) ) );
+my $root   = dirname( dirname( dirname( realpath($0) ) ) );
 my $rcfile = "$root/perltidyrc";
 
 my @files;
@@ -54,7 +54,7 @@ foreach my $file (@files) {
             destination => \my $result,
             perltidyrc  => $rcfile
         );
-        write_file($file, $result);
+        write_file( $file, $result );
         Pod::Tidy::tidy_files(
             files    => [$file],
             inplace  => 1,

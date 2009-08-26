@@ -111,3 +111,28 @@ sub has_moose_class {
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+CHI::Util -- Internal utilities
+
+=head1 DESCRIPTION
+
+These are utilities for internal CHI use.
+
+=head1 AUTHOR
+
+Jonathan Swartz
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (C) 2007 Jonathan Swartz, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+=cut

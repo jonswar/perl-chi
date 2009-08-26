@@ -28,6 +28,16 @@ requires 'Task::Weaken'              => 0;
 requires 'Time::Duration'            => '1.06';
 requires 'Time::Duration::Parse'     => '0.03';
 
+no_index directory => 'lib/CHI/t';
+no_index directory => 'lib/CHI/Test';
+no_index package => 'CHI::Constants';
+no_index package => 'CHI::Serializer::Storable';
+no_index package => 'CHI::Test';
+no_index package => 'CHI::Types';
+no_index package => 'CHI::Util';
+
+extra_tests;
+
 license 'perl';
 
 auto_install;
