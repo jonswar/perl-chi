@@ -18,7 +18,7 @@ use Test::More tests => 1;
 # Ensure a standard version of Perl::Critic
 use Perl::Critic 1.080;
 
-my $root   = dirname( dirname( realpath($0) ) );
+my $root   = dirname(dirname( dirname( realpath($0) ) ));
 my $rcfile = "$root/perlcriticrc";
 
 my @files;
