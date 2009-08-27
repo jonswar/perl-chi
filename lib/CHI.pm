@@ -887,12 +887,11 @@ developing new drivers.
 
 =head1 LOGGING
 
-C<Server::Control> uses L<Log::Any|Log::Any> for logging, so you have control
-over where logs will be sent, if anywhere. See L<Log::Any|Log::Any>
-documentation for details.
+C<CHI> uses L<Log::Any|Log::Any> for logging events. For example, a debug log
+message is sent for every cache get and set.
 
-If you have activated a logger, CHI will log events at various levels - for
-example, a debug log message for every cache get and set.
+See L<Log::Any|Log::Any> documentation for how to control where logs get sent,
+if anywhere.
 
 =for readme continue
 
