@@ -36,15 +36,6 @@ my $Max_Path_Length = ( $^O eq 'MSWin32' ? 254 : 1023 );
 my $Fetch_Flags     = O_RDONLY | O_BINARY;
 my $Store_Flags     = O_WRONLY | O_CREAT | O_BINARY;
 
-sub BUILD {
-    my ( $self, $params ) = @_;
-
-    # Allow 'cache_root' for backward compatibility with Cache::Filecache
-    if ( my $root_dir = delete $params->{cache_root} ) {
-        $self->{root_dir} = $root_dir;
-    }
-}
-
 sub _build_path_to_namespace {
     my $self = shift;
 
@@ -302,9 +293,6 @@ The location in the filesystem that will hold the root of the cache.  Defaults
 to a directory called 'chi-driver-file' under the OS default temp directory
 (e.g. '/tmp' on UNIX). This directory will be created as needed on the first
 cache set.
-
-For backward compatibility with Cache::FileCache, this can also be specified as
-C<cache_root>.
 
 =item dir_create_mode
 

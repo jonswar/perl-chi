@@ -17,10 +17,4 @@ sub test_48998 : Test(1) {
         [ 5, 6 ], "get_multi" );
 }
 
-sub test_43409 : Test(1) {
-    my $cache_root = tempdir( 'bugs-XXXX', TMPDIR => 1, CLEANUP => 1 );
-    my $cache = CHI->new( driver => 'File', cache_root => $cache_root );
-    is( $cache->root_dir, $cache_root );
-}
-
 1;
