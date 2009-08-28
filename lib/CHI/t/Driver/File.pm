@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use CHI::Test;
 use CHI::Test::Util qw(random_string activate_test_logger);
-use CHI::Util qw(fast_catdir unique_id dp);
+use CHI::Util qw(fast_catdir unique_id);
 use File::Basename;
 use File::Path;
 use File::Temp qw(tempdir);

@@ -1,6 +1,5 @@
 package CHI::Driver::Metacache;
 use CHI::Constants qw(CHI_Meta_Namespace);
-use CHI::Util qw(dp);
 use Moose;
 use strict;
 use warnings;

@@ -1,7 +1,6 @@
 package CHI::Driver::Role::HasSubcaches;
 use Moose::Role;
 use Hash::MoreUtils qw(slice_exists);
-use CHI::Util qw(dp);
 use Scalar::Util qw(weaken);
 use strict;
 use warnings;
