@@ -6,6 +6,7 @@ Revision history for CHI
 
 * Fixes
   - Fix get_multi_* when $@ already contains an error - RT #48988 - reported by Sergey Panteleev
+  - Fix cache_root alias and fix docs to mention root_dir - RT #43409 - reported by anirvan
 
 * Implementation
   - Remove private debugging methods dp and dps
@@ -168,7 +169,6 @@ Revision history for CHI
 - The FastMmap driver was not actually making use of the init_file,
   cache_size, page_size, or num_pages options. Reported by Mike
   Astle. RT #35819. (Dave Rolsky)
-- The clear method did not work with the Memcached driver. RT #32859.
 - Allow suppression of renames in CHI::Driver::File by overriding
   generate_temporary_filename
 
@@ -180,7 +180,7 @@ Revision history for CHI
 
 - Created separate manual for developing drivers (CHI::Driver::Development)
 - Made standard CHI driver tests easily available to external drivers
-- Fixed clear() in Memcached driver - reported by Justin Ellison
+- Fixed clear() in Memcached driver - RT #32859 - reported by Justin Ellison
 - Add size to set logs
 
 0.05  Jan 30, 2008
