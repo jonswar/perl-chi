@@ -4,6 +4,12 @@ Revision history for CHI
 
 0.28  Aug 27, 2009
 
+* Fixes
+  - Fix get_multi_* when $@ already contains an error - RT #48988 - reported by Sergey Panteleev
+
+* Implementation
+  - Remove private debugging methods dp and dps
+
 0.27  Aug 27, 2009
 
 ** Incompatible Changes **
