@@ -40,8 +40,8 @@ sub BUILD {
     my ( $self, $params ) = @_;
 
     # Allow 'cache_root' for backward compatibility with Cache::Filecache
-    if ( my $root = delete $self->{cache_root} ) {
-        $self->set_root_dir($root);
+    if ( my $root_dir = delete $params->{cache_root} ) {
+        $self->{root_dir} = $root_dir;
     }
 }
 

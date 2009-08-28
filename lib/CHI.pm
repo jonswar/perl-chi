@@ -87,7 +87,7 @@ CHI -- Unified cache interface
     #
     my $cache = CHI->new( driver => 'Memory' );
     my $cache = CHI->new( driver => 'File',
-        cache_root => '/path/to/root'
+        root_dir => '/path/to/root'
     );
     my $cache = CHI->new( driver => 'FastMmap',
         root_dir   => '/path/to/root',
@@ -724,7 +724,7 @@ have its own subcaches, and so on. e.g.
         servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
         l1_cache => {
             driver     => 'File',
-            cache_root => '/path/to/root',
+            root_dir   => '/path/to/root',
             l1_cache   => { driver => 'Memory' }
         }
     );
