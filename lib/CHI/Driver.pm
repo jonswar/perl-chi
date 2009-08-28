@@ -124,10 +124,13 @@ sub get {
 
     # Fetch cache object
     #
-    my $data = $params{data} || eval { $self->fetch($key) };
-    if ( my $error = $@ ) {
-        $self->_handle_get_error( $error, $key );
-        return;
+    my $data = $params{data};
+    if ( !defined $data ) {
+        $data = eval { $self->fetch($key) };
+        if ( my $error = $@ ) {
+            $self->_handle_get_error( $error, $key );
+            return undef;
+        }
     }
 
     if ( !defined $data ) {
