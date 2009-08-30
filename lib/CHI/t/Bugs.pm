@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use CHI::Test;
 use File::Temp qw(tempdir);
-use d;
 use base qw(CHI::Test::Class);
 
 # A place for testing obscure bug fixes. When possible, test will be named for RT ticket.
