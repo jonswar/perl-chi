@@ -15,6 +15,7 @@ blib*
 cover_db
 cp.yml
 data
+depends
 dist
 docs
 inc
