@@ -2,7 +2,6 @@ package CHI::t::Driver;
 use strict;
 use warnings;
 use CHI::Test;
-use CHI::Test::Logger;
 use CHI::Test::Util
   qw(activate_test_logger cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line);

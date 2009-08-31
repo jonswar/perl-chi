@@ -5,7 +5,6 @@ use List::MoreUtils qw(uniq);
 use Class::MOP;
 use CHI;
 use CHI::Driver::Memory;
-use CHI::Test::Logger;
 use strict;
 use warnings;
 
