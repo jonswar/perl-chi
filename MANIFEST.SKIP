@@ -2,6 +2,7 @@
 ^bin
 ^cp\.yml
 ^data
+^depends
 ^dist
 ^docs
 ^git
