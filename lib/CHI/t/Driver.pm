@@ -496,8 +496,10 @@ sub test_serialize : Tests {
 sub test_serializers : Tests {
     my ($self) = @_;
 
-    return 'Data::Serializer not installed'
-      unless can_load( modules => { 'Data::Serializer' => undef } );
+    unless ( can_load( modules => { 'Data::Serializer' => 0 } ) ) {
+        $self->num_tests(1);
+        return 'Data::Serializer not installed';
+    }
 
     my @modes    = (qw(string hash object));
     my @variants = (qw(Storable Data::Dumper YAML));
