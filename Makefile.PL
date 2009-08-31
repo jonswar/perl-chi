@@ -7,13 +7,14 @@ author 'Jonathan Swartz <swartz@pobox.com>';
 
 perl_version '5.006';
 
-build_requires 'Date::Parse'         => 0;
-build_requires 'Test::Class'         => 0;
-build_requires 'Test::Deep'          => 0;
-build_requires 'Test::Exception'     => 0;
-build_requires 'Test::Log::Dispatch' => 0;
-build_requires 'Test::More'          => 0;
-build_requires 'Test::Warn'          => 0;
+build_requires 'Date::Parse'                 => 0;
+build_requires 'Log::Any::Adapter::Dispatch' => 0;
+build_requires 'Test::Class'                 => 0;
+build_requires 'Test::Deep'                  => 0;
+build_requires 'Test::Exception'             => 0;
+build_requires 'Test::Log::Dispatch'         => 0;
+build_requires 'Test::More'                  => 0;
+build_requires 'Test::Warn'                  => 0;
 
 requires 'Carp::Assert'              => '0.20';
 requires 'Data::UUID'                => 0;
