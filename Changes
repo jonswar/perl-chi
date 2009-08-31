@@ -8,7 +8,7 @@ Revision history for CHI
   - Add Test::Exception, Log::Any::Adapter::Dispatch to dependencies
   - Remove use of no-longer-existent CHI::Test::Logger from test modules - RT #49252
   - Fix get_multi_* when $@ already contains an error - RT #48988 - reported by Sergey Panteleev
-  - Fix cache_root alias and fix docs to mention root_dir - RT #43409 - reported by anirvan
+  - Fix docs to mention root_dir - RT #43409 - reported by anirvan
 
 * Implementation
   - Remove private debugging methods dp and dps
