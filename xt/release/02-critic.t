@@ -39,7 +39,7 @@ sub sig {
 my $cache = CHI->new(
     driver    => 'FastMmap',
     root_dir  => "$root/data/cache",
-    namespace => 'critic',
+    namespace => '02-critic.t',
 );
 
 my $critic = Perl::Critic->new( -profile => $rcfile );
