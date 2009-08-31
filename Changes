@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.28  Aug 30, 2009
+0.28  Aug 31, 2009
 
 * Fixes
   - Add Test::Exception, Log::Any::Adapter::Dispatch to dependencies
