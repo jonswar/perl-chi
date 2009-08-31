@@ -4,8 +4,6 @@
 #
 use strict;
 use warnings;
-use CHI::Test::InternalOnly;
-
 use Test::More tests => 3;
 use Test::Exception;
 use Module::Mask;

@@ -5,8 +5,6 @@
 #
 use strict;
 use warnings;
-use CHI::Test::InternalOnly;
-
 use CHI;
 use Cwd qw(realpath);
 use File::Basename;
