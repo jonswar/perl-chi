@@ -85,7 +85,7 @@ CHI -- Unified cache interface
 
     # Choose a standard driver
     #
-    my $cache = CHI->new( driver => 'Memory' );
+    my $cache = CHI->new( driver => 'Memory', global => 1 );
     my $cache = CHI->new( driver => 'File',
         root_dir => '/path/to/root'
     );
