@@ -18,7 +18,7 @@ use Perl::Tidy 20071205;
 use Pod::Tidy 0.10;
 
 my $root   = dirname( dirname( dirname( realpath($0) ) ) );
-my $rcfile = "$root/perltidyrc";
+my $rcfile = "$root/.perltidyrc";
 
 my @files;
 find(
