@@ -4,6 +4,11 @@ Revision history for CHI
 
 0.29  Aug 31, 2009
 
+* Fixes
+  - Fix synopsis of Memory cache in main docs - RT #50360 - reported by zloyrusskiy
+  - Fix get_namespaces when File root dir doesn't exist
+  - Fix tests to use label for log matching
+
 0.28  Aug 31, 2009
 
 * Fixes

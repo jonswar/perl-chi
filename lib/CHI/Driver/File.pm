@@ -182,11 +182,13 @@ sub generate_temporary_filename {
 sub get_namespaces {
     my ($self) = @_;
 
-    my @contents = read_dir( $self->root_dir() );
+    my $root_dir = $self->root_dir();
+    return () if !-d $root_dir;
+    my @contents = read_dir($root_dir);
     my @namespaces =
       map  { $self->unescape_for_filename($_) }
       grep { $self->is_escaped_for_filename($_) }
-      grep { -d fast_catdir( $self->root_dir(), $_ ) } @contents;
+      grep { -d fast_catdir( $root_dir, $_ ) } @contents;
     return @namespaces;
 }
 
