@@ -1,12 +1,13 @@
 package CHI::Driver::Memory;
 use Carp qw(cluck croak);
+use CHI::Constants qw(CHI_Meta_Namespace);
 use Moose;
 use strict;
 use warnings;
 
 extends 'CHI::Driver';
 
-our $Global_Datastore = {};    ## no critic (ProhibitPackageVars)
+our %Global_Datastore = ();    ## no critic (ProhibitPackageVars)
 
 has 'datastore' => ( is => 'ro', isa => 'HashRef' );
 has 'global'    => ( is => 'ro', isa => 'Bool' );
@@ -15,65 +16,60 @@ __PACKAGE__->meta->make_immutable();
 
 sub default_discard_policy { 'lru' }
 
+# We see a lot of repeated '$self->{datastore}->{$self->{namespace}}'
+# expressions below. The reason this cannot be easily memoized in the object
+# is that we want the cache to be cleared across multiple existing CHI
+# objects when the datastore itself is emptied - e.g. %datastore = ()
+#
+
 sub BUILD {
     my ( $self, $params ) = @_;
 
     if ( $self->{global} ) {
         croak "cannot specify both 'datastore' and 'global'"
           if ( defined( $self->{datastore} ) );
-        $self->{datastore} = $Global_Datastore;
+        $self->{datastore} = \%Global_Datastore;
     }
     if ( !defined( $self->{datastore} ) ) {
         cluck "must specify either 'datastore' hashref or 'global' flag";
-        $self->{datastore} = $Global_Datastore;
+        $self->{datastore} = \%Global_Datastore;
     }
-    $self->{datastore}->{ $self->namespace }->{values}   ||= {};
-    $self->{datastore}->{ $self->namespace }->{metadata} ||= {};
-    $self->_initialize_namespace_slots();
-}
-
-sub _initialize_namespace_slots {
-    my ($self) = @_;
-
-    $self->{datastore_for_namespace} = $self->{datastore}->{ $self->namespace };
-    $self->{values_for_namespace} = $self->{datastore_for_namespace}->{values};
-    $self->{metadata_for_namespace} =
-      $self->{metadata_for_namespace}->{metadata};
 }
 
 sub fetch {
     my ( $self, $key ) = @_;
 
-    if ( $self->is_size_aware() ) {
-        $self->{metadata_for_namespace}->{last_used_time}->{$key} = time;
+    if ( $self->{is_size_aware} ) {
+        $self->{datastore}->{ CHI_Meta_Namespace() }->{last_used_time}->{$key} =
+          time;
     }
-    return $self->{values_for_namespace}->{$key};
+    return $self->{datastore}->{ $self->{namespace} }->{$key};
 }
 
 sub store {
     my ( $self, $key, $data ) = @_;
 
-    $self->{values_for_namespace}->{$key} = $data;
+    $self->{datastore}->{ $self->{namespace} }->{$key} = $data;
 }
 
 sub remove {
     my ( $self, $key ) = @_;
 
-    delete $self->{values_for_namespace}->{$key};
-    delete $self->{metadata_for_namespace}->{$key};
+    delete $self->{datastore}->{ $self->{namespace} }->{$key};
+    delete $self->{datastore}->{ CHI_Meta_Namespace() }->{last_used_time}
+      ->{$key};
 }
 
 sub clear {
     my ($self) = @_;
 
-    $self->{datastore}->{ $self->namespace } = {};
-    $self->_initialize_namespace_slots();
+    $self->{datastore}->{ $self->{namespace} } = {};
 }
 
 sub get_keys {
     my ($self) = @_;
 
-    return keys( %{ $self->{values_for_namespace} } );
+    return keys( %{ $self->{datastore}->{ $self->{namespace} } } );
 }
 
 sub get_namespaces {
@@ -85,7 +81,8 @@ sub get_namespaces {
 sub discard_policy_lru {
     my ($self) = @_;
 
-    my $last_used_time = $self->{metadata_for_namespace}->{last_used_time};
+    my $last_used_time =
+      $self->{datastore}->{ CHI_Meta_Namespace() }->{last_used_time};
     my @keys_in_lru_order =
       sort { $last_used_time->{$a} <=> $last_used_time->{$b} } $self->get_keys;
     return sub {
@@ -136,18 +133,6 @@ error eventually) will be thrown.
 A hash to be used for storage. Within the hash, each namespace is used as a key
 to a second-level hash.  This hash may be passed to multiple
 CHI::Driver::Memory constructors.
-
-For example, it can be useful to create a memory cache that lasts for a single
-web request. If you using a web framework with a request object which goes out
-of scope at the end of the page request, you can hang a datastore off of that
-request object.  e.g.
-
-    $r->notes('memory_cache_datastore', {});
-    ...
-    my $cache = CHI->new(driver => 'Memory', datastore => $r->notes('memory_cache_datastore'));
-
-This eliminates the danger of "forgetting" to clear the cache at the end of the
-request.
 
 =item global [BOOL]
 

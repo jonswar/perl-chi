@@ -5,6 +5,7 @@ Revision history for CHI
 0.29  Aug 31, 2009
 
 * Fixes
+  - Make sure Memory cache is cleared when multiple objects use the same datastore, or when datastore hash itself is emptied
   - Fix synopsis of Memory cache in main docs - RT #50360 - reported by zloyrusskiy
   - Fix get_namespaces when File root dir doesn't exist
   - Fix tests to use label for log matching

@@ -63,6 +63,31 @@ sub test_different_datastores : Tests(1) {
     ok( $cache2->is_empty() );
 }
 
+# Make sure cache is cleared when datastore itself is cleared
+#
+sub test_clear_datastore : Tests {
+    my $self = shift;
+    $self->num_tests( $self->{key_count} * 3 + 6 );
+
+    my (@caches);
+
+    my %datastore;
+    $caches[0] =
+      $self->new_cache( namespace => 'name', datastore => \%datastore );
+    $caches[1] =
+      $self->new_cache( namespace => 'other', datastore => \%datastore );
+    $caches[2] =
+      $self->new_cache( namespace => 'name', datastore => \%datastore );
+    $self->set_some_keys( $caches[0] );
+    $self->set_some_keys( $caches[1] );
+    %datastore = ();
+
+    foreach my $i ( 0 .. 2 ) {
+        $self->_verify_cache_is_cleared( $caches[$i],
+            "cache $i after out of scope" );
+    }
+}
+
 sub test_lru_discard : Tests(2) {
     my $self = shift;
     my $cache = $self->new_cleared_cache( max_size => 41 );
