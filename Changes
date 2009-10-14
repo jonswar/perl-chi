@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.29  Aug 31, 2009
+0.29  Oct 14, 2009
 
 * Fixes
   - Make sure Memory cache is cleared when multiple objects use the same datastore, or when datastore hash itself is emptied
