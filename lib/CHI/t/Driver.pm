@@ -825,7 +825,7 @@ sub _test_logging_with_l1_cache {
     my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
-    my $driver = $cache->short_driver_name;
+    my $driver = $cache->label;
 
     my $miss_not_in_cache = 'MISS \(not in cache\)';
     my $miss_expired      = 'MISS \(expired\)';
@@ -877,7 +877,7 @@ sub _test_logging_with_mirror_cache {
     my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
-    my $driver = $cache->short_driver_name;
+    my $driver = $cache->label;
 
     my $miss_not_in_cache = 'MISS \(not in cache\)';
     my $miss_expired      = 'MISS \(expired\)';
@@ -1042,7 +1042,7 @@ sub test_logging : Test(10) {
     my $log = activate_test_logger();
     my ( $key, $value ) = $self->kvpair();
 
-    my $driver = $cache->short_driver_name;
+    my $driver = $cache->label;
 
     # Multilevel cache logs less details about misses
     my $miss_not_in_cache =
