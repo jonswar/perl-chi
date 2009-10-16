@@ -11,6 +11,7 @@ our @EXPORT_OK = (@all_constants);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 use constant CHI_Meta_Namespace => '_CHI_METACACHE';
+use constant CHI_Max_Time       => 0xffffffff;
 
 1;
 
