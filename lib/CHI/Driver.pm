@@ -1,6 +1,7 @@
 package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
+use CHI::Constants qw(CHI_Max_Time);
 use CHI::Driver::Metacache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
@@ -16,12 +17,10 @@ use warnings;
 
 my $default_serializer = CHI::Serializer::Storable->new();
 
-use constant Max_Time => 0xffffffff;
-
 has 'chi_root_class'     => ( is => 'ro' );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
-has 'expires_at'         => ( is => 'rw', default => Max_Time );
+has 'expires_at'         => ( is => 'rw', default => CHI_Max_Time );
 has 'expires_in' => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
 has 'expires_variance' => ( is => 'rw', default => 0.0 );
 has 'has_subcaches' =>
@@ -138,8 +137,7 @@ sub get {
           if $log->is_debug;
         return undef;
     }
-    my $obj =
-      CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
+    my $obj = $self->unpack_from_data( $key, $data );
     if ( defined( my $obj_ref = $params{obj_ref} ) ) {
         $$obj_ref = $obj;
     }
@@ -170,13 +168,18 @@ sub get {
     return $obj->value;
 }
 
+sub unpack_from_data {
+    my ( $self, $key, $data ) = @_;
+
+    return CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
+}
+
 sub get_object {
     my ( $self, $key ) = @_;
     croak "must specify key" unless defined($key);
 
     my $data = $self->fetch($key) or return undef;
-    my $obj =
-      CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
+    my $obj = $self->unpack_from_data( $key, $data );
     return $obj;
 }
 
@@ -237,7 +240,7 @@ sub set {
     else {
         if ( !ref($options) ) {
             if ( $options eq 'never' ) {
-                $options = { expires_at => Max_Time };
+                $options = { expires_at => CHI_Max_Time };
             }
             elsif ( $options eq 'now' ) {
                 $options = { expires_in => 0 };
@@ -259,7 +262,7 @@ sub set {
       : $options->{expires_at};
     my $early_expires_at =
         defined( $options->{early_expires_at} ) ? $options->{early_expires_at}
-      : ( $expires_at == Max_Time )             ? Max_Time
+      : ( $expires_at == CHI_Max_Time )         ? CHI_Max_Time
       : $expires_at -
       ( ( $expires_at - $time ) * $options->{expires_variance} );
 
