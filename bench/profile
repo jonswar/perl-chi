@@ -1,5 +1,0 @@
-#!/bin/bash
-perl -d:DProf file_cache.pl --only-chi
-# perl -d:DProf file_cache.pl --only-chi --test-writes
-dprofpp -E -O50 > dprofppe.out
-dprofpp -I -O50 > dprofppi.out
