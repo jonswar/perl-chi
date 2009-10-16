@@ -11,6 +11,7 @@ README
 TODO
 VERSION
 _build*
+bench
 blib*
 cover_db
 cp.yml
