@@ -18,6 +18,8 @@ extends 'CHI::Driver';
 has 'depth'            => ( is => 'ro', isa => 'Int', default => 2 );
 has 'dir_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'file_create_mode' => ( is => 'ro', isa => 'Int', default => oct(666) );
+has 'file_digest'      => ( is => 'ro', isa => 'Str' );
+has 'file_extension'   => ( is => 'ro', isa => 'Str', default => '.dat' );
 has 'root_dir'         => (
     is      => 'ro',
     isa     => 'Str',
@@ -198,29 +200,39 @@ sub path_to_key {
     my ( $self, $key, $dir_ref ) = @_;
 
     my @paths = ( $self->path_to_namespace );
-
-    # Hash key to a 32-bit integer
-    #
-    my $bucket = jhash($key);
-
-    # Create $self->{depth} subdirectories, containing a maximum of 64 subdirectories each,
-    # by successively shifting 4 bits off the bucket and converting to hex.
-    #
-    for ( my $d = $self->{depth} ; $d > 0 ; $d-- ) {
-        push( @paths, $hex_strings{ $bucket & 0xf } );
-        $bucket >>= 4;
+    my $filename;
+    if ( my $digest_type = $self->file_digest ) {
+        require Digest;
+        $filename = Digest->new($digest_type)->add($key)->hexdigest();
+        push( @paths,
+            map { substr( $filename, $_, 1 ) } ( 0 .. $self->{depth} - 1 ) );
     }
+    else {
 
-    # Escape key to make safe for filesystem
-    #
-    my $filename = $self->escape_for_filename($key) . ".dat";
-    if ( length($filename) > $Max_File_Length ) {
-        my $namespace = $self->{namespace};
-        $log->warn(
-            "escaped key '$key' in namespace '$namespace' is over $Max_File_Length chars; cannot cache"
-        );
-        return undef;
+        # Hash key to a 32-bit integer
+        #
+        my $bucket = jhash($key);
+
+        # Create $self->{depth} subdirectories, containing a maximum of 64 subdirectories each,
+        # by successively shifting 4 bits off the bucket and converting to hex.
+        #
+        for ( my $d = $self->{depth} ; $d > 0 ; $d-- ) {
+            push( @paths, $hex_strings{ $bucket & 0xf } );
+            $bucket >>= 4;
+        }
+
+        # Escape key to make safe for filesystem
+        #
+        $filename = $self->escape_for_filename($key);
+        if ( length($filename) > $Max_File_Length ) {
+            my $namespace = $self->{namespace};
+            $log->warn(
+                "escaped key '$key' in namespace '$namespace' is over $Max_File_Length chars; cannot cache"
+            );
+            return undef;
+        }
     }
+    $filename .= $self->file_extension;
 
     # Join paths together, computing dir separately if $dir_ref was passed.
     #
@@ -274,10 +286,12 @@ efficient, it eliminates the need for locking (with multiple overlapping sets,
 the last one "wins") and makes this cache usable in environments like NFS where
 locking might normally be undesirable.
 
-The base filename is the key itself, with unsafe characters replaced with an
-escape sequence similar to URI escaping. The filename length is capped at 255
-characters, which is the maximum for most Unix systems, so gets/sets for keys
-that escape to longer than 255 characters will fail.
+By default, the base filename is the key itself, with unsafe characters
+replaced with an escape sequence similar to URI escaping. The filename length
+is capped at 255 characters, which is the maximum for most Unix systems, so
+gets/sets for keys that escape to longer than 255 characters will fail. You can
+also use a digest of the key (e.g. MD5, SHA) for the base filename by
+specifying L</file_digest>.
 
 The files are evenly distributed within a multi-level directory structure with
 a customizable depth, to minimize the time needed to search for a given entry.
@@ -305,12 +319,21 @@ Permissions mode to use when creating directories. Defaults to 0775.
 Permissions mode to use when creating files, modified by the current umask.
 Defaults to 0666.
 
+=item file_digest
+
+Digest algorithm to transform the key into a filename - e.g. "MD5", "SHA-1", or
+"SHA-256".  The string will be passed to Digest->new(). By default, no digest
+is performed and the entire key is used for the filename.
+
+=item file_extension
+
+Extension to append to filename. Default is ".dat".
+
 =item depth
 
 The number of subdirectories deep to place cache files. Defaults to 2. This
 should be large enough that no leaf directory has more than a few hundred
-files. At present, each non-leaf directory contains up to 16 subdirectories,
-meaning a potential of 256 leaf directories.
+files. Each non-leaf directory contains up to 16 subdirectories (0-9, A-F).
 
 =back
     
@@ -341,7 +364,7 @@ altogether by having it return undef.
 
 =head1 SEE ALSO
 
-CHI
+L<CHI|CHI>
 
 =head1 AUTHOR
 
