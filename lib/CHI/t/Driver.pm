@@ -8,6 +8,7 @@ use CHI::Util qw(dump_one_line);
 use File::Temp qw(tempdir);
 use Module::Load::Conditional qw(can_load check_install);
 use Scalar::Util qw(weaken);
+use Storable qw(dclone);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -192,7 +193,7 @@ sub test_key_types : Tests {
     }
 }
 
-sub test_deep_copy : Test(8) {
+sub test_deep_copy : Test(9) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -209,6 +210,15 @@ sub test_deep_copy : Test(8) {
         isnt( $cache->get($key), $cache->get($key),
             "multiple get($key) do not return same reference" );
     }
+
+    my $struct = { a => [ 1, 2 ], b => [ 4, 5 ] };
+    my $struct2 = dclone($struct);
+    $cache->set( 'hashref', $struct );
+    push( @{ $struct->{a} }, 3 );
+    delete( $struct->{b} );
+    cmp_deeply( $cache->get('hashref'),
+        $struct2,
+        "altering original set structure does not affect cached copy" );
 }
 
 sub test_expires_immediately : Test(32) {
