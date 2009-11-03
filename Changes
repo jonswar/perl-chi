@@ -2,10 +2,12 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.30  Oct 14, 2009
+0.30  Nov 3, 2009
 
 * Improvements
   - Add file_digest and file_extension options to File driver
+  - Improve l1 cache performance by reusing packed CacheObject data
+  - Document options that cannot be overriden by subcache, and warn if user tries to override these
 
 0.29  Oct 14, 2009
 
