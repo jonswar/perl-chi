@@ -1,5 +1,6 @@
 package CHI::Test::Util;
 use Date::Parse;
+use Log::Any::Adapter;
 use Test::Builder;
 use Test::Log::Dispatch;
 use Test::More;
@@ -12,7 +13,7 @@ our @EXPORT_OK =
 
 sub activate_test_logger {
     my $log = Test::Log::Dispatch->new( min_level => 'debug' );
-    Log::Any->set_adapter( 'Dispatch', dispatcher => $log );
+    Log::Any::Adapter->set( 'Dispatch', dispatcher => $log );
     return $log;
 }
 
