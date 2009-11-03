@@ -672,11 +672,16 @@ contain a hash of options to create the subcache with.
 The cache containing the subcache is called the I<parent cache>.
 
 The following options are automatically inherited by the subcache from the
-parent cache, if they are not specified explicitly:
+parent cache, and may not be overriden:
 
     expires_at
     expires_in
     expires_variance
+    serializer
+
+The following options are automatically inherited by the subcache from the
+parent cache, but may be overriden:
+
     namespace
     on_get_error
     on_set_error

@@ -9,6 +9,7 @@ use File::Temp qw(tempdir);
 use Module::Load::Conditional qw(can_load check_install);
 use Scalar::Util qw(weaken);
 use Storable qw(dclone);
+use Test::Warn;
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -74,10 +75,9 @@ sub new_cache_options {
     my $self = shift;
 
     return (
-        driver_class     => $self->testing_driver_class(),
-        expires_variance => 0,
-        on_get_error     => 'die',
-        on_set_error     => 'die'
+        driver_class => $self->testing_driver_class(),
+        on_get_error => 'die',
+        on_set_error => 'die'
     );
 }
 
@@ -824,6 +824,28 @@ sub test_mirror_cache : Test(216) {
     isa_ok( $cache,        'CHI::Driver::File' );
     isa_ok( $mirror_cache, $self->testing_driver_class );
     $test_mirror_cache->();
+}
+
+sub test_subcache_overridable_params : Tests(5) {
+    my ($self) = @_;
+
+    my $cache;
+    warning_like {
+        $cache = $self->new_cache(
+            l1_cache => {
+                driver           => 'Memory',
+                on_get_error     => 'log',
+                datastore        => {},
+                expires_variance => 0.5,
+                serializer       => 'Foo'
+            }
+        );
+    }
+    qr/cannot override these keys/, "non-overridable subcache keys";
+    is( $cache->l1_cache->expires_variance, $cache->expires_variance );
+    is( $cache->l1_cache->serializer,       $cache->serializer );
+    is( $cache->l1_cache->on_set_error,     $cache->on_set_error );
+    is( $cache->l1_cache->on_get_error,     'log' );
 }
 
 # Run logging tests for a cache with an l1_cache

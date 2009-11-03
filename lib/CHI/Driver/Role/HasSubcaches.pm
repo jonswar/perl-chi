@@ -31,13 +31,27 @@ after 'BUILD_roles' => sub {
 # List of parameters that are automatically inherited by a subcache
 #
 my @subcache_inherited_param_keys = (
-    qw(expires_at expires_in expires_variance namespace on_get_error on_set_error)
+    qw(expires_at expires_in expires_variance namespace on_get_error on_set_error serializer)
 );
+
+# List of parameters that cannot be overriden in a subcache
+#
+my @subcache_nonoverride_param_keys =
+  (qw(expires_at expires_in expires_variance serializer));
 
 # Add a subcache with the specified type and params - called from BUILD
 #
 sub add_subcache {
     my ( $self, $params, $subcache_type, $subcache_params ) = @_;
+
+    if ( my %nonoverride_params =
+        slice_exists( $subcache_params, @subcache_nonoverride_param_keys ) )
+    {
+        my @nonoverride_keys = sort keys(%nonoverride_params);
+        warn sprintf( "cannot override these keys in a subcache: %s",
+            join( ", ", @nonoverride_keys ) );
+        delete( @$subcache_params{@nonoverride_keys} );
+    }
 
     my $chi_root_class = $self->chi_root_class;
     my %inherited_params =
@@ -86,16 +100,11 @@ around 'get' => sub {
             my $value = $self->$orig( @_, obj_ref => \my $obj );
             if ( defined($value) ) {
 
-                # If found in primary cache, write back to l1 cache
+                # If found in primary cache, write back to l1 cache. Use same $obj,
+                # meaning same metadata and serialization.
                 #
                 my $key = $_[0];
-                $l1_cache->set(
-                    $key, $value,
-                    {
-                        expires_at       => $obj->expires_at,
-                        early_expires_at => $obj->early_expires_at
-                    }
-                );
+                $l1_cache->_set_object( $key, $obj );
             }
             return $value;
         }
