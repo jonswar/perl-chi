@@ -12,6 +12,7 @@ use constant f_expires_at       => 5;
 use constant f_is_serialized    => 6;
 use constant f_cache_version    => 7;
 use constant f_value            => 8;
+use constant f_packed_data      => 9;
 
 my $Metadata_Format = "LLLCC";
 my $Metadata_Length = 14;
@@ -27,11 +28,15 @@ sub serializer       { $_[0]->[f_serializer] }
 sub _is_serialized   { $_[0]->[f_is_serialized] }
 sub size             { length( $_[0]->[f_raw_value] ) + $Metadata_Length }
 
-sub set_key              { $_[0]->[f_key]              = $_[1] }
-sub set_created_at       { $_[0]->[f_created_at]       = $_[1] }
-sub set_early_expires_at { $_[0]->[f_early_expires_at] = $_[1] }
-sub set_expires_at       { $_[0]->[f_expires_at]       = $_[1] }
-sub set_serializer       { $_[0]->[f_serializer]       = $_[1] }
+sub set_early_expires_at {
+    $_[0]->[f_early_expires_at] = $_[1];
+    undef $_[0]->[f_packed_data];
+}
+
+sub set_expires_at {
+    $_[0]->[f_expires_at] = $_[1];
+    undef $_[0]->[f_packed_data];
+}
 
 ## no critic (ProhibitManyArgs)
 sub new {
@@ -69,16 +74,20 @@ sub unpack_from_data {
         $serializer, unpack( $Metadata_Format, $metadata )
       ],
       $class;
+    $obj->[f_packed_data] = $data;
     return $obj;
 }
 
 sub pack_to_data {
     my ($self) = @_;
 
-    my $data =
-      pack( $Metadata_Format, ( @{$self} )[ f_created_at .. f_cache_version ] )
-      . $self->[f_raw_value];
-    return $data;
+    if ( !defined( $self->[f_packed_data] ) ) {
+        my $data = pack( $Metadata_Format,
+            ( @{$self} )[ f_created_at .. f_cache_version ] )
+          . $self->[f_raw_value];
+        $self->[f_packed_data] = $data;
+    }
+    return $self->[f_packed_data];
 }
 
 sub is_expired {
