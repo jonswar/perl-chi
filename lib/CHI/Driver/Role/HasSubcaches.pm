@@ -70,6 +70,7 @@ sub add_subcache {
 }
 
 # Call these methods first on the main cache, then on any subcaches.
+# ** Should use same $obj for all sets, just as in get.
 #
 foreach my $method (qw(clear expire expire_if purge remove set)) {
     after $method => sub {
