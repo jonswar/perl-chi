@@ -1,6 +1,7 @@
 package CHI::Driver::Role::HasSubcaches;
 use Moose::Role;
 use Hash::MoreUtils qw(slice_exists);
+use Log::Any qw($log);
 use Scalar::Util qw(weaken);
 use strict;
 use warnings;
@@ -70,9 +71,8 @@ sub add_subcache {
 }
 
 # Call these methods first on the main cache, then on any subcaches.
-# ** Should use same $obj for all sets, just as in get.
 #
-foreach my $method (qw(clear expire expire_if purge remove set)) {
+foreach my $method (qw(clear expire expire_if purge remove)) {
     after $method => sub {
         my $self      = shift;
         my $subcaches = $self->subcaches;
@@ -81,6 +81,17 @@ foreach my $method (qw(clear expire expire_if purge remove set)) {
         }
     };
 }
+
+after 'set_object' => sub {
+    my ( $self, $key, $obj ) = @_;
+
+    my $subcaches = $self->subcaches;
+    foreach my $subcache (@$subcaches) {
+        $subcache->set_object( $key, $obj );
+        $subcache->_log_set_result( $log, $obj )
+          if $log->is_debug;
+    }
+};
 
 around 'get' => sub {
     my $orig     = shift;
@@ -98,14 +109,17 @@ around 'get' => sub {
             return $value;
         }
         else {
-            my $value = $self->$orig( @_, obj_ref => \my $obj );
+            my ( $key, %params ) = @_;
+            $params{obj_ref} ||= \my $obj_store;
+            my $value = $self->$orig( $key, %params );
             if ( defined($value) ) {
 
                 # If found in primary cache, write back to l1 cache. Use same $obj,
                 # meaning same metadata and serialization.
                 #
                 my $key = $_[0];
-                $l1_cache->_set_object( $key, $obj );
+                my $obj = ${ $params{obj_ref} };
+                $l1_cache->set_object( $key, $obj );
             }
             return $value;
         }
