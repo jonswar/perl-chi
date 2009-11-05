@@ -54,10 +54,8 @@ around 'remove' => sub {
     }
 };
 
-around 'set' => sub {
-    my $orig  = shift;
-    my $self  = shift;
-    my ($key) = @_;
+around 'set_object' => sub {
+    my ( $orig, $self, $key, $obj ) = @_;
 
     # If item exists, record its size so we can subtract it below
     #
@@ -66,7 +64,7 @@ around 'set' => sub {
         $size_delta = -1 * length($data);
     }
 
-    my $result = $self->$orig( @_, { obj_ref => \my $obj } );
+    my $result = $self->$orig( $key, $obj );
 
     # Add to size and reduce size if over the maximum
     #
