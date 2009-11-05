@@ -6,6 +6,7 @@ use CHI::Test::Util
   qw(activate_test_logger cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line);
 use File::Temp qw(tempdir);
+use List::Util qw(shuffle);
 use Module::Load::Conditional qw(can_load check_install);
 use Scalar::Util qw(weaken);
 use Storable qw(dclone);
@@ -872,12 +873,12 @@ sub _test_logging_with_l1_cache {
     $log->empty_ok();
 
     $cache->set( $key, $value, 80 );
-    my $length = length($value);
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
     );
+
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='.*l1.*'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='.*l1.*'/
     );
     $log->empty_ok();
 
@@ -922,12 +923,12 @@ sub _test_logging_with_mirror_cache {
     $log->empty_ok();
 
     $cache->set( $key, $value, 80 );
-    my $length = length($value);
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
     );
+
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='.*mirror.*'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='.*mirror.*'/
     );
     $log->empty_ok();
 
@@ -1076,7 +1077,7 @@ sub test_clear : Tests {
     }
 }
 
-sub test_logging : Test(10) {
+sub test_logging : Test(12) {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1098,10 +1099,14 @@ sub test_logging : Test(10) {
         qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
     $log->empty_ok();
 
-    $cache->set( $key, $value, 80 );
-    my $length = length($value);
+    $cache->set( $key, $value );
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=$length, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='never', cache='$driver'/
+    );
+    $log->empty_ok();
+    $cache->set( $key, $value, 80 );
+    $log->contains_ok(
+        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
     );
     $log->empty_ok();
 
@@ -1149,7 +1154,7 @@ sub test_cache_object : Test(6) {
     );
 }
 
-sub test_size_awareness : Test(11) {
+sub test_size_awareness : Test(12) {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
 
@@ -1176,6 +1181,11 @@ sub test_size_awareness : Test(11) {
     is_about( $cache->get_size, 20, "size is about 20 with one value" );
     $cache->clear();
     is( $cache->get_size, 0, "size is 0 again after clear" );
+
+    my $time = time() + 10;
+    $cache->set( $key, $value, { expires_at => $time } );
+    is( $cache->get_expires_at($key),
+        $time, "set options respected by size aware cache" );
 }
 
 sub test_max_size : Test(22) {
@@ -1197,6 +1207,49 @@ sub test_max_size : Test(22) {
             "after iteration $i, size = " . $cache->get_size );
         is_between( scalar( $cache->get_keys ),
             3, 5, "after iteration $i, keys = " . scalar( $cache->get_keys ) );
+    }
+}
+
+sub test_max_size_with_l1_cache : Test(44) {
+    my $self = shift;
+
+    my $cache = $self->new_cleared_cache(
+        l1_cache => { driver => 'Memory', datastore => {}, max_size => 99 } );
+    my $l1_cache = $cache->l1_cache;
+    ok( $l1_cache->is_size_aware, "is size aware when max_size specified" );
+    my $value_20 = 'x' x 6;
+
+    my @keys = map { "key$_" } ( 0 .. 9 );
+    my @shuffle_keys = shuffle(@keys);
+    for ( my $i = 0 ; $i < 5 ; $i++ ) {
+        $cache->set( "key$i", $value_20 );
+    }
+    for ( my $i = 0 ; $i < 10 ; $i++ ) {
+        my $key = $shuffle_keys[$i];
+        $cache->set( $key, $value_20 );
+        is_between( $l1_cache->get_size, 60, 99,
+            "after iteration $i, size = " . $l1_cache->get_size );
+        is_between( scalar( $l1_cache->get_keys ),
+            3, 5,
+            "after iteration $i, keys = " . scalar( $l1_cache->get_keys ) );
+    }
+    cmp_deeply( [ sort $cache->get_keys ],
+        \@keys, "primary cache still has all keys" );
+
+    # Now test population by writeback
+    $l1_cache->clear();
+    is( $l1_cache->get_size, 0, "l1 size is 0 after clear" );
+    for ( my $i = 0 ; $i < 5 ; $i++ ) {
+        $cache->get("key$i");
+    }
+    for ( my $i = 0 ; $i < 10 ; $i++ ) {
+        my $key = $shuffle_keys[$i];
+        $cache->get($key);
+        is_between( $l1_cache->get_size, 60, 99,
+            "after iteration $i, size = " . $l1_cache->get_size );
+        is_between( scalar( $l1_cache->get_keys ),
+            3, 5,
+            "after iteration $i, keys = " . scalar( $l1_cache->get_keys ) );
     }
 }
 
@@ -1354,8 +1407,11 @@ sub test_busy_lock : Test(5) {
 }
 
 sub test_obj_ref : Tests(8) {
-    my $self  = shift;
-    my $cache = $self->{cache};
+    my $self = shift;
+
+    # Make sure obj_ref works in conjunction with subcaches too
+    my $cache =
+      $self->new_cache( l1_cache => { driver => 'Memory', datastore => {} } );
     my $obj;
     my ( $key, $value ) = ( 'medium', [ a => 5, b => 6 ] );
 
