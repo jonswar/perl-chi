@@ -281,12 +281,13 @@ sub set_with_options {
     if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
         $$obj_ref = $obj;
     }
-    $self->set_object( $key, $obj );
+    if ( $self->set_object( $key, $obj ) ) {
 
-    # Log the set
-    #
-    if ( $log->is_debug ) {
-        $self->_log_set_result( $log, $obj );
+        # Log the set
+        #
+        if ( $log->is_debug ) {
+            $self->_log_set_result( $log, $obj );
+        }
     }
 
     return $value;
@@ -467,8 +468,9 @@ sub set_object {
     eval { $self->store( $key, $data ) };
     if ( my $error = $@ ) {
         $self->_handle_set_error( $error, $obj );
-        return;
+        return 0;
     }
+    return 1;
 }
 
 sub _log_get_result {

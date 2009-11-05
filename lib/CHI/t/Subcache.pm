@@ -25,9 +25,8 @@ sub test_option_inheritance : Tests(8) {
     {
         is( $cache->$field, $cache->l1_cache->$field, "$field matches" );
     }
-    is( $cache->serializer->serializer, 'Data::Dumper', 'cache serializer' );
     is( $cache->l1_cache->serializer->serializer,
-        'Storable', 'l1 cache serializer' );
+        'Data::Dumper', 'l1 cache serializer' );
     is( $cache->depth,           4, 'cache depth' );
     is( $cache->l1_cache->depth, 2, 'l1 cache depth' );
 }
