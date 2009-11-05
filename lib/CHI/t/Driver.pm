@@ -273,7 +273,7 @@ sub test_expires_shortly : Test(18) {
 
         # Only bother sleeping and expiring for one of the variants
         if ( $set_option eq "2 seconds" ) {
-            sleep(2);
+            sleep(3);
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
             ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
             ok( !$cache->is_valid($key),             "invalid ($desc)" );
