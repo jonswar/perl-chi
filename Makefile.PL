@@ -8,7 +8,7 @@ author 'Jonathan Swartz <swartz@pobox.com>';
 perl_version '5.006';
 
 build_requires 'Date::Parse'                 => 0;
-build_requires 'Log::Any::Adapter::Dispatch' => 0;
+build_requires 'Log::Any::Adapter::Dispatch' => '0.05';
 build_requires 'Test::Class'                 => 0;
 build_requires 'Test::Deep'                  => 0;
 build_requires 'Test::Exception'             => 0;
@@ -22,7 +22,7 @@ requires 'Digest::JHash'             => 0;
 requires 'File::Spec'                => '0.80';
 requires 'Hash::MoreUtils'           => 0;
 requires 'List::MoreUtils'           => '0.13';
-requires 'Log::Any'                  => '0.03';
+requires 'Log::Any'                  => '0.06';
 requires 'Module::Load::Conditional' => 0;
 requires 'Moose'                     => '0.66';
 requires 'Storable'                  => 0;
