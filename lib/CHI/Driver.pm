@@ -158,7 +158,7 @@ sub get {
             my $busy_lock_time = $time + parse_duration($busy_lock);
             $obj->set_early_expires_at($busy_lock_time);
             $obj->set_expires_at($busy_lock_time);
-            $self->_set_object( $key, $obj );
+            $self->set_object( $key, $obj );
         }
 
         return undef;
@@ -229,6 +229,7 @@ sub _default_set_options {
 sub set {
     my $self = shift;
     my ( $key, $value, $options ) = @_;
+
     croak "must specify key" unless defined($key);
     return unless defined($value);
 
@@ -252,6 +253,12 @@ sub set {
         $options = { %{ $self->_default_set_options }, %$options };
     }
 
+    $self->set_with_options( $key, $value, $options );
+}
+
+sub set_with_options {
+    my ( $self, $key, $value, $options ) = @_;
+
     # Determine early and final expiration times
     #
     my $time = $Test_Time || time();
@@ -274,20 +281,12 @@ sub set {
     if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
         $$obj_ref = $obj;
     }
-    eval { $self->_set_object( $key, $obj ) };
-    if ( my $error = $@ ) {
-        my $log_expires_in =
-          defined($expires_at) ? ( $expires_at - $created_at ) : undef;
-        $self->_handle_set_error( $error, $key, $value, $log_expires_in );
-        return;
-    }
+    $self->set_object( $key, $obj );
 
     # Log the set
     #
     if ( $log->is_debug ) {
-        my $log_expires_in =
-          defined($expires_at) ? ( $expires_at - $created_at ) : undef;
-        $self->_log_set_result( $log, $key, $value, $log_expires_in );
+        $self->_log_set_result( $log, $obj );
     }
 
     return $value;
@@ -315,7 +314,7 @@ sub expire {
         my $expires_at = $time - 1;
         $obj->set_early_expires_at($expires_at);
         $obj->set_expires_at($expires_at);
-        $self->_set_object( $key, $obj );
+        $self->set_object( $key, $obj );
     }
 }
 
@@ -461,12 +460,15 @@ sub is_empty {
     }
 }
 
-sub _set_object {
+sub set_object {
     my ( $self, $key, $obj ) = @_;
 
     my $data = $obj->pack_to_data();
-    $self->store( $key, $data );
-    return length($data);
+    eval { $self->store( $key, $data ) };
+    if ( my $error = $@ ) {
+        $self->_handle_set_error( $error, $obj );
+        return;
+    }
 }
 
 sub _log_get_result {
@@ -493,13 +495,13 @@ sub _handle_get_error {
 }
 
 sub _handle_set_error {
-    my $self  = shift;
-    my $error = shift;
-    my $key   = $_[0];
+    my ( $self, $error, $obj ) = @_;
 
     my $msg =
-      sprintf( "error during %s: %s", $self->_describe_cache_set(@_), $error );
-    $self->_dispatch_error_msg( $msg, $error, $self->on_set_error(), $key );
+      sprintf( "error during %s: %s", $self->_describe_cache_set($obj),
+        $error );
+    $self->_dispatch_error_msg( $msg, $error, $self->on_set_error(),
+        $obj->key );
 }
 
 sub _dispatch_error_msg {
@@ -523,20 +525,22 @@ sub _describe_cache_get {
 }
 
 sub _describe_cache_set {
-    my ( $self, $key, $value, $expires_in ) = @_;
+    my ( $self, $obj ) = @_;
 
-    return sprintf(
-        "cache set for namespace='%s', key='%s', size=%d, expires='%s', cache='%s'",
-        $self->namespace,
-        $key,
-        length($value),
-        defined($expires_in)
-        ? Time::Duration::concise(
-            Time::Duration::duration_exact($expires_in)
-          )
-        : 'never',
-        $self->label
+    my $expires_str = (
+        ( $obj->expires_at == CHI_Max_Time )
+        ? 'never'
+        : Time::Duration::concise(
+            Time::Duration::duration_exact(
+                $obj->expires_at - $obj->created_at
+            )
+        )
     );
+
+    return
+      sprintf(
+        "cache set for namespace='%s', key='%s', size=%d, expires='%s', cache='%s'",
+        $self->namespace, $obj->key, $obj->size, $expires_str, $self->label );
 }
 
 1;
