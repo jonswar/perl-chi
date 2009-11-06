@@ -58,10 +58,14 @@ sub testing_driver_class {
     return $driver_class;
 }
 
+sub testing_chi_root_class {
+    return 'CHI';
+}
+
 sub new_cache {
     my $self = shift;
 
-    return CHI->new( $self->new_cache_options(), @_ );
+    return $self->testing_chi_root_class->new( $self->new_cache_options(), @_ );
 }
 
 sub new_cleared_cache {
@@ -763,7 +767,7 @@ sub test_l1_cache : Test(238) {
 
     # and in l1 position
     #
-    $cache = CHI->new(
+    $cache = $self->testing_chi_root_class->new(
         driver    => 'Memory',
         datastore => {},
         l1_cache  => { $self->new_cache_options() }
@@ -819,7 +823,7 @@ sub test_mirror_cache : Test(216) {
     # and in mirror position
     #
     $cache =
-      CHI->new( $file_cache_options->(),
+      $self->testing_chi_root_class->new( $file_cache_options->(),
         mirror_cache => { $self->new_cache_options() } );
     $mirror_cache = $cache->mirror_cache;
     isa_ok( $cache,        'CHI::Driver::File' );
