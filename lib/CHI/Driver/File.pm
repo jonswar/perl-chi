@@ -1,6 +1,7 @@
 package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
+use CHI::Types;
 use CHI::Util qw(fast_catdir fast_catfile unique_id read_dir);
 use Digest::JHash qw(jhash);
 use Fcntl qw( :DEFAULT );
@@ -18,9 +19,9 @@ extends 'CHI::Driver';
 has 'depth'            => ( is => 'ro', isa => 'Int', default => 2 );
 has 'dir_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'file_create_mode' => ( is => 'ro', isa => 'Int', default => oct(666) );
-has 'file_digest'      => ( is => 'ro', isa => 'Str' );
 has 'file_extension'   => ( is => 'ro', isa => 'Str', default => '.dat' );
-has 'root_dir'         => (
+has 'key_digest' => ( is => 'ro', isa => 'CHI::Types::Digester', coerce => 1 );
+has 'root_dir' => (
     is      => 'ro',
     isa     => 'Str',
     default => catdir( tmpdir(), 'chi-driver-file' ),
@@ -201,9 +202,8 @@ sub path_to_key {
 
     my @paths = ( $self->path_to_namespace );
     my $filename;
-    if ( my $digest_type = $self->file_digest ) {
-        require Digest;
-        $filename = Digest->new($digest_type)->add($key)->hexdigest();
+    if ( my $digester = $self->key_digest ) {
+        $filename = $digester->add($key)->hexdigest;
         push( @paths,
             map { substr( $filename, $_, 1 ) } ( 0 .. $self->{depth} - 1 ) );
     }
@@ -291,7 +291,7 @@ replaced with an escape sequence similar to URI escaping. The filename length
 is capped at 255 characters, which is the maximum for most Unix systems, so
 gets/sets for keys that escape to longer than 255 characters will fail. You can
 also use a digest of the key (e.g. MD5, SHA) for the base filename by
-specifying L</file_digest>.
+specifying L</key_digest>.
 
 The files are evenly distributed within a multi-level directory structure with
 a customizable depth, to minimize the time needed to search for a given entry.
@@ -319,12 +319,6 @@ Permissions mode to use when creating directories. Defaults to 0775.
 Permissions mode to use when creating files, modified by the current umask.
 Defaults to 0666.
 
-=item file_digest
-
-Digest algorithm to transform the key into a filename - e.g. "MD5", "SHA-1", or
-"SHA-256".  The string will be passed to Digest->new(). By default, no digest
-is performed and the entire key is used for the filename.
-
 =item file_extension
 
 Extension to append to filename. Default is ".dat".
@@ -334,6 +328,18 @@ Extension to append to filename. Default is ".dat".
 The number of subdirectories deep to place cache files. Defaults to 2. This
 should be large enough that no leaf directory has more than a few hundred
 files. Each non-leaf directory contains up to 16 subdirectories (0-9, A-F).
+
+=item key_digest [STRING|HASHREF|OBJECT]
+
+Digest algorithm to use on the key before storing - e.g. "MD5", "SHA-1", or
+"SHA-256".
+
+Can be a L<Digest|Digest> object, or a string or hashref which will passed to
+Digest->new(). You will need to ensure Digest is installed to use these
+options.
+
+By default, no digest is performed and the entire key is used in the filename,
+after escaping unsafe characters.
 
 =back
     

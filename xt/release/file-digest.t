@@ -13,7 +13,7 @@ my $root_dir = tempdir( "file-digest-XXXX", TMPDIR => 1, CLEANUP => 1 );
 my $cache = CHI->new(
     driver         => 'File',
     root_dir       => $root_dir,
-    file_digest    => 'SHA-1',
+    key_digest    => 'SHA-1',
     file_extension => '.sha'
 );
 my $key  = scalar( 'ab' x 256 );

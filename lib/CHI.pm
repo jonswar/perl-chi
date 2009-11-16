@@ -237,7 +237,7 @@ will set the namespace to the current component path.
 
 Defaults to 'Default' if not specified.
 
-=item serializer [STRING|OBJECT]
+=item serializer [STRING|HASHREF|OBJECT]
 
 An object to use for serializing data before storing it in the cache, and
 deserializing data before retrieving it from the cache.
