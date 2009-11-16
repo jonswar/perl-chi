@@ -29,10 +29,20 @@ coerce 'CHI::Types::Serializer' => from 'Str' => via {
     _build_data_serializer( { serializer => $_, raw => 1 } );
 };
 
+subtype 'CHI::Types::Digester' => as 'Object';
+coerce 'CHI::Types::Digester' => from 'HashRef' => via {
+    _build_digester(%$_);
+};
+coerce 'CHI::Types::Digester' => from 'Str' => via {
+    _build_digester($_);
+};
+
 __PACKAGE__->meta->make_immutable;
 
 my $data_serializer_loaded =
   can_load( modules => { 'Data::Serializer' => undef } );
+
+my $digest_loaded = can_load( modules => { 'Digest' => undef } );
 
 sub _build_data_serializer {
     my ($params) = @_;
@@ -41,7 +51,17 @@ sub _build_data_serializer {
         return Data::Serializer->new(%$params);
     }
     else {
-        croak "Data::Serializer not loaded, cannot handle serializer argument";
+        croak
+          "Data::Serializer could not be loaded, cannot handle serializer argument";
+    }
+}
+
+sub _build_digester {
+    if ($digest_loaded) {
+        return Digest->new(@_);
+    }
+    else {
+        croak "Digest could not be loaded, cannot handle digester argument";
     }
 }
 
