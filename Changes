@@ -2,7 +2,12 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.31  Nov 5, 2009
+0.31  Nov 15, 2009
+
+* Improvements
+  - ** Rename file_digest to key_digest, so it can be made a generic driver feature later on
+  - Allow key_digest to be passed as a string, hash or object
+  - Create Digest object once per CHI object, rather than once per read/write
 
 0.30  Nov 5, 2009
 
