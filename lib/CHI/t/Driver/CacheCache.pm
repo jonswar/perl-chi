@@ -8,7 +8,7 @@ use base qw(CHI::t::Driver);
 my $root_dir;
 
 sub required_modules {
-    return { 'Cache::Cache' => undef };
+    return { 'Cache::Cache' => undef, 'Cache::FileCache' => undef };
 }
 
 sub new_cache_options {
