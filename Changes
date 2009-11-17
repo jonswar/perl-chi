@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.31  Nov 15, 2009
+0.31  Nov 17, 2009
 
 * Improvements
   - ** Rename file_digest to key_digest, so it can be made a generic driver feature later on
