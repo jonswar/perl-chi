@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.32  Nov 17, 2009
 
+* Fixes
+  - get_keys not supported in File driver when key_digest is used, for now
+
 0.31  Nov 17, 2009
 
 * Improvements

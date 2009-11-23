@@ -149,6 +149,9 @@ sub clear {
 sub get_keys {
     my ($self) = @_;
 
+    die "get_keys not supported when key_digest is set"
+      if $self->key_digest;
+
     my @filepaths;
     my $wanted = sub { push( @filepaths, $_ ) if -f && /\.dat$/ };
     my @keys = $self->_collect_keys_via_file_find( \@filepaths, $wanted );
@@ -157,6 +160,9 @@ sub get_keys {
 
 sub _collect_keys_via_file_find {
     my ( $self, $filepaths, $wanted ) = @_;
+
+    die "cannot retrieve keys from filenames when key_digest is set"
+      if $self->key_digest;
 
     my $namespace_dir = $self->path_to_namespace;
     return () if !-d $namespace_dir;
@@ -336,7 +342,8 @@ Digest algorithm to use on the key before storing - e.g. "MD5", "SHA-1", or
 
 Can be a L<Digest|Digest> object, or a string or hashref which will passed to
 Digest->new(). You will need to ensure Digest is installed to use these
-options.
+options. Also, L<CHI/get_keys> is currently not supported when a digest is
+used, this will hopefully be fixed at a later date.
 
 By default, no digest is performed and the entire key is used in the filename,
 after escaping unsafe characters.
