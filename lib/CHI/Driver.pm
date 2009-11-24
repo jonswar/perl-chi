@@ -53,7 +53,7 @@ __PACKAGE__->meta->make_immutable();
 # Given a hash of params, return the subset that are not in CHI's common parameters.
 #
 my %common_params =
-  map { ( $_, 1 ) } keys( %{ __PACKAGE__->meta->get_attribute_map } );
+  map { ( $_, 1 ) } __PACKAGE__->meta->get_attribute_list();
 
 sub non_common_constructor_params {
     my ( $class, $params ) = @_;
