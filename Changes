@@ -6,6 +6,10 @@ Revision history for CHI
 
 * Fixes
   - get_keys not supported in File driver when key_digest is used, for now
+  - replace deprecated Class::MOP get_attribute_map with get_attribute_list - RT #52019 -
+    reported by Todd Caine
+  - include Role::HasSubcaches and Role::IsSizeAware attributes in
+    CHI::Driver->non_common_constructor_params
 
 0.31  Nov 17, 2009
 
