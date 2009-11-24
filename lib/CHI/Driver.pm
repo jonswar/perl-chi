@@ -3,6 +3,8 @@ use Carp;
 use CHI::CacheObject;
 use CHI::Constants qw(CHI_Max_Time);
 use CHI::Driver::Metacache;
+use CHI::Driver::Role::HasSubcaches;
+use CHI::Driver::Role::IsSizeAware;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
 use CHI::Util qw(has_moose_class parse_duration);
@@ -52,8 +54,12 @@ __PACKAGE__->meta->make_immutable();
 
 # Given a hash of params, return the subset that are not in CHI's common parameters.
 #
-my %common_params =
-  map { ( $_, 1 ) } __PACKAGE__->meta->get_attribute_list();
+my @common_params = map { $_->meta->get_attribute_list() } (
+    'CHI::Driver',
+    'CHI::Driver::Role::HasSubcaches',
+    'CHI::Driver::Role::IsSizeAware'
+);
+my %common_params = map { ( $_, 1 ) } @common_params;
 
 sub non_common_constructor_params {
     my ( $class, $params ) = @_;
