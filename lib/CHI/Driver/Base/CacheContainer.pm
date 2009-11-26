@@ -14,7 +14,7 @@ __PACKAGE__->meta->make_immutable();
 sub fetch {
     my ( $self, $key ) = @_;
 
-    return $self->_contained_cache->get($key);
+    return scalar( $self->_contained_cache->get($key) );
 }
 
 sub store {
