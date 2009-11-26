@@ -2,7 +2,11 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.33  Nov 24, 2009
+0.33  Nov 25, 2009
+
+* Fixes
+  - in CacheContainer, ensure that fetch returns scalar
+  - include Role::IsSubcache attributes in CHI::Driver->non_common_constructor_params
 
 0.32  Nov 24, 2009
 
