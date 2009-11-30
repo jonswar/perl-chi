@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.33  Nov 25, 2009
+0.33  Nov 29, 2009
 
 * Fixes
   - in CacheContainer, ensure that fetch returns scalar
