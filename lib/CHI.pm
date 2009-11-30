@@ -5,7 +5,7 @@ use CHI::NullLogger;
 use strict;
 use warnings;
 
-our $VERSION = '0.33';
+our $VERSION = '0.34';
 
 my %final_class_seen;
 
