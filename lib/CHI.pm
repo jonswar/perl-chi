@@ -679,6 +679,12 @@ parent cache, and may not be overriden:
     expires_variance
     serializer
 
+(Reason: for efficiency, we want to create a single L<cache
+object|CHI::CacheObject> and store it in both caches. The cache object contains
+expiration information and is dependent on the serializer.  At some point we
+could conceivably add code that will use a single object or separate objects as
+necessary, and thus allow the above to be overriden.)
+
 The following options are automatically inherited by the subcache from the
 parent cache, but may be overriden:
 
