@@ -41,12 +41,12 @@ sub read_dir {
     # For efficiency, use Data::UUID to generate an initial unique id, then suffix it to
     # generate a series of 0x10000 unique ids. Not to be used for hard-to-guess ids, obviously.
 
-    my $ug = Data::UUID->new();
     my $uuid;
     my $suffix = 0;
 
     sub unique_id {
         if ( !$suffix || !defined($uuid) ) {
+            my $ug = Data::UUID->new();
             $uuid = $ug->create_hex();
         }
         my $hex = sprintf( '%s%04x', $uuid, $suffix );
