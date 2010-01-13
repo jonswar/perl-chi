@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.34  Nov 29, 2009
 
+* Fixes
+  - change unique_id so as not to seg fault with threads - RT #53591 - reported by Marc Tobias
+
 0.33  Nov 29, 2009
 
 * Fixes
