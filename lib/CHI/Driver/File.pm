@@ -67,7 +67,7 @@ sub store {
     # Possibly generate a temporary file - if generate_temporary_filename returns undef,
     # store to the destination file directly
     #
-    my $temp_file = $self->generate_temporary_filename($dir);
+    my $temp_file = $self->generate_temporary_filename( $dir, $file );
     my $store_file = defined($temp_file) ? $temp_file : $file;
 
     write_file( $store_file, $data, $self->{file_create_mode} );
@@ -98,9 +98,12 @@ sub clear {
     my ($self) = @_;
 
     my $namespace_dir = $self->path_to_namespace;
-    rmtree($namespace_dir);
-    die "could not remove '$namespace_dir'"
-      if -d $namespace_dir;
+    return if !-d $namespace_dir;
+    my $renamed_dir = join( ".", $namespace_dir, unique_id() );
+    rename( $namespace_dir, $renamed_dir );
+    rmtree($renamed_dir);
+    die "could not remove '$renamed_dir'"
+      if -d $renamed_dir;
 }
 
 sub get_keys {
@@ -137,10 +140,11 @@ sub _collect_keys_via_file_find {
 }
 
 sub generate_temporary_filename {
-    my ( $self, $dir ) = @_;
+    my ( $self, $dir, $file ) = @_;
 
     # Generate a temporary filename using unique_id - faster than tempfile, as long as
-    # we don't need automatic removal
+    # we don't need automatic removal.
+    # Note: $file not used here, but might be used in an override.
     #
     return fast_catfile( $dir, unique_id() );
 }
