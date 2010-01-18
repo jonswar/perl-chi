@@ -64,6 +64,7 @@ sub read_file {
             croak "read_file '$file' - sysread: $!";
         }
     }
+    return $buf;
 }
 
 sub write_file {
