@@ -67,7 +67,7 @@ sub store {
     # Possibly generate a temporary file - if generate_temporary_filename returns undef,
     # store to the destination file directly
     #
-    my $temp_file = $self->generate_temporary_filename( $dir, $file );
+    my $temp_file = $self->generate_temporary_filename($dir);
     my $store_file = defined($temp_file) ? $temp_file : $file;
 
     write_file( $store_file, $data, $self->{file_create_mode} );
@@ -137,7 +137,7 @@ sub _collect_keys_via_file_find {
 }
 
 sub generate_temporary_filename {
-    my ( $self, $dir, $file ) = @_;
+    my ( $self, $dir ) = @_;
 
     # Generate a temporary filename using unique_id - faster than tempfile, as long as
     # we don't need automatic removal
