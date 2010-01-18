@@ -92,7 +92,6 @@ sub remove {
 
     my $file = $self->path_to_key($key) or return undef;
     unlink($file);
-    die "could not unlink '$file'" if -f $file;
 }
 
 sub clear {
