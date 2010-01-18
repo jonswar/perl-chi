@@ -93,6 +93,13 @@ sub BUILD {
         delete( $self->{constructor_params}->{$param} );
     }
 
+    # If stats enabled, add ns_stats slot for keeping track of stats
+    #
+    my $stats = $self->chi_root_class->stats;
+    if ( $stats->enabled ) {
+        $self->{ns_stats} = $stats->namespace_stats( $self->namespace );
+    }
+
     # Call BUILD_roles on any of the roles that need initialization.
     #
     $self->BUILD_roles($params);
@@ -126,6 +133,7 @@ sub _build_metacache {
 sub get {
     my ( $self, $key, %params ) = @_;
     croak "must specify key" unless defined($key);
+    my $ns_stats = $self->{ns_stats};
 
     # Fetch cache object
     #
@@ -133,12 +141,14 @@ sub get {
     if ( !defined $data ) {
         $data = eval { $self->fetch($key) };
         if ( my $error = $@ ) {
+            $ns_stats->{'get_errors'}++ if defined($ns_stats);
             $self->_handle_get_error( $error, $key );
             return undef;
         }
     }
 
     if ( !defined $data ) {
+        $ns_stats->{'absent_misses'}++ if defined($ns_stats);
         $self->_log_get_result( $log, "MISS (not in cache)", $key )
           if $log->is_debug;
         return undef;
@@ -153,6 +163,7 @@ sub get {
     my $is_expired = $obj->is_expired()
       || ( defined( $params{expire_if} ) && $params{expire_if}->($obj) );
     if ($is_expired) {
+        $ns_stats->{'expired_misses'}++ if defined($ns_stats);
         $self->_log_get_result( $log, "MISS (expired)", $key )
           if $log->is_debug;
 
@@ -170,6 +181,7 @@ sub get {
         return undef;
     }
 
+    $ns_stats->{'hits'}++ if defined($ns_stats);
     $self->_log_get_result( $log, "HIT", $key ) if $log->is_debug;
     return $obj->value;
 }
@@ -264,6 +276,7 @@ sub set {
 
 sub set_with_options {
     my ( $self, $key, $value, $options ) = @_;
+    my $ns_stats = $self->{ns_stats};
 
     # Determine early and final expiration times
     #
@@ -291,6 +304,11 @@ sub set_with_options {
 
         # Log the set
         #
+        if ( defined($ns_stats) ) {
+            $ns_stats->{'sets'}++;
+            $ns_stats->{'set_key_size'}   += length( $obj->key );
+            $ns_stats->{'set_value_size'} += $obj->size;
+        }
         if ( $log->is_debug ) {
             $self->_log_set_result( $log, $obj );
         }
@@ -473,6 +491,7 @@ sub set_object {
     my $data = $obj->pack_to_data();
     eval { $self->store( $key, $data ) };
     if ( my $error = $@ ) {
+        $self->{ns_stats}->{'set_errors'}++ if defined( $self->{ns_stats} );
         $self->_handle_set_error( $error, $obj );
         return 0;
     }

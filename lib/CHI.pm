@@ -1,22 +1,33 @@
 package CHI;
 use 5.006;
 use Carp;
-use CHI::NullLogger;
+use CHI::Stats;
 use strict;
 use warnings;
 
 our $VERSION = '0.34';
 
-my %final_class_seen;
+my ( %final_class_seen, %stats );
 
 sub logger {
     warn
       "CHI now uses Log::Any for logging - see Log::Any documentation for details";
 }
 
+sub stats {
+    my ($class) = @_;
+
+    # Each CHI root class gets its own stats object
+    #
+    $stats{$class} ||= CHI::Stats->new( chi_root_class => $class );
+    return $stats{$class};
+}
+
 sub new {
     my ( $chi_root_class, %params ) = @_;
 
+    # Get driver class from driver or driver_class parameters
+    #
     my $driver_class;
     if ( my $driver = delete( $params{driver} ) ) {
         $driver_class = "CHI::Driver::$driver";
@@ -27,7 +38,7 @@ sub new {
     croak "missing required param 'driver' or 'driver_class'"
       unless defined $driver_class;
 
-    # Load class if it hasn't been loaded or defined in-line already
+    # Load driver class if it hasn't been loaded or defined in-line already
     #
     unless ( $driver_class->can('fetch') ) {
         Class::MOP::load_class($driver_class);
@@ -158,7 +169,7 @@ Probabilistic expiration and busy locks, to reduce cache miss stampedes
 
 =item *
 
-Optional logging of cache activity
+Optional logging and statistics collection of cache activity
 
 =back
 
@@ -900,6 +911,14 @@ message is sent for every cache get and set.
 
 See L<Log::Any|Log::Any> documentation for how to control where logs get sent,
 if anywhere.
+
+=head1 STATS
+
+CHI can record statistics, such as number of hits, misses and sets, on a
+per-namespace basis and log the results to your L<Log::Any|Log::Any> logger.
+You can then use utilities included with this distribution to read stats back
+from the logs and report a coherent a summary. See L<CHI::Stats|CHI::Stats> for
+details.
 
 =for readme continue
 
