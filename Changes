@@ -4,22 +4,24 @@ Revision history for CHI
 
 0.34  Jan 18, 2010
 
+* Improvements
+  - Add statistics tracking with CHI->stats
 * Fixes
-  - change unique_id so as not to seg fault with threads - RT #53591 - reported by Marc Tobias
+  - Change unique_id so as not to seg fault with threads - RT #53591 - reported by Marc Tobias
 
 0.33  Nov 29, 2009
 
 * Fixes
-  - in CacheContainer, ensure that fetch returns scalar
-  - include Role::IsSubcache attributes in CHI::Driver->non_common_constructor_params
+  - In CacheContainer, ensure that fetch returns scalar
+  - Include Role::IsSubcache attributes in CHI::Driver->non_common_constructor_params
 
 0.32  Nov 24, 2009
 
 * Fixes
   - get_keys not supported in File driver when key_digest is used, for now
-  - replace deprecated Class::MOP get_attribute_map with get_attribute_list - RT #52019 -
+  - Replace deprecated Class::MOP get_attribute_map with get_attribute_list - RT #52019 -
     reported by Todd Caine
-  - include Role::HasSubcaches and Role::IsSizeAware attributes in
+  - Include Role::HasSubcaches and Role::IsSizeAware attributes in
     CHI::Driver->non_common_constructor_params
 
 0.31  Nov 17, 2009
