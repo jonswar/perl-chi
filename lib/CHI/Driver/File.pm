@@ -2,9 +2,9 @@ package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
 use CHI::Types;
-use CHI::Util qw(fast_catdir fast_catfile unique_id read_dir);
+use CHI::Util
+  qw(fast_catdir fast_catfile unique_id read_dir read_file write_file);
 use Digest::JHash qw(jhash);
-use Fcntl qw( :DEFAULT );
 use File::Basename qw(basename dirname);
 use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
@@ -36,8 +36,6 @@ __PACKAGE__->meta->make_immutable();
 
 my $Max_File_Length = 254;
 my $Max_Path_Length = ( $^O eq 'MSWin32' ? 254 : 1023 );
-my $Fetch_Flags     = O_RDONLY | O_BINARY;
-my $Store_Flags     = O_WRONLY | O_CREAT | O_BINARY;
 
 sub _build_path_to_namespace {
     my $self = shift;
@@ -50,29 +48,12 @@ sub fetch {
     my ( $self, $key ) = @_;
 
     my $file = $self->path_to_key($key);
-    return undef unless defined $file && -f $file;
-
-    # Fast slurp, adapted from File::Slurp::read, with unnecessary options removed
-    #
-    my $buf = "";
-    my $read_fh;
-    unless ( sysopen( $read_fh, $file, $Fetch_Flags ) ) {
-        croak "read_file '$file' - sysopen: $!";
+    if ( defined $file && -f $file ) {
+        return read_file($file);
     }
-    my $size_left = -s $read_fh;
-    while (1) {
-        my $read_cnt = sysread( $read_fh, $buf, $size_left, length $buf );
-        if ( defined $read_cnt ) {
-            last if $read_cnt == 0;
-            $size_left -= $read_cnt;
-            last if $size_left <= 0;
-        }
-        else {
-            croak "read_file '$file' - sysread: $!";
-        }
+    else {
+        return undef;
     }
-
-    return $buf;
 }
 
 sub store {
@@ -89,30 +70,7 @@ sub store {
     my $temp_file = $self->generate_temporary_filename( $dir, $file );
     my $store_file = defined($temp_file) ? $temp_file : $file;
 
-    # Fast spew, adapted from File::Slurp::write, with unnecessary options removed
-    #
-    {
-        my $write_fh;
-        unless (
-            sysopen(
-                $write_fh,    $store_file,
-                $Store_Flags, $self->{file_create_mode}
-            )
-          )
-        {
-            croak "write_file '$store_file' - sysopen: $!";
-        }
-        my $size_left = length($data);
-        my $offset    = 0;
-        do {
-            my $write_cnt = syswrite( $write_fh, $data, $size_left, $offset );
-            unless ( defined $write_cnt ) {
-                croak "write_file '$store_file' - syswrite: $!";
-            }
-            $size_left -= $write_cnt;
-            $offset += $write_cnt;
-        } while ( $size_left > 0 );
-    }
+    write_file( $store_file, $data, $self->{file_create_mode} );
 
     if ( defined($temp_file) ) {
 
