@@ -4,7 +4,8 @@ use warnings;
 use CHI::Test;
 use CHI::Test::Util
   qw(activate_test_logger cmp_bool is_between random_string skip_until);
-use CHI::Util qw(dump_one_line);
+use CHI::Util qw(dump_one_line write_file);
+use File::Spec::Functions qw(tmpdir);
 use File::Temp qw(tempdir);
 use List::Util qw(shuffle);
 use Module::Load::Conditional qw(can_load check_install);
@@ -1090,11 +1091,8 @@ sub test_logging : Test(12) {
 
     my $driver = $cache->label;
 
-    # Multilevel cache logs less details about misses
-    my $miss_not_in_cache =
-      ( $driver eq 'Multilevel' ? 'MISS' : 'MISS \(not in cache\)' );
-    my $miss_expired =
-      ( $driver eq 'Multilevel' ? 'MISS' : 'MISS \(expired\)' );
+    my $miss_not_in_cache = 'MISS \(not in cache\)';
+    my $miss_expired      = 'MISS \(expired\)';
 
     my $start_time = time();
 
@@ -1129,6 +1127,73 @@ sub test_logging : Test(12) {
     $log->contains_ok(
         qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
     $log->empty_ok();
+}
+
+sub test_stats : Test(5) {
+    my $self = shift;
+
+    my $stats = $self->testing_chi_root_class->stats;
+    $stats->enable();
+
+    my ( $key, $value ) = $self->kvpair();
+    my $start_time = time();
+
+    my $cache;
+    $cache = $self->new_cache( namespace => 'Foo' );
+    $cache->get($key);
+    $cache->set( $key, $value, 80 );
+    $cache->get($key);
+    local $CHI::Driver::Test_Time = $start_time + 120;
+    $cache->get($key);
+    $cache->remove($key);
+    $cache->get($key);
+
+    $cache = $self->new_cache( namespace => 'Bar' );
+    $cache->set( $key, scalar( $value x 3 ) );
+    $cache->set( $key, $value );
+
+    my $log = activate_test_logger();
+    $log->empty_ok();
+    $stats->flush();
+    $log->contains_ok(
+        qr/CHI stats: namespace='Foo'; start=.*; end=.*; absent_misses=2; expired_misses=1; hits=1; set_key_size=6; set_value_size=20; sets=1/
+    );
+    $log->contains_ok(
+        qr/CHI stats: namespace='Bar'; start=.*; end=.*; set_key_size=12; set_value_size=52; sets=2/
+    );
+    $log->empty_ok();
+
+    my @logs = (
+        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; sets=5",
+        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=1; sets=7",
+        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=4; sets=9",
+        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; sets=3",
+        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=8",
+        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=10; sets=1",
+        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; set_errors=2",
+    );
+    my $log_dir = tempdir( "chi-test-stats-XXXX", TMPDIR => 1, CLEANUP => 1 );
+    write_file( "$log_dir/log1", join( "\n", splice( @logs, 0, 4 ) ) . "\n" );
+    write_file( "$log_dir/log2", join( "\n", splice( @logs, 0, 3 ) ) . "\n" );
+    open( my $fh2, "<", "$log_dir/log2" );
+    my $results = $stats->parse_stats_logs( "$log_dir/log1", $fh2 );
+    cmp_deeply(
+        $results,
+        {
+            CHI => {
+                Bar => {
+                    hits       => 17,
+                    set_errors => 2,
+                    sets       => 10
+                },
+                Foo => {
+                    hits => 12,
+                    sets => 15
+                }
+            }
+        },
+        'parse_stats_logs'
+    );
 }
 
 sub test_cache_object : Test(6) {
