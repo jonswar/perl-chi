@@ -8,6 +8,7 @@ Revision history for CHI
   - Add statistics tracking with CHI->stats
 * Fixes
   - Change unique_id so as not to seg fault with threads - RT #53591 - reported by Marc Tobias
+  - Eliminate file existence check in remove, as it is prone to race condition - RT #50104 - reported by Aran Deltac
 
 0.33  Nov 29, 2009
 
