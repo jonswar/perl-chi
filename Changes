@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.34  Jan 21, 2010
+0.34  Feb 9, 2010
 
 * Improvements
   - Add statistics recording with CHI::Stats
