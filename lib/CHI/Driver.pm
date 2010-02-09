@@ -30,9 +30,10 @@ has 'has_subcaches' =>
   ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
 has 'is_subcache'   => ( is => 'ro', isa => 'Bool', default => undef );
-has 'label'     => ( is => 'rw', lazy_build => 1 );
-has 'metacache' => ( is => 'ro', lazy_build => 1 );
-has 'namespace' => ( is => 'ro', isa        => 'Str', default => 'Default' );
+has 'label'           => ( is => 'rw', lazy_build => 1 );
+has 'max_build_depth' => ( is => 'ro', default    => 8 );
+has 'metacache'       => ( is => 'ro', lazy_build => 1 );
+has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' =>
   ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
 has 'on_set_error' =>
@@ -81,9 +82,16 @@ sub declare_unsupported_methods {
 
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
+our $Build_Depth = 0;
 
 sub BUILD {
     my ( $self, $params ) = @_;
+
+    # Ward off infinite build recursion, e.g. from circular subcache configuration.
+    #
+    local $Build_Depth = $Build_Depth + 1;
+    die "$Build_Depth levels of CHI cache creation; infinite recursion?"
+      if ( $Build_Depth > $max_build_depth );
 
     # Save off constructor params. Used to create metacache, for
     # example. Hopefully this will not cause circular references...
