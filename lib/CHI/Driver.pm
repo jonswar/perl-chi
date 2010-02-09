@@ -91,7 +91,7 @@ sub BUILD {
     #
     local $Build_Depth = $Build_Depth + 1;
     die "$Build_Depth levels of CHI cache creation; infinite recursion?"
-      if ( $Build_Depth > $max_build_depth );
+      if ( $Build_Depth > $self->max_build_depth );
 
     # Save off constructor params. Used to create metacache, for
     # example. Hopefully this will not cause circular references...
