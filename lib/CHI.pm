@@ -916,8 +916,7 @@ if anywhere.
 CHI can record statistics, such as number of hits, misses and sets, on a
 per-namespace basis and log the results to your L<Log::Any|Log::Any> logger.
 You can then use utilities included with this distribution to read stats back
-from the logs and report a coherent a summary. See L<CHI::Stats|CHI::Stats> for
-details.
+from the logs and report a summary. See L<CHI::Stats|CHI::Stats> for details.
 
 =for readme continue
 

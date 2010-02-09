@@ -5,7 +5,7 @@ Revision history for CHI
 0.34  Jan 21, 2010
 
 * Improvements
-  - Add statistics tracking with CHI::Stats
+  - Add statistics recording with CHI::Stats
 * Fixes
   - Change unique_id so as not to seg fault with threads - RT #53591 - reported by Marc Tobias
   - Eliminate existence check in File remove(), as it is prone to race condition - RT #50104 - reported by Aran Deltac
