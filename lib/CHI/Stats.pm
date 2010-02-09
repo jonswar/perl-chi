@@ -122,12 +122,6 @@ sub clear {
     $self->{start_time} = time;
 }
 
-sub DEMOLISH {
-    my ($self) = @_;
-
-    $self->flush();
-}
-
 __END__
 
 =pod
@@ -160,9 +154,8 @@ You can then parse the logs to get a combined summary.
 A single CHI::Stats object is maintained for each CHI root class, and tallies
 statistics over any number of CHI::Driver objects.
 
-Statistics are reported to the logs by the L</flush> method. flush() is called
-automatically when the C<CHI::Stats> object is destroyed (typically at process
-end).
+Statistics are reported when you call the L</flush> method. You can choose to
+this once at process end, or on a periodic basis.
 
 =head1 STATISTICS
 
