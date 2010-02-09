@@ -1152,46 +1152,58 @@ sub test_stats : Test(5) {
     $cache->set( $key, scalar( $value x 3 ) );
     $cache->set( $key, $value );
 
-    my $log = activate_test_logger();
+    my $log   = activate_test_logger();
+    my $label = $cache->label;
     $log->empty_ok();
     $stats->flush();
     $log->contains_ok(
-        qr/CHI stats: namespace='Foo'; start=.*; end=.*; absent_misses=2; expired_misses=1; hits=1; set_key_size=6; set_value_size=20; sets=1/
+        qr/CHI stats: namespace='Foo'; cache='$label'; start=.*; end=.*; absent_misses=2; expired_misses=1; hits=1; set_key_size=6; set_value_size=20; sets=1/
     );
     $log->contains_ok(
-        qr/CHI stats: namespace='Bar'; start=.*; end=.*; set_key_size=12; set_value_size=52; sets=2/
+        qr/CHI stats: namespace='Bar'; cache='$label'; start=.*; end=.*; set_key_size=12; set_value_size=52; sets=2/
     );
     $log->empty_ok();
 
     my @logs = (
-        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; sets=5",
-        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=1; sets=7",
-        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=4; sets=9",
-        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; sets=3",
-        "CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; hits=8",
-        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=10; sets=1",
-        "CHI stats: namespace='Bar'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; set_errors=2",
+        "CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; sets=5",
+        "CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=1; sets=7",
+        "CHI stats: namespace='Bar'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=4; sets=9",
+        "CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; sets=3",
+        "CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=8",
+        "CHI stats: namespace='Foo'; cache='Memory'; start=20090102:12:53:05; end=20090102:12:58:05; sets=2",
+        "CHI stats: namespace='Bar'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=10; sets=1",
+        "CHI stats: namespace='Bar'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; hits=3; set_errors=2",
     );
     my $log_dir = tempdir( "chi-test-stats-XXXX", TMPDIR => 1, CLEANUP => 1 );
     write_file( "$log_dir/log1", join( "\n", splice( @logs, 0, 4 ) ) . "\n" );
-    write_file( "$log_dir/log2", join( "\n", splice( @logs, 0, 3 ) ) . "\n" );
+    write_file( "$log_dir/log2", join( "\n", @logs ) );
     open( my $fh2, "<", "$log_dir/log2" );
     my $results = $stats->parse_stats_logs( "$log_dir/log1", $fh2 );
     cmp_deeply(
         $results,
-        {
-            CHI => {
-                Bar => {
-                    hits       => 17,
-                    set_errors => 2,
-                    sets       => 10
-                },
-                Foo => {
-                    hits => 12,
-                    sets => 15
-                }
+        [
+            {
+                root_class => 'CHI',
+                namespace  => 'Foo',
+                cache      => 'File',
+                hits       => 12,
+                sets       => 15
+            },
+            {
+                root_class => 'CHI',
+                namespace  => 'Bar',
+                cache      => 'File',
+                hits       => 17,
+                sets       => 10,
+                set_errors => 2
+            },
+            {
+                root_class => 'CHI',
+                namespace  => 'Foo',
+                cache      => 'Memory',
+                sets       => 2
             }
-        },
+        ],
         'parse_stats_logs'
     );
 }

@@ -65,16 +65,17 @@ sub format_time {
     );
 }
 
-sub namespace_stats {
-    my ( $self, $label, $namespace ) = @_;
+sub stats_for_driver {
+    my ( $self, $cache ) = @_;
 
-    $self->data->{$label}->{$namespace} ||= {};
-    return $self->data->{$label}->{$namespace};
+    my $stats =
+      ( $self->data->{ $cache->label }->{ $cache->namespace } ||= {} );
+    return $stats;
 }
 
 sub parse_stats_logs {
     my $self = shift;
-    my %results;
+    my ( %results_hash, @results );
     foreach my $log (@_) {
         my $logfh;
         if ( ref($log) ) {
@@ -84,6 +85,7 @@ sub parse_stats_logs {
             open( $logfh, '<', $log ) or die "cannot open $log: $!";
         }
         while ( my $line = <$logfh> ) {
+            chomp($line);
             if (
                 my ( $root_class, $namespace, $label, $start, $end, $rest ) = (
                     $line =~
@@ -91,22 +93,23 @@ sub parse_stats_logs {
                 )
               )
             {
-                $results{$root_class}->{$label}->{$namespace} ||= {
-                    root_class => $root_class,
-                    label      => $label,
-                    namespace  => $namespace
-                };
-                my $results_rc_ns =
-                  $results{$root_class}->{$label}->{$namespace};
+                my $results_set =
+                  ( $results_hash{$root_class}->{$label}->{$namespace} ||= {} );
+                if ( !%$results_set ) {
+                    $results_set->{root_class} = $root_class;
+                    $results_set->{namespace}  = $namespace;
+                    $results_set->{cache}      = $label;
+                    push( @results, $results_set );
+                }
                 my @pairs = split( '; ', $rest );
                 foreach my $pair (@pairs) {
                     my ( $key, $value ) = split( /=/, $pair );
-                    $results_rc_ns->{$key} += $value;
+                    $results_set->{$key} += $value;
                 }
             }
         }
     }
-    return values(%results);
+    return \@results;
 }
 
 sub clear {
@@ -233,7 +236,7 @@ cache label and namespace, looking like:
 
 =item parse_stats_logs (log1, log2, ...)
 
-Parses logs output by CHI::Stats and returns a list of stats totals by root
+Parses logs output by CHI::Stats and returns a listref of stats totals by root
 class, cache label, and namespace. e.g.
 
     [

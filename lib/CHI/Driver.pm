@@ -105,7 +105,7 @@ sub BUILD {
     #
     my $stats = $self->chi_root_class->stats;
     if ( $stats->enabled ) {
-        $self->{ns_stats} = $stats->namespace_stats( $self->namespace );
+        $self->{ns_stats} = $stats->stats_for_driver($self);
     }
 
     # Call BUILD_roles on any of the roles that need initialization.
