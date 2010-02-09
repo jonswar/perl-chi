@@ -18,17 +18,21 @@ sub flush {
     my ($self) = @_;
 
     my $data = $self->data;
-    foreach my $namespace ( sort keys %$data ) {
-        my $namespace_stats = $data->{$namespace};
-        if (%$namespace_stats) {
-            $self->log_namespace_stats( $namespace, $namespace_stats );
+    foreach my $label ( sort keys %$data ) {
+        my $label_stats = $data->{$label};
+        foreach my $namespace ( sort keys(%$label_stats) ) {
+            my $namespace_stats = $label_stats->{$namespace};
+            if (%$namespace_stats) {
+                $self->log_namespace_stats( $label, $namespace,
+                    $namespace_stats );
+            }
         }
     }
     $self->clear();
 }
 
 sub log_namespace_stats {
-    my ( $self, $namespace, $namespace_stats ) = @_;
+    my ( $self, $label, $namespace, $namespace_stats ) = @_;
 
     my $fields_string = join( "; ",
         map { join( "=", $_, $namespace_stats->{$_} ) }
@@ -38,9 +42,10 @@ sub log_namespace_stats {
         my $start_time = $namespace_stats->{start_time};
         my $end_time   = time;
         $log->infof(
-            '%s stats: namespace=\'%s\'; start=%s; end=%s; %s',
+            '%s stats: namespace=\'%s\'; cache=\'%s\'; start=%s; end=%s; %s',
             $self->chi_root_class,
             $namespace,
+            $label,
             $self->format_time($start_time),
             $self->format_time($end_time),
             $fields_string
@@ -61,10 +66,10 @@ sub format_time {
 }
 
 sub namespace_stats {
-    my ( $self, $namespace ) = @_;
+    my ( $self, $label, $namespace ) = @_;
 
-    $self->data->{$namespace} ||= {};
-    return $self->data->{$namespace};
+    $self->data->{$label}->{$namespace} ||= {};
+    return $self->data->{$label}->{$namespace};
 }
 
 sub parse_stats_logs {
@@ -80,14 +85,19 @@ sub parse_stats_logs {
         }
         while ( my $line = <$logfh> ) {
             if (
-                my ( $root_class, $namespace, $start, $end, $rest ) = (
+                my ( $root_class, $namespace, $label, $start, $end, $rest ) = (
                     $line =~
-                      /(.*) stats: namespace='(.*)'; start=([^;]+); end=([^;]+); (.*)/
+                      /(.*) stats: namespace='(.*)'; cache='(.*)'; start=([^;]+); end=([^;]+); (.*)/
                 )
               )
             {
-                $results{$root_class}->{$namespace} ||= {};
-                my $results_rc_ns = $results{$root_class}->{$namespace};
+                $results{$root_class}->{$label}->{$namespace} ||= {
+                    root_class => $root_class,
+                    label      => $label,
+                    namespace  => $namespace
+                };
+                my $results_rc_ns =
+                  $results{$root_class}->{$label}->{$namespace};
                 my @pairs = split( '; ', $rest );
                 foreach my $pair (@pairs) {
                     my ( $key, $value ) = split( /=/, $pair );
@@ -96,15 +106,15 @@ sub parse_stats_logs {
             }
         }
     }
-    return \%results;
+    return values(%results);
 }
 
 sub clear {
     my ($self) = @_;
 
     my $data = $self->data;
-    foreach my $namespace ( keys %{$data} ) {
-        %{ $data->{$namespace} } = ();
+    foreach my $key ( keys %{$data} ) {
+        %{ $data->{$key} } = ();
     }
     $self->{start_time} = time;
 }
@@ -217,24 +227,22 @@ and disabling does not affect existing cache objects. e.g.
 
 Log all statistics to L<Log::Any|Log::Any> (at Info level in the CHI::Stats
 category), then clear statistics from memory. There is one log message per
-namespace looking like:
+cache label and namespace, looking like:
 
-    CHI stats: namespace='Foo'; start=20090102:12:53:05; end=20090102:12:58:05; absent_misses=10; expired_misses=20; hits=50; set_key_size=6; set_value_size=20; sets=30
+    CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; absent_misses=10; expired_misses=20; hits=50; set_key_size=6; set_value_size=20; sets=30
 
 =item parse_stats_logs (log1, log2, ...)
 
-Parses logs output by CHI::Stats and returns a hashref of stats totals by root
-class and namespace. e.g.
+Parses logs output by CHI::Stats and returns a list of stats totals by root
+class, cache label, and namespace. e.g.
 
-    CHI => {
-      { 
-        Foo => { absent_misses => 100, expired_misses => 200, ... },
-        Bar => { ... },
-      }
-    }
+    [
+     {root_class => 'CHI', cache =>'File', namespace => 'Foo', absent_misses => 100, expired_misses => 200, ... },
+     {root_class => 'CHI', cache =>'File', namespace => 'Bar', ... },
+    ]
 
-Lines with the same root class and namespace are summed together. Non-stats
-lines are ignored.
+Lines with the root class, cache label, and namespace are summed together.
+Non-stats lines are ignored.
 
 Each parameter to this method may be a filename or a reference to an open
 filehandle.
