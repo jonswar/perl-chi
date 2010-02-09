@@ -203,10 +203,9 @@ Provide default values for the corresponding L</set> options.
 
 =item label [STRING]
 
-A label for the cache as a whole, used when referring to it in logs and error
-messages, for example "web-file-cache". Does not need to include namespace -
-this will be appended to messages automatically. By default, the driver name
-will be used, e.g. "Memcached".
+A label for the cache as a whole, independent of namespace - e.g.
+"web-file-cache". Used when referring to the cache in logs, statistics, and
+error messages. By default, set to L</short_driver_name>.
 
 =item l1_cache [HASHREF]
 
