@@ -82,7 +82,7 @@ sub declare_unsupported_methods {
 
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
-our $Build_Depth = 0;
+our $Build_Depth = 0;    ## no critic (ProhibitPackageVars)
 
 sub BUILD {
     my ( $self, $params ) = @_;

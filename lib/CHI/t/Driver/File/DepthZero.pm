@@ -6,8 +6,6 @@ use File::Temp qw(tempdir);
 use File::Basename qw(dirname);
 use base qw(CHI::t::Driver::File);
 
-my $root_dir;
-
 # Test file driver with zero depth
 
 sub testing_driver_class { 'CHI::Driver::File' }

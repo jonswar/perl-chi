@@ -117,7 +117,6 @@ around 'get' => sub {
                 # If found in primary cache, write back to l1 cache. Use same $obj,
                 # meaning same metadata and serialization.
                 #
-                my $key = $_[0];
                 my $obj = ${ $params{obj_ref} };
                 $l1_cache->set_object( $key, $obj );
             }

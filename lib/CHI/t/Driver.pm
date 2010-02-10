@@ -1177,8 +1177,9 @@ sub test_stats : Test(5) {
     my $log_dir = tempdir( "chi-test-stats-XXXX", TMPDIR => 1, CLEANUP => 1 );
     write_file( "$log_dir/log1", join( "\n", splice( @logs, 0, 4 ) ) . "\n" );
     write_file( "$log_dir/log2", join( "\n", @logs ) );
-    open( my $fh2, "<", "$log_dir/log2" );
+    open( my $fh2, "<", "$log_dir/log2" ) or die "cannot open $log_dir/log2";
     my $results = $stats->parse_stats_logs( "$log_dir/log1", $fh2 );
+    close($fh2);
     cmp_deeply(
         $results,
         [
@@ -1498,7 +1499,6 @@ sub test_obj_ref : Tests(8) {
     my ( $key, $value ) = ( 'medium', [ a => 5, b => 6 ] );
 
     my $validate_obj = sub {
-        my $obj = shift;
         isa_ok( $obj, 'CHI::CacheObject' );
         is( $obj->key, $key, "keys match" );
         cmp_deeply( $obj->value, $value, "values match" );
@@ -1507,11 +1507,11 @@ sub test_obj_ref : Tests(8) {
     $cache->get( $key, obj_ref => \$obj );
     ok( !defined($obj), "obj not defined on miss" );
     $cache->set( $key, $value, { obj_ref => \$obj } );
-    $validate_obj->($obj);
+    $validate_obj->();
     undef $obj;
     ok( !defined($obj), "obj not defined before get" );
     $cache->get( $key, obj_ref => \$obj );
-    $validate_obj->($obj);
+    $validate_obj->();
 }
 
 sub test_metacache : Tests(3) {
@@ -1556,8 +1556,7 @@ sub test_no_leak : Tests(2) {
     ok( !defined($weakref), "weakref is no longer defined - cache was freed" );
 }
 
-## no critic
-{ package My::CHI; use Moose; extends 'CHI' }
+Class::MOP::Class->create( 'My::CHI' => ( superclasses => ['CHI'] ) );
 
 sub test_driver_properties : Tests(2) {
     my $self  = shift;
