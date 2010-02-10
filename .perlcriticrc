@@ -33,5 +33,7 @@ allow = refs
 [RegularExpressions::ProhibitComplexRegexes]
 max_characters = 100
 
-# Theoretically I like this, but ultimately caused too many exceptions
+# Theoretically I like these, but ultimately caused too many exceptions
 [-ErrorHandling::RequireCarping]
+[-ErrorHandling::RequireCheckingReturnValueOfEval]
+[-InputOutput::RequireBriefOpen]
