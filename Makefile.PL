@@ -15,6 +15,8 @@ build_requires 'Test::Exception'             => 0;
 build_requires 'Test::Log::Dispatch'         => 0;
 build_requires 'Test::More'                  => 0;
 build_requires 'Test::Warn'                  => 0;
+build_requires 'Test::Builder'               => 0;
+build_requires 'Test::Log::Dispatch'         => 0;
 
 requires 'Carp::Assert'              => '0.20';
 requires 'Data::UUID'                => 0;
