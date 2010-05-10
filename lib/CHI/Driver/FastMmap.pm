@@ -98,6 +98,11 @@ CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed files
         cache_size => '1m'
     );
 
+=head1 REQUIREMENTS
+
+You will need to install L<Cache::FastMmap|Cache::FastMmap> from CPAN to use
+this driver.
+
 =head1 DESCRIPTION
 
 This cache driver uses Cache::FastMmap to store data in an mmap'ed file. It is
