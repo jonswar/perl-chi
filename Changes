@@ -2,7 +2,11 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.35  Feb 9, 2010
+0.35  May 10, 2010
+
+* Fixes
+  - Add Test::Builder and Test::Log::Dispatch to dependencies - RT #57091 - reported by Doug Bell
+  - Add line about installing Cache::FastMmap in CHI::Driver::FastMmap - RT #55920 - reported by RSAVAGE
 
 0.34  Feb 9, 2010
 
