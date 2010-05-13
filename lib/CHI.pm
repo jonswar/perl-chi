@@ -88,7 +88,7 @@ __END__
 
 =head1 NAME
 
-CHI -- Unified cache interface
+CHI -- Unified cache handling interface
 
 =head1 SYNOPSIS
 
