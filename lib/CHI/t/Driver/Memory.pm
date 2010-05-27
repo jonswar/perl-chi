@@ -60,7 +60,7 @@ sub test_different_datastores : Tests(1) {
     my $cache1 = CHI->new( driver => 'Memory', datastore => {} );
     my $cache2 = CHI->new( driver => 'Memory', datastore => {} );
     $self->set_some_keys($cache1);
-    ok( $cache2->is_empty() );
+    ok( !$cache2->get_keys() );
 }
 
 # Make sure cache is cleared when datastore itself is cleared
