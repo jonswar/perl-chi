@@ -157,7 +157,7 @@ Uniform support for namespaces
 
 =item *
 
-Automatic [de]serialization of data
+Automatic serialization of keys and values
 
 =item *
 
@@ -195,11 +195,22 @@ The exact CHI::Driver subclass to drive the cache, for example
 
 =item expires_in [DURATION]
 
-=item expires_at [NUM]
+=item expires_at [INT]
 
 =item expires_variance [FLOAT]
 
 Provide default values for the corresponding L</set> options.
+
+=item key_digester [STRING|HASHREF|OBJECT]
+
+Digest algorithm to use on keys longer than L</max_key_length> - e.g. "MD5",
+"SHA-1", or "SHA-256".
+
+Can be a L<Digest|Digest> object, or a string or hashref which will passed to
+Digest->new(). You will need to ensure Digest is installed to use these
+options.
+
+Default is "MD5".
 
 =item label [STRING]
 
@@ -210,6 +221,11 @@ error messages. By default, set to L</short_driver_name>.
 =item l1_cache [HASHREF]
 
 Add an L1 cache as a subcache. See L</SUBCACHES>.
+
+=item max_key_length [INT]
+
+Keys over this size will be L<digested|key_digester>. The default is
+driver-specific; for most drivers there is no maximum.
 
 =item mirror_cache [HASHREF]
 
@@ -250,7 +266,7 @@ Defaults to 'Default' if not specified.
 =item serializer [STRING|HASHREF|OBJECT]
 
 An object to use for serializing data before storing it in the cache, and
-deserializing data before retrieving it from the cache.
+deserializing data after retrieving it from the cache.
 
 If this is a string, a L<Data::Serializer|Data::Serializer> object will be
 created, with the string passed as the 'serializer' option and raw=1. Common
@@ -273,6 +289,12 @@ e.g.
     my $cache = CHI->new(serializer => My::Custom::Serializer->new())
 
 The default is to use raw Storable.
+
+=item key_serializer [STRING|HASHREF|OBJECT]
+
+An object to use for serializing keys that are references. See L</serializer>
+above for the different ways this can be passed in. The default is to use JSON
+in canonical mode (sorted hash keys).
 
 =item on_get_error [STRING|CODEREF]
 
@@ -364,11 +386,11 @@ these options can be provided with defaults in the cache constructor.
 
 =over
 
-=item expires_in [INT]
+=item expires_in [DURATION]
 
 Amount of time (in seconds) until this data expires.
 
-=item expires_at [NUM]
+=item expires_at [INT]
 
 The epoch time at which the data expires.
 
@@ -485,10 +507,13 @@ Remove all entries from the namespace.
 Returns a list of keys in the namespace. This may or may not include expired
 keys, depending on the driver.
 
-=item is_empty( )
+The keys may not look the same as they did when passed into L</set>; they may
+have been serialized, utf8 encoded, and/or digested (see L</KEY AND VALUE
+TRANSFORMATION>). However, they may still be passed back into L</get>, L</set>,
+etc. to access the same underlying objects. i.e. the following code is
+guaranteed to produce all key/value pairs from the cache:
 
-Returns a boolean indicating whether the namespace is empty, based on
-get_keys().
+  map { ($_, $c->get($_)) } $c->get_keys()
 
 =item purge( )
 
@@ -500,6 +525,11 @@ keys and the driver.
 
 Returns a list of namespaces associated with the cache. This may or may not
 include empty namespaces, depending on the driver.
+
+The namespaces may not look the same as they did when passed into the
+L<constructor|/CONSTRUCTOR>; they may have been serialized, utf8 encoded,
+and/or digested (see L</KEY AND VALUE TRANSFORMATION>). However, they may still
+be passed back into a new constructor to access the same underlying cache.
 
 =back
 
@@ -520,13 +550,14 @@ same length with corresponding values or undefs.
 =item get_multi_hashref( $keys )
 
 Like L</get_multi_arrayref>, but returns a hash reference with each key in
-I<$keys> mapping to its corresponding value or undef.
+I<$keys> mapping to its corresponding value or undef. Will only work with
+scalar keys.
 
 =item set_multi( $key_values, $set_options )
 
 Set the multiple keys and values provided in hash reference I<$key_values>.
 I<$set_options> is a scalar or hash reference, used as the third argument to
-set.
+set. Will only work with scalar keys.
 
 =item remove_multi( $keys )
 
@@ -590,7 +621,7 @@ e.g.
 
 The following methods are deprecated and will be removed in a later version:
 
-    expire_if
+    is_empty
 
 =head1 DURATION EXPRESSIONS
 
@@ -614,6 +645,47 @@ e.g. the following are all valid duration expressions:
     5 seconds
     1 minute and ten seconds
     1 hour
+
+=head1 KEY AND VALUE TRANSFORMATION
+
+CHI strives to accept arbitrary namespaces, keys, and values for caching
+regardless of the limitations of the underlying driver.
+
+=over
+
+=item *
+
+Keys that are references are serialized - see L</key_serializer>.
+
+=item *
+
+Keys with a utf8 flag are utf8 encoded.
+
+=item *
+
+For some drivers (e.g. L<CHI::Driver::File|File>), keys containing special
+characters or whitespace are escaped with URL-like escaping.
+
+=item *
+
+Keys exceeding the maximum length for the underlying driver are digested - see
+L</max_key_length> and L</key_digester>.
+
+=item *
+
+Namespaces are transformed the same way as keys.
+
+=item *
+
+Values which are references are automatically serialized before storing, and
+deserialized after retrieving - see L</serializer>.
+
+=item *
+
+Values with a utf8 flag are are utf8 encoded before storing, and utf8 decoded
+after retrieving.
+
+=back
 
 =head1 SUBCACHES
 
@@ -730,7 +802,6 @@ caller's intent.)
     exists_and_is_expired
     is_valid
     dump_as_hash
-    is_empty
 
 =head2 Multiple subcaches
 
