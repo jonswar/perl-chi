@@ -8,8 +8,11 @@ use CHI::Driver::Role::IsSizeAware;
 use CHI::Driver::Role::IsSubcache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
+use CHI::Serializer::JSON;
 use CHI::Util qw(has_moose_class parse_duration);
 use CHI::Types;
+use Digest::MD5;
+use Encode;
 use Log::Any qw($log);
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -18,7 +21,9 @@ use Time::Duration;
 use strict;
 use warnings;
 
-my $default_serializer = CHI::Serializer::Storable->new();
+my $default_serializer     = CHI::Serializer::Storable->new();
+my $default_key_serializer = CHI::Serializer::JSON->new();
+my $default_key_digester   = Digest::MD5->new();
 
 has 'chi_root_class'     => ( is => 'ro' );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
@@ -30,9 +35,22 @@ has 'has_subcaches' =>
   ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
 has 'is_size_aware' => ( is => 'ro', isa => 'Bool', default => undef );
 has 'is_subcache'   => ( is => 'ro', isa => 'Bool', default => undef );
+has 'key_digester'  => (
+    is      => 'ro',
+    isa     => 'CHI::Types::Digester',
+    coerce  => 1,
+    default => sub { $default_key_digester }
+);
+has 'key_serializer' => (
+    is      => 'ro',
+    isa     => 'CHI::Types::Serializer',
+    coerce  => 1,
+    default => sub { $default_key_serializer }
+);
 has 'label'           => ( is => 'rw', lazy_build => 1 );
 has 'max_build_depth' => ( is => 'ro', default    => 8 );
-has 'metacache'       => ( is => 'ro', lazy_build => 1 );
+has 'max_key_length' => ( is => 'ro', isa        => 'Int', default => 1 << 31 );
+has 'metacache'      => ( is => 'ro', lazy_build => 1 );
 has 'namespace' => ( is => 'ro', isa => 'Str', default => 'Default' );
 has 'on_get_error' =>
   ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
@@ -101,6 +119,10 @@ sub BUILD {
         delete( $self->{constructor_params}->{$param} );
     }
 
+    # Transform namespace as needed (serialize, encode, etc.)
+    #
+    $self->{namespace} = $self->transform_namespace( $self->{namespace} );
+
     # If stats enabled, add ns_stats slot for keeping track of stats
     #
     my $stats = $self->chi_root_class->stats;
@@ -140,7 +162,9 @@ sub _build_metacache {
 
 sub get {
     my ( $self, $key, %params ) = @_;
+
     croak "must specify key" unless defined($key);
+    $key = $self->transform_key($key);
     my $ns_stats = $self->{ns_stats};
 
     # Fetch cache object
@@ -202,7 +226,9 @@ sub unpack_from_data {
 
 sub get_object {
     my ( $self, $key ) = @_;
+
     croak "must specify key" unless defined($key);
+    $key = $self->transform_key($key);
 
     my $data = $self->fetch($key) or return undef;
     my $obj = $self->unpack_from_data( $key, $data );
@@ -257,6 +283,7 @@ sub set {
     my ( $key, $value, $options ) = @_;
 
     croak "must specify key" unless defined($key);
+    $key = $self->transform_key($key);
     return unless defined($value);
 
     # Fill in $options if not passed, copy if passed, and apply defaults.
@@ -325,6 +352,19 @@ sub set_with_options {
     return $value;
 }
 
+sub set_object {
+    my ( $self, $key, $obj ) = @_;
+
+    my $data = $obj->pack_to_data();
+    eval { $self->store( $key, $data ) };
+    if ( my $error = $@ ) {
+        $self->{ns_stats}->{'set_errors'}++ if defined( $self->{ns_stats} );
+        $self->_handle_set_error( $error, $obj );
+        return 0;
+    }
+    return 1;
+}
+
 sub get_keys_iterator {
     my ($self) = @_;
 
@@ -351,23 +391,6 @@ sub expire {
     }
 }
 
-# DEPRECATED
-sub expire_if {
-    my ( $self, $key, $code ) = @_;
-    croak "must specify key and code" unless defined($key) && defined($code);
-
-    if ( my $obj = $self->get_object($key) ) {
-        my $retval = $code->($obj);
-        if ($retval) {
-            $self->expire($key);
-        }
-        return $retval;
-    }
-    else {
-        return 1;
-    }
-}
-
 sub compute {
     my ( $self, $key, $code, $set_options ) = @_;
     croak "must specify key and code" unless defined($key) && defined($code);
@@ -378,52 +401,6 @@ sub compute {
         $self->set( $key, $value, $set_options );
     }
     return $value;
-}
-
-sub fetch_multi_hashref {
-    my ( $self, $keys ) = @_;
-
-    return { map { ( $_, $self->fetch($_) ) } @$keys };
-}
-
-sub get_multi_hashref {
-    my ( $self, $keys ) = @_;
-    croak "must specify keys" unless defined($keys);
-
-    my $keyvals = $self->fetch_multi_hashref($keys);
-    return { map { ( $_, $self->get( $_, data => $keyvals->{$_} ) ) } @$keys };
-}
-
-# DEPRECATED
-sub get_multi_array {
-    my $self = shift;
-    return @{ $self->get_multi_arrayref(@_) };
-}
-
-sub get_multi_arrayref {
-    my ( $self, $keys ) = @_;
-    croak "must specify keys" unless defined($keys);
-
-    my $keyvals = $self->get_multi_hashref($keys);
-    return [ map { $keyvals->{$_} } @$keys ];
-}
-
-sub set_multi {
-    my ( $self, $key_values, $set_options ) = @_;
-    croak "must specify key_values" unless defined($key_values);
-
-    while ( my ( $key, $value ) = each(%$key_values) ) {
-        $self->set( $key, $value, $set_options );
-    }
-}
-
-sub remove_multi {
-    my ( $self, $keys ) = @_;
-    croak "must specify keys" unless defined($keys);
-
-    foreach my $key (@$keys) {
-        $self->remove($key);
-    }
 }
 
 sub purge {
@@ -454,57 +431,123 @@ sub is_empty {
     return !$self->get_keys();
 }
 
-{
+#
+# MULTI KEY OPERATIONS
+#
 
-    # Escape/unescape keys and namespaces for filename safety - used by various
-    # drivers.  Adapted from URI::Escape, but use '+' for escape character, like Mason's
-    # compress_path.
-    #
-    my %escapes;
-    for ( 0 .. 255 ) {
-        $escapes{ chr($_) } = sprintf( "+%02x", $_ );
-    }
+sub fetch_multi_hashref {
+    my ( $self, $keys ) = @_;
 
-    my $_fail_hi = sub {
-        my $chr = shift;
-        Carp::croak( sprintf "Can't escape multibyte character \\x{%04X}",
-            ord($chr) );
-    };
+    return { map { ( $_, $self->fetch($_) ) } @$keys };
+}
 
-    sub escape_for_filename {
-        my ( $self, $text ) = @_;
+sub get_multi_arrayref {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
+    my $transformed_keys = [ map { $self->transform_key($_) } @$keys ];
 
-        $text =~ s/([^\w\=\-\~])/$escapes{$1} || $_fail_hi->($1)/ge;
-        $text;
-    }
+    my $key_count = scalar(@$keys);
+    my $keyvals   = $self->fetch_multi_hashref($transformed_keys);
+    return [
+        map {
+            $self->get( $keys->[$_],
+                data => $keyvals->{ $transformed_keys->[$_] } )
+          } ( 0 .. $key_count - 1 )
+    ];
+}
 
-    sub unescape_for_filename {
-        my ( $self, $str ) = @_;
+sub get_multi_hashref {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
 
-        $str =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $str;
-        $str;
-    }
+    my $key_count = scalar(@$keys);
+    my $values    = $self->get_multi_arrayref($keys);
+    return { map { ( $keys->[$_], $values->[$_] ) } ( 0 .. $key_count - 1 ) };
+}
 
-    sub is_escaped_for_filename {
-        my ( $self, $text ) = @_;
+sub set_multi {
+    my ( $self, $key_values, $set_options ) = @_;
+    croak "must specify key_values" unless defined($key_values);
 
-        return $self->escape_for_filename( $self->unescape_for_filename($text) )
-          eq $text;
+    while ( my ( $key, $value ) = each(%$key_values) ) {
+        $self->set( $key, $value, $set_options );
     }
 }
 
-sub set_object {
-    my ( $self, $key, $obj ) = @_;
+sub remove_multi {
+    my ( $self, $keys ) = @_;
+    croak "must specify keys" unless defined($keys);
 
-    my $data = $obj->pack_to_data();
-    eval { $self->store( $key, $data ) };
-    if ( my $error = $@ ) {
-        $self->{ns_stats}->{'set_errors'}++ if defined( $self->{ns_stats} );
-        $self->_handle_set_error( $error, $obj );
-        return 0;
+    foreach my $key (@$keys) {
+        $self->remove($key);
     }
-    return 1;
 }
+
+#
+# KEY TRANSFORMATION
+#
+
+my %escapes;
+for ( 0 .. 255 ) {
+    $escapes{ chr($_) } = sprintf( "+%02x", $_ );
+}
+my $_fail_hi = sub {
+    croak( sprintf "Can't escape multibyte character \\x{%04X}", ord( $_[0] ) );
+};
+
+sub transform_key {
+    my ( $self, $key ) = @_;
+
+    if ( ref($key) ) {
+        $key = $self->key_serializer->serialize($key);
+    }
+    elsif ( Encode::is_utf8($key) ) {
+        $key = $self->encode_key($key);
+    }
+    if ( length($key) > $self->max_key_length ) {
+        $key = $self->digest_key($key);
+    }
+
+    return $key;
+}
+sub transform_namespace { transform_key(@_) }
+
+sub digest_key {
+    my ( $self, $key ) = @_;
+
+    return $self->key_digester->add($key)->hexdigest;
+}
+
+sub encode_key {
+    my ( $self, $key ) = @_;
+
+    return Encode::encode( utf8 => $key );
+}
+
+sub escape_for_filename {
+    my ( $self, $key ) = @_;
+
+    $key =~ s/([^\w\=\-\~])/$escapes{$1} || $_fail_hi->($1)/ge;
+    return $key;
+}
+
+sub unescape_for_filename {
+    my ( $self, $key ) = @_;
+
+    $key =~ s/\+([0-9A-Fa-f]{2})/chr(hex($1))/eg if defined $key;
+    return $key;
+}
+
+sub is_escaped_for_filename {
+    my ( $self, $key ) = @_;
+
+    return $self->escape_for_filename( $self->unescape_for_filename($key) ) eq
+      $key;
+}
+
+#
+# LOGGING AND ERROR HANDLING
+#
 
 sub _log_get_result {
     my $self = shift;
