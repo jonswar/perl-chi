@@ -1,5 +1,6 @@
 package CHI::CacheObject;
 use CHI::Constants qw(CHI_Max_Time);
+use Encode;
 use strict;
 use warnings;
 
@@ -9,10 +10,13 @@ use constant f_serializer       => 2;
 use constant f_created_at       => 3;
 use constant f_early_expires_at => 4;
 use constant f_expires_at       => 5;
-use constant f_is_serialized    => 6;
+use constant f_is_transformed   => 6;
 use constant f_cache_version    => 7;
 use constant f_value            => 8;
 use constant f_packed_data      => 9;
+
+use constant T_SERIALIZED   => 1;
+use constant T_UTF8_ENCODED => 2;
 
 my $Metadata_Format = "LLLCC";
 my $Metadata_Length = 14;
@@ -25,7 +29,7 @@ sub created_at       { $_[0]->[f_created_at] }
 sub early_expires_at { $_[0]->[f_early_expires_at] }
 sub expires_at       { $_[0]->[f_expires_at] }
 sub serializer       { $_[0]->[f_serializer] }
-sub _is_serialized   { $_[0]->[f_is_serialized] }
+sub _is_transformed  { $_[0]->[f_is_transformed] }
 sub size             { length( $_[0]->[f_raw_value] ) + $Metadata_Length }
 
 sub set_early_expires_at {
@@ -44,13 +48,18 @@ sub new {
         $serializer )
       = @_;
 
-    # Serialize value if necessary - does this belong here, or in Driver.pm?
+    # Serialize/encode value if necessary - does this belong here, or in
+    # Driver.pm?
     #
-    my $is_serialized = 0;
-    my $raw_value     = $value;
+    my $is_transformed = 0;
+    my $raw_value      = $value;
     if ( ref($raw_value) ) {
-        $raw_value     = $serializer->serialize($raw_value);
-        $is_serialized = 1;
+        $raw_value      = $serializer->serialize($raw_value);
+        $is_transformed = T_SERIALIZED;
+    }
+    elsif ( Encode::is_utf8($raw_value) ) {
+        $raw_value = Encode::encode( utf8 => $raw_value );
+        $is_transformed = T_UTF8_ENCODED;
     }
 
     # Not sure where this should be set and checked
@@ -58,9 +67,9 @@ sub new {
     my $cache_version = 1;
 
     return bless [
-        $key,           $raw_value,        $serializer,
-        $created_at,    $early_expires_at, $expires_at,
-        $is_serialized, $cache_version,    $value,
+        $key,            $raw_value,        $serializer,
+        $created_at,     $early_expires_at, $expires_at,
+        $is_transformed, $cache_version,    $value,
     ], $class;
 }
 
@@ -116,8 +125,11 @@ sub value {
 
     if ( !defined $self->[f_value] ) {
         my $value = $self->[f_raw_value];
-        if ( $self->[f_is_serialized] ) {
+        if ( $self->[f_is_transformed] == T_SERIALIZED ) {
             $value = $self->serializer->deserialize($value);
+        }
+        elsif ( $self->[f_is_transformed] == T_UTF8_ENCODED ) {
+            $value = Encode::decode( utf8 => $value );
         }
         $self->[f_value] = $value;
     }
