@@ -20,7 +20,7 @@ has 'depth'            => ( is => 'ro', isa => 'Int', default => 2 );
 has 'dir_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(775) );
 has 'file_create_mode' => ( is => 'ro', isa => 'Int', default => oct(666) );
 has 'file_extension'   => ( is => 'ro', isa => 'Str', default => '.dat' );
-has 'key_digest' => ( is => 'ro', isa => 'CHI::Types::Digester', coerce => 1 );
+has '+max_key_length' => ( default => 248 );
 has 'root_dir' => (
     is      => 'ro',
     isa     => 'Str',
@@ -34,14 +34,26 @@ has 'path_to_namespace' => (
 
 __PACKAGE__->meta->make_immutable();
 
-my $Max_File_Length = 254;
-my $Max_Path_Length = ( $^O eq 'MSWin32' ? 254 : 1023 );
+sub BUILDARGS {
+    my ( $class, %params ) = @_;
+
+    # Backward compat
+    #
+    if ( defined( $params{key_digest} ) ) {
+        $params{key_digester}   = $params{key_digest};
+        $params{max_key_length} = 0;
+    }
+
+    return \%params;
+}
 
 sub _build_path_to_namespace {
     my $self = shift;
 
-    return catdir( $self->root_dir,
-        $self->escape_for_filename( $self->namespace ) );
+    my $namespace = $self->escape_for_filename( $self->namespace );
+    $namespace = $self->digest_key($namespace)
+      if length($namespace) > $self->max_key_length;
+    return catdir( $self->root_dir, $namespace );
 }
 
 sub fetch {
@@ -109,9 +121,6 @@ sub clear {
 sub get_keys {
     my ($self) = @_;
 
-    die "get_keys not supported when key_digest is set"
-      if $self->key_digest;
-
     my @filepaths;
     my $wanted = sub { push( @filepaths, $_ ) if -f && /\.dat$/ };
     my @keys = $self->_collect_keys_via_file_find( \@filepaths, $wanted );
@@ -120,9 +129,6 @@ sub get_keys {
 
 sub _collect_keys_via_file_find {
     my ( $self, $filepaths, $wanted ) = @_;
-
-    die "cannot retrieve keys from filenames when key_digest is set"
-      if $self->key_digest;
 
     my $namespace_dir = $self->path_to_namespace;
     return () if !-d $namespace_dir;
@@ -167,12 +173,26 @@ my %hex_strings = map { ( $_, sprintf( "%x", $_ ) ) } ( 0x0 .. 0xf );
 sub path_to_key {
     my ( $self, $key, $dir_ref ) = @_;
 
+    # Escape key to make safe for filesystem; if it then grows larger than
+    # max_key_length, digest it.
+    #
+    my $new_key = $self->escape_for_filename($key);
+    if (   length($new_key) > length($key)
+        && length($new_key) > $self->max_key_length() )
+    {
+        $new_key = $self->digest_key($new_key);
+    }
+    $key = $new_key;
+
     my @paths = ( $self->path_to_namespace );
-    my $filename;
-    if ( my $digester = $self->key_digest ) {
-        $filename = $digester->add($key)->hexdigest;
+
+    # Hack: If key is exactly 32 hex chars, assume it's an md5 digest and
+    # take a prefix of it for bucket. Digesting will usually happen in
+    # transform_key and there's no good way for us to know it occurred.
+    #
+    if ( $key =~ /^[0-9a-f]{32}$/ ) {
         push( @paths,
-            map { substr( $filename, $_, 1 ) } ( 0 .. $self->{depth} - 1 ) );
+            map { substr( $key, $_, 1 ) } ( 0 .. $self->{depth} - 1 ) );
     }
     else {
 
@@ -187,22 +207,11 @@ sub path_to_key {
             push( @paths, $hex_strings{ $bucket & 0xf } );
             $bucket >>= 4;
         }
-
-        # Escape key to make safe for filesystem
-        #
-        $filename = $self->escape_for_filename($key);
-        if ( length($filename) > $Max_File_Length ) {
-            my $namespace = $self->{namespace};
-            $log->warn(
-                "escaped key '$key' in namespace '$namespace' is over $Max_File_Length chars; cannot cache"
-            );
-            return undef;
-        }
     }
-    $filename .= $self->file_extension;
 
     # Join paths together, computing dir separately if $dir_ref was passed.
     #
+    my $filename = $key . $self->file_extension;
     my $filepath;
     if ( defined $dir_ref && ref($dir_ref) ) {
         my $dir = fast_catdir(@paths);
@@ -211,14 +220,6 @@ sub path_to_key {
     }
     else {
         $filepath = fast_catfile( @paths, $filename );
-    }
-
-    if ( length($filepath) > $Max_Path_Length ) {
-        my $namespace = $self->{namespace};
-        $log->warn(
-            "full escaped path for key '$key' in namespace '$namespace' is over $Max_Path_Length chars; cannot cache"
-        );
-        return undef;
     }
 
     return $filepath;
@@ -239,7 +240,12 @@ directory structure
 
     use CHI;
 
-    my $cache = CHI->new(driver => 'File', root_dir => '/path/to/cache/root', depth => 3);
+    my $cache = CHI->new(
+        driver         => 'File',
+        root_dir       => '/path/to/cache/root',
+        depth          => 3,
+        max_key_length => 64
+    );
 
 =head1 DESCRIPTION
 
@@ -253,15 +259,15 @@ efficient, it eliminates the need for locking (with multiple overlapping sets,
 the last one "wins") and makes this cache usable in environments like NFS where
 locking might normally be undesirable.
 
-By default, the base filename is the key itself, with unsafe characters
-replaced with an escape sequence similar to URI escaping. The filename length
-is capped at 255 characters, which is the maximum for most Unix systems, so
-gets/sets for keys that escape to longer than 255 characters will fail. You can
-also use a digest of the key (e.g. MD5, SHA) for the base filename by
-specifying L</key_digest>.
+By default, the base filename is the key itself, with unsafe characters escaped
+similar to URL escaping. If the escaped key is larger than L</max_key_length>
+(default 248 characters), it will be L<digested|CHI/key_digester>. You may want
+to lower L</max_key_length> if you are storing a lot of items as long filenames
+can be more expensive to work with.
 
 The files are evenly distributed within a multi-level directory structure with
-a customizable depth, to minimize the time needed to search for a given entry.
+a customizable L</depth>, to minimize the time needed to search for a given
+entry.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -277,6 +283,12 @@ to a directory called 'chi-driver-file' under the OS default temp directory
 (e.g. '/tmp' on UNIX). This directory will be created as needed on the first
 cache set.
 
+=item depth
+
+The number of subdirectories deep to place cache files. Defaults to 2. This
+should be large enough that no leaf directory has more than a few hundred
+files. Each non-leaf directory contains up to 16 subdirectories (0-9, A-F).
+
 =item dir_create_mode
 
 Permissions mode to use when creating directories. Defaults to 0775.
@@ -289,25 +301,6 @@ Defaults to 0666.
 =item file_extension
 
 Extension to append to filename. Default is ".dat".
-
-=item depth
-
-The number of subdirectories deep to place cache files. Defaults to 2. This
-should be large enough that no leaf directory has more than a few hundred
-files. Each non-leaf directory contains up to 16 subdirectories (0-9, A-F).
-
-=item key_digest [STRING|HASHREF|OBJECT]
-
-Digest algorithm to use on the key before storing - e.g. "MD5", "SHA-1", or
-"SHA-256".
-
-Can be a L<Digest|Digest> object, or a string or hashref which will passed to
-Digest->new(). You will need to ensure Digest is installed to use these
-options. Also, L<CHI/get_keys> is currently not supported when a digest is
-used, this will hopefully be fixed at a later date.
-
-By default, no digest is performed and the entire key is used in the filename,
-after escaping unsafe characters.
 
 =back
     
