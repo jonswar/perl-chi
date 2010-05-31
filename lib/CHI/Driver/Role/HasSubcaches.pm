@@ -72,7 +72,7 @@ sub add_subcache {
 
 # Call these methods first on the main cache, then on any subcaches.
 #
-foreach my $method (qw(clear expire expire_if purge remove)) {
+foreach my $method (qw(clear expire purge remove)) {
     after $method => sub {
         my $self      = shift;
         my $subcaches = $self->subcaches;
@@ -125,7 +125,7 @@ around 'get' => sub {
     }
 };
 
-around 'get_multi_hashref' => sub {
+around 'get_multi_arrayref' => sub {
     my $orig   = shift;
     my $self   = shift;
     my ($keys) = @_;
@@ -137,13 +137,21 @@ around 'get_multi_hashref' => sub {
     else {
 
         # Consult l1 cache first, then call on primary cache with remainder of keys,
-        # and combine the hashes.
+        # and combine the arrays.
         #
-        my $l1_result      = $l1_cache->get_multi_hashref($keys);
-        my @primary_keys   = grep { !defined( $l1_result->{$_} ) } @$keys;
-        my $primary_result = $self->$orig( \@primary_keys );
-        my $result         = { %$l1_result, %$primary_result };
-        return $result;
+        my $l1_values = $l1_cache->get_multi_arrayref($keys);
+        my @indices   = ( 0 .. scalar(@$keys) - 1 );
+        my @primary_keys =
+          map { $keys->[$_] } grep { defined( $l1_values->[$_] ) } @indices;
+        my $primary_values = $self->$orig( \@primary_keys );
+        my $values         = [
+            map {
+                defined( $l1_values->[$_] )
+                  ? $l1_values->[$_]
+                  : shift(@$primary_values)
+              } @indices
+        ];
+        return $values;
     }
 };
 
