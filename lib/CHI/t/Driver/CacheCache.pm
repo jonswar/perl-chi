@@ -19,7 +19,7 @@ sub new_cache_options {
     return (
         $self->SUPER::new_cache_options(),
         cc_class   => 'Cache::FileCache',
-        cc_options => { root_dir => $root_dir }
+        cc_options => { cache_root => $root_dir }
     );
 }
 
