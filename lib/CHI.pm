@@ -648,8 +648,8 @@ e.g. the following are all valid duration expressions:
 
 =head1 KEY AND VALUE TRANSFORMATION
 
-CHI strives to accept arbitrary namespaces, keys, and values for caching
-regardless of the limitations of the underlying driver.
+CHI strives to accept arbitrary keys and values for caching regardless of the
+limitations of the underlying driver.
 
 =over
 
@@ -670,10 +670,6 @@ characters or whitespace are escaped with URL-like escaping.
 
 Keys exceeding the maximum length for the underlying driver are digested - see
 L</max_key_length> and L</key_digester>.
-
-=item *
-
-Namespaces are transformed the same way as keys.
 
 =item *
 
