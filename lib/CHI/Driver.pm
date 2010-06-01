@@ -119,10 +119,6 @@ sub BUILD {
         delete( $self->{constructor_params}->{$param} );
     }
 
-    # Transform namespace as needed (serialize, encode, etc.)
-    #
-    $self->{namespace} = $self->transform_namespace( $self->{namespace} );
-
     # If stats enabled, add ns_stats slot for keeping track of stats
     #
     my $stats = $self->chi_root_class->stats;
@@ -510,7 +506,10 @@ sub transform_key {
 
     return $key;
 }
-sub transform_namespace { transform_key(@_) }
+
+sub revert_key {
+    return $_[1];
+}
 
 sub digest_key {
     my ( $self, $key ) = @_;
