@@ -30,53 +30,6 @@ sub set_standard_keys_and_values {
     return ( $keys, $values );
 }
 
-sub test_path_to_key : Test(5) {
-    my ($self) = @_;
-
-    my $key;
-    my $cache = $self->new_cache( namespace => random_string(10) );
-    my $log = activate_test_logger();
-
-    $key = "\$20.00 plus 5% = \$25.00";
-    my $file = basename( $cache->path_to_key($key) );
-    is(
-        $file,
-        "+2420+2e00+20plus+205+25+20=+20+2425+2e00.dat",
-        "path_to_key for key with mixed chars"
-    );
-
-    # Should escape to over 255 chars
-    $key = "!@#" x 100;
-    $log->clear();
-    ok(
-        !defined( $cache->path_to_key($key) ),
-        "path_to_key undefined for too-long key"
-    );
-    my $namespace = $cache->namespace();
-    $log->contains_ok(
-        qr/escaped key '.+' in namespace '\Q$namespace\E' is over \d+ chars; cannot cache/
-    );
-
-    # Full path is too long
-    my $max_path_length = ( $^O eq 'MSWin32' ? 254 : 1023 );
-    my $long_root_dir =
-      fast_catdir( $root_dir, scalar( "a" x ( $max_path_length - 60 ) ) );
-    $cache = $self->new_cache(
-        root_dir  => $long_root_dir,
-        namespace => random_string(10)
-    );
-    $key = 'abcd' x 25;
-    $log->clear();
-    ok(
-        !defined( $cache->path_to_key($key) ),
-        "path_to_key undefined for too-long key"
-    );
-    $namespace = $cache->namespace();
-    $log->contains_ok(
-        qr/full escaped path for key '.+' in namespace '\Q$namespace\E' is over \d+ chars; cannot cache/
-    );
-}
-
 {
 
     package CHI::t::Driver::File::NoTempDriver;
@@ -105,7 +58,7 @@ sub test_path_to_key : Test(5) {
 
 # Test that we can override how temporary files are generated
 #
-sub test_generate_temporary_filename : Tests(2) {
+sub test_generate_temporary_filename : Tests(3) {
     my $self = shift;
 
     $self->{cache} =
