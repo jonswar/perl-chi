@@ -32,28 +32,6 @@ has 'path_to_namespace' => (
     builder => '_build_path_to_namespace',
 );
 
-# Escape key to make safe for filesystem; if it then grows larger than
-# max_key_length, digest it.
-#
-around 'transform_key' => sub {
-    my ( $orig, $self, $key ) = @_;
-
-    $key = $self->$orig($key);
-    my $new_key = $self->escape_for_filename($key);
-    if (   length($new_key) > length($key)
-        && length($new_key) > $self->max_key_length() )
-    {
-        $new_key = $self->digest_key($new_key);
-    }
-    return $new_key;
-};
-
-sub revert_key {
-    my ( $self, $key ) = @_;
-
-    return $self->unescape_for_filename($key);
-}
-
 __PACKAGE__->meta->make_immutable();
 
 sub BUILDARGS {
@@ -76,6 +54,27 @@ sub _build_path_to_namespace {
     $namespace = $self->digest_key($namespace)
       if length($namespace) > $self->max_key_length;
     return catdir( $self->root_dir, $namespace );
+}
+
+# Escape key to make safe for filesystem; if it then grows larger than
+# max_key_length, digest it.
+#
+sub escape_key {
+    my ( $self, $key ) = @_;
+
+    my $new_key = $self->escape_for_filename($key);
+    if (   length($new_key) > length($key)
+        && length($new_key) > $self->max_key_length() )
+    {
+        $new_key = $self->digest_key($new_key);
+    }
+    return $new_key;
+}
+
+sub unescape_key {
+    my ( $self, $key ) = @_;
+
+    return $self->unescape_for_filename($key);
 }
 
 sub fetch {
@@ -161,7 +160,7 @@ sub _collect_keys_via_file_find {
     my $key_start = length($namespace_dir) + 1 + $self->depth * 2;
     foreach my $filepath (@$filepaths) {
         my $key = substr( $filepath, $key_start, -4 );
-        $key = $self->revert_key( join( "", splitdir($key) ) );
+        $key = $self->unescape_key( join( "", splitdir($key) ) );
         push( @keys, $key );
     }
     return @keys;
@@ -196,6 +195,8 @@ sub path_to_key {
     my ( $self, $key, $dir_ref ) = @_;
 
     my @paths = ( $self->path_to_namespace );
+
+    $key = $self->escape_key($key);
 
     # Hack: If key is exactly 32 hex chars, assume it's an md5 digest and
     # take a prefix of it for bucket. Digesting will usually happen in

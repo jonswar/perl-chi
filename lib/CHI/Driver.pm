@@ -507,10 +507,6 @@ sub transform_key {
     return $key;
 }
 
-sub revert_key {
-    return $_[1];
-}
-
 sub digest_key {
     my ( $self, $key ) = @_;
 
@@ -523,6 +519,14 @@ sub encode_key {
     return Encode::encode( utf8 => $key );
 }
 
+# These will be called by drivers if necessary, and in testing. By default
+# no escaping/unescaping is necessary.
+#
+sub escape_key   { $_[1] }
+sub unescape_key { $_[1] }
+
+# May be used by drivers to implement escape_key/unescape_key.
+#
 sub escape_for_filename {
     my ( $self, $key ) = @_;
 

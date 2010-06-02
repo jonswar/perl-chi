@@ -200,13 +200,10 @@ sub test_key_types : Tests {
         pop(@keys_set);
         $check_keys_set->("after removal of key '$keyname'");
 
-        # Confirm that revert_key reverses the non-idempotent portions
-        # of transform_key
+        # Confirm that transform_key is idempotent
         #
         is(
-            $cache->revert_key(
-                $cache->transform_key( $cache->transform_key($key) )
-            ),
+            $cache->transform_key( $cache->transform_key($key) ),
             $cache->transform_key($key),
             "transform_key is idempotent for '$keyname'"
         );
@@ -1062,7 +1059,8 @@ sub process_keys {
 
 sub process_key {
     my ( $self, $cache, $key ) = @_;
-    return $cache->revert_key( $cache->transform_key($key) );
+    return $cache->unescape_key(
+        $cache->escape_key( $cache->transform_key($key) ) );
 }
 
 sub test_clear : Tests {
