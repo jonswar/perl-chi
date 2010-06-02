@@ -5,6 +5,7 @@ use CHI::Test;
 use CHI::Test::Util
   qw(activate_test_logger cmp_bool is_between random_string skip_until);
 use CHI::Util qw(dump_one_line write_file);
+use Encode;
 use File::Spec::Functions qw(tmpdir);
 use File::Temp qw(tempdir);
 use List::Util qw(shuffle);
@@ -27,6 +28,11 @@ sub standard_keys_and_values : Test(startup) {
     $self->{keynames}      = [ keys( %{$keys_ref} ) ];
     $self->{key_count}     = scalar( @{ $self->{keynames} } );
     $self->{all_test_keys} = [ values(%$keys_ref), $self->extra_test_keys() ];
+    my $cache = $self->new_cache();
+    push(
+        @{ $self->{all_test_keys} },
+        $self->process_keys( $cache, @{ $self->{all_test_keys} } )
+    );
     $self->{all_test_keys_hash} =
       { map { ( $_, 1 ) } @{ $self->{all_test_keys} } };
 }
@@ -91,39 +97,28 @@ sub set_standard_keys_and_values {
     my $self = shift;
 
     my ( %keys, %values );
-    my @mixed_chars = ( 32 .. 48, 57 .. 65, 90 .. 97, 122 .. 126 );
+    my @mixed_chars = ( 32 .. 48, 57 .. 65, 90 .. 97, 122 .. 126, 240 );
+
     %keys = (
-        'space'    => ' ',
-        'char'     => 'a',
-        'zero'     => 0,
-        'one'      => 1,
-        'medium'   => 'medium',
-        'mixed'    => join( "", map { chr($_) } @mixed_chars ),
-        'large'    => scalar( 'ab' x 256 ),
-        'arrayref' => 'arrayref',
-        'hashref'  => 'hashref',
-
-        # Several problems with trying to handle unicode keys and values.
-        # * They generate 'Wide character in print' warnings when logging about the gets/sets
-        # * Causes metadata packing to break
-        # * Storable won't touch them
-        # not sure how to handle these. Maybe there's no way. Even if we automatically
-        # encoded all keys and values, what to do about complex values where wide strings
-        # might be lurking?
-        # 'utf8_partial' => "abc\x{263A}def",
-        # 'utf8_all' => "\x{263A}\x{263B}\x{263C}",
-
-        # What should be done for empty key?
-        #     'empty'        => '',
-
-        # TODO: We should test passing an actual arrayref or hashref as a key - not sure what
-        # expected behavior is
+        'space'   => ' ',
+        'newline' => "\n",
+        'char'    => 'a',
+        'zero'    => 0,
+        'one'     => 1,
+        'medium'  => 'medium',
+        'mixed'   => join( "", map { chr($_) } @mixed_chars ),
+        'binary'  => join( "", map { chr($_) } ( 129 .. 255 ) ),
+        'large'   => scalar( 'ab' x 256 ),
+        'empty'   => 'empty',
+        'arrayref' => [ 1, 2 ],
+        'hashref' => { foo => [ 'bar', 'baz' ] },
+        'utf8'    => "Have \x{263a} a nice day",
     );
 
-    %values =
-      map { ( $_, scalar( reverse( $keys{$_} ) ) ) } keys(%keys);
-    $values{arrayref} = [ 1, 2 ];
-    $values{hashref} = { foo => 'bar' };
+    %values = map {
+        ( $_, ref( $keys{$_} ) ? $keys{$_} : scalar( reverse( $keys{$_} ) ) )
+    } keys(%keys);
+    $values{empty} = '';
 
     return ( \%keys, \%values );
 }
@@ -136,7 +131,7 @@ sub set_standard_keys_and_values {
 sub extra_test_keys {
     my ($class) = @_;
     return (
-        '', '2', 'medium2', 'foo',
+        '', '2', 'medium2', 'foo', 'hashref', 'test_namespace_types',
         ( map { "done$_" } ( 0 .. 2 ) ),
         ( map { "key$_" }  ( 0 .. 20 ) )
     );
@@ -150,11 +145,19 @@ sub set_some_keys {
     }
 }
 
-sub test_simple : Test(1) {
-    my $self  = shift;
-    my $cache = $self->{cache};
+sub test_mixed : Test(2) {
+    my $self = shift;
+    my $cache = shift || $self->{cache};
 
-    $cache->set( $self->{keys}->{medium}, $self->{values}->{medium} );
+    ok( $cache->set( $self->{keys}->{mixed}, $self->{values}->{mixed} ) );
+    is( $cache->get( $self->{keys}->{mixed} ), $self->{values}->{mixed} );
+}
+
+sub test_simple : Test(2) {
+    my $self = shift;
+    my $cache = shift || $self->{cache};
+
+    ok( $cache->set( $self->{keys}->{medium}, $self->{values}->{medium} ) );
     is( $cache->get( $self->{keys}->{medium} ), $self->{values}->{medium} );
 }
 
@@ -170,7 +173,7 @@ sub test_driver_class : Tests(3) {
 sub test_key_types : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
-    $self->num_tests( $self->{key_count} * 6 + 1 );
+    $self->num_tests( $self->{key_count} * 7 + 1 );
 
     my @keys_set;
     my $check_keys_set = sub {
@@ -184,7 +187,7 @@ sub test_key_types : Tests {
         my $value = $self->{values}->{$keyname};
         ok( !defined $cache->get($key), "miss for key '$keyname'" );
         is( $cache->set( $key, $value ), $value, "set for key '$keyname'" );
-        push( @keys_set, $key );
+        push( @keys_set, $self->process_keys( $cache, $key ) );
         $check_keys_set->("after set of key '$keyname'");
         cmp_deeply( $cache->get($key), $value, "hit for key '$keyname'" );
     }
@@ -196,6 +199,17 @@ sub test_key_types : Tests {
             "miss after remove for key '$keyname'" );
         pop(@keys_set);
         $check_keys_set->("after removal of key '$keyname'");
+
+        # Confirm that revert_key reverses the non-idempotent portions
+        # of transform_key
+        #
+        is(
+            $cache->revert_key(
+                $cache->transform_key( $cache->transform_key($key) )
+            ),
+            $cache->transform_key($key),
+            "transform_key is idempotent for '$keyname'"
+        );
     }
 }
 
@@ -390,40 +404,25 @@ sub test_expires_manually : Test(3) {
     ok( !$cache->is_valid($key),    "invalid after expire ($desc)" );
 }
 
-sub test_expires_conditionally : Test(22) {
+sub test_expires_conditionally : Test(8) {
     my $self  = shift;
     my $cache = $self->{cache};
 
     # Expires conditionally
     my $test_expires_conditionally = sub {
         my ( $code, $cond_desc, $expect_expire ) = @_;
-        foreach my $separate_call ( 0, 1 ) {
-            my ( $key, $value ) = $self->kvpair();
-            my $desc =
-              "expires conditionally ($cond_desc, separate_call=$separate_call)";
-            $cache->set( $key, $value );
-            if ($separate_call) {
-                is( $cache->get($key), $value, "hit ($desc)" );
-                cmp_bool( $cache->expire_if( $key, $code ),
-                    $expect_expire, "expire_if ($desc)" );
-            }
-            else {
-                is(
-                    $cache->get( $key, expire_if => $code ),
-                    $expect_expire ? undef : $value,
-                    "get result ($desc)"
-                );
-            }
-            if ( $expect_expire && $separate_call ) {
-                ok( !defined $cache->get($key),
-                    "miss after expire_if ($desc)" );
-                ok( !$cache->is_valid($key),
-                    "invalid after expire_if ($desc)" );
-            }
-            else {
-                is( $cache->get($key), $value, "hit after expire_if ($desc)" );
-            }
-        }
+
+        my ( $key, $value ) = $self->kvpair();
+        my $desc = "expires conditionally ($cond_desc)";
+        $cache->set( $key, $value );
+        is(
+            $cache->get( $key, expire_if => $code ),
+            $expect_expire ? undef : $value,
+            "get result ($desc)"
+        );
+
+        is( $cache->get($key), $value, "hit after expire_if ($desc)" );
+
     };
     my $time = time();
     $test_expires_conditionally->( sub { 1 }, 'true',  1 );
@@ -492,12 +491,14 @@ sub test_serialize : Tests {
 
     $self->set_some_keys($cache);
     foreach my $keyname ( @{ $self->{keynames} } ) {
-        my $expect_serialized =
-          ( $keyname eq 'arrayref' || $keyname eq 'hashref' ) ? 1 : 0;
+        my $expect_transformed =
+            ( $keyname eq 'arrayref' || $keyname eq 'hashref' ) ? 1
+          : ( $keyname eq 'utf8' ) ? 2
+          :                          0;
         is(
-            $cache->get_object( $self->{keys}->{$keyname} )->_is_serialized(),
-            $expect_serialized,
-            "is_serialized = $expect_serialized ($keyname)"
+            $cache->get_object( $self->{keys}->{$keyname} )->_is_transformed(),
+            $expect_transformed,
+            "is_transformed = $expect_transformed ($keyname)"
         );
     }
 }
@@ -648,16 +649,23 @@ sub test_multi : Test(8) {
     my $self  = shift;
     my $cache = $self->{cache};
 
-    my @ordered_keys = map { $self->{keys}->{$_} } @{ $self->{keynames} };
+    my ( $keys, $values, $keynames ) =
+      ( $self->{keys}, $self->{values}, $self->{keynames} );
+
+    my @ordered_keys = map { $keys->{$_} } @{$keynames};
     my @ordered_values =
-      map { $self->{values}->{$_} } @{ $self->{keynames} };
-    my %ordered_key_values =
-      map { ( $self->{keys}->{$_}, $self->{values}->{$_} ) }
-      @{ $self->{keynames} };
+      map { $values->{$_} } @{$keynames};
+    my %ordered_scalar_key_values =
+      map { ( $keys->{$_}, $values->{$_} ) }
+      grep { !ref( $keys->{$_} ) } @{$keynames};
 
     cmp_deeply( $cache->get_multi_arrayref( ['foo'] ),
         [undef], "get_multi_arrayref before set" );
-    $cache->set_multi( \%ordered_key_values );
+
+    $cache->set_multi( \%ordered_scalar_key_values );
+    $cache->set( $keys->{arrayref}, $values->{arrayref} );
+    $cache->set( $keys->{hashref},  $values->{hashref} );
+
     cmp_deeply( $cache->get_multi_arrayref( \@ordered_keys ),
         \@ordered_values, "get_multi_arrayref" );
     cmp_deeply( $cache->get( $ordered_keys[0] ),
@@ -667,9 +675,14 @@ sub test_multi : Test(8) {
         [ reverse @ordered_values ],
         "get_multi_arrayref"
     );
-    cmp_deeply( $cache->get_multi_hashref( \@ordered_keys ),
-        \%ordered_key_values, "get_multi_hashref" );
-    cmp_set( [ $cache->get_keys ], \@ordered_keys, "get_keys after set_multi" );
+    cmp_deeply(
+        $cache->get_multi_hashref( [ grep { !ref($_) } @ordered_keys ] ),
+        \%ordered_scalar_key_values, "get_multi_hashref" );
+    cmp_set(
+        [ $cache->get_keys ],
+        [ $self->process_keys( $cache, @ordered_keys ) ],
+        "get_keys after set_multi"
+    );
 
     $cache->remove_multi( \@ordered_keys );
     cmp_deeply(
@@ -732,15 +745,11 @@ sub test_l1_cache : Test(238) {
         $cache->set( $keys[1], $values[0] );
         $l1_cache->remove( $keys[0] );
         $l1_cache->set( $keys[1], $values[1] );
+
         cmp_deeply(
             $cache->get_multi_arrayref( [ $keys[0], $keys[1], $keys[2] ] ),
             [ $values[0], $values[1], undef ],
             "get_multi_arrayref"
-        );
-        cmp_deeply(
-            [ $cache->get_multi_array( [ $keys[0], $keys[1], $keys[2] ] ) ],
-            [ $values[0], $values[1], undef ],
-            "get_multi_array"
         );
         cmp_deeply(
             $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ),
@@ -1031,13 +1040,6 @@ sub _test_common_subcache_features {
     $test_remove_method->(
         'expire', sub { $cache->expire($key); $cache->expire($key2) }
     );
-    $test_remove_method->(
-        'expire_if',
-        sub {
-            $cache->expire_if( $key,  sub { 1 } );
-            $cache->expire_if( $key2, sub { 1 } );
-        }
-    );
     $test_remove_method->( 'clear', sub { $cache->clear() } );
 }
 
@@ -1050,6 +1052,17 @@ sub _verify_cache_is_cleared {
         ok( !defined $cache->get($key),
             "key '$keyname' no longer defined ($desc)" );
     }
+}
+
+sub process_keys {
+    my ( $self, $cache, @keys ) = @_;
+    $self->process_key( $cache, 'foo' );
+    return map { $self->process_key( $cache, $_ ) } @keys;
+}
+
+sub process_key {
+    my ( $self, $cache, $key ) = @_;
+    return $cache->revert_key( $cache->transform_key($key) );
 }
 
 sub test_clear : Tests {
@@ -1068,7 +1081,7 @@ sub test_clear : Tests {
         $self->_verify_cache_is_cleared( $cache3, 'cache3 after clear' );
         cmp_set(
             [ $cache2->get_keys ],
-            [ values( %{ $self->{keys} } ) ],
+            [ $self->process_keys( $cache2, values( %{ $self->{keys} } ) ) ],
             'cache2 untouched by clear'
         );
     }
@@ -1573,7 +1586,7 @@ sub test_missing_params : Tests(13) {
 
     # These methods require a key
     foreach my $method (
-        qw(get get_object get_expires_at exists_and_is_expired is_valid set expire expire_if compute get_multi_arrayref get_multi_hashref set_multi remove_multi)
+        qw(get get_object get_expires_at exists_and_is_expired is_valid set expire compute get_multi_arrayref get_multi_hashref set_multi remove_multi)
       )
     {
         throws_ok(
