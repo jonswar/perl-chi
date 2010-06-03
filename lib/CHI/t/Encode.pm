@@ -23,24 +23,16 @@ sub test_encode : Tests(8) {
     is( $cache->get($smiley_encoded),
         $smiley, "encoded and non-encoded map to same value" );
 
-    # utf8 flag of value is maintained, in scalar or in arrayref
-    $cache->set( "utf8=1", $smiley );
-    ok( is_utf8($smiley),                 "is_utf8=1 into cache" );
-    ok( is_utf8( $cache->get("utf8=1") ), "is_utf8=1 out of cache" );
-    $cache->set( "utf8=1", [$smiley] );
-    ok(
-        is_utf8( $cache->get("utf8=1")->[0] ),
-        "is_utf8=1 out of cache (arrayref)"
-    );
+    # Value is maintained as a utf8 or binary string, in scalar or in arrayref
+    $cache->set( "utf8", $smiley );
+    is( $cache->get("utf8"), $smiley, "utf8 in scalar" );
+    $cache->set( "utf8", [$smiley] );
+    is( $cache->get("utf8")->[0], $smiley, "utf8 in arrayref" );
 
-    $cache->set( "utf8=0", $smiley_encoded );
-    ok( !is_utf8($smiley_encoded),         "is_utf8=0 into cache" );
-    ok( !is_utf8( $cache->get("utf8=0") ), "is_utf8=0 out of cache" );
-    $cache->set( "utf8=0", [$smiley_encoded] );
-    ok(
-        !is_utf8( $cache->get("utf8=0")->[0] ),
-        "is_utf8=0 out of cache (arrayref)"
-    );
+    $cache->set( "binary", $smiley_encoded );
+    is( $cache->get("binary"), $smiley_encoded, "binary in scalar" );
+    $cache->set( "binary", [$smiley_encoded] );
+    is( $cache->get("binary")->[0], $smiley_encoded, "binary in arrayref" );
 }
 
 1;
