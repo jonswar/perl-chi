@@ -196,6 +196,7 @@ sub path_to_key {
 
     my @paths = ( $self->path_to_namespace );
 
+    my $orig_key = $key;
     $key = $self->escape_key($key);
 
     # Hack: If key is exactly 32 hex chars, assume it's an md5 digest and
@@ -208,12 +209,13 @@ sub path_to_key {
     }
     else {
 
-        # Hash key to a 32-bit integer
+        # Hash key to a 32-bit integer (using non-escaped key for back compat)
         #
-        my $bucket = jhash($key);
+        my $bucket = jhash($orig_key);
 
-        # Create $self->{depth} subdirectories, containing a maximum of 64 subdirectories each,
-        # by successively shifting 4 bits off the bucket and converting to hex.
+        # Create $self->{depth} subdirectories, containing a maximum of 64
+        # subdirectories each, by successively shifting 4 bits off the
+        # bucket and converting to hex.
         #
         for ( my $d = $self->{depth} ; $d > 0 ; $d-- ) {
             push( @paths, $hex_strings{ $bucket & 0xf } );
