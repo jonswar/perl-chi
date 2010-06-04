@@ -18,18 +18,6 @@ sub new_cache_options {
     return ( $self->SUPER::new_cache_options(), root_dir => $root_dir );
 }
 
-sub set_standard_keys_and_values {
-    my ($self) = @_;
-
-    my ( $keys, $values ) = $self->SUPER::set_standard_keys_and_values();
-
-    # keys have max length of 255 or so
-    # but on windows xp, the full pathname is limited to 255 chars as well
-    $keys->{'large'} = scalar( 'ab' x ( $^O eq 'MSWin32' ? 64 : 120 ) );
-
-    return ( $keys, $values );
-}
-
 {
 
     package CHI::t::Driver::File::NoTempDriver;
