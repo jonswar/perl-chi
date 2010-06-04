@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.35  May 10, 2010
+0.35  Jun 4, 2010
 
 * Improvements
   - Automatically serialize keys that are references
