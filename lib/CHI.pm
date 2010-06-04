@@ -225,7 +225,8 @@ Add an L1 cache as a subcache. See L</SUBCACHES>.
 =item max_key_length [INT]
 
 Keys over this size will be L<digested|key_digester>. The default is
-driver-specific; for most drivers there is no maximum.
+driver-specific; L<CHI::Driver::File|File>, for example, defaults this to 240
+due to file system limits. For most drivers there is no maximum.
 
 =item mirror_cache [HASHREF]
 
@@ -525,11 +526,6 @@ keys and the driver.
 
 Returns a list of namespaces associated with the cache. This may or may not
 include empty namespaces, depending on the driver.
-
-The namespaces may not look the same as they did when passed into the
-L<constructor|/CONSTRUCTOR>; they may have been serialized, utf8 encoded,
-and/or digested (see L</KEY AND VALUE TRANSFORMATION>). However, they may still
-be passed back into a new constructor to access the same underlying cache.
 
 =back
 
