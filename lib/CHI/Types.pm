@@ -52,7 +52,7 @@ sub _build_data_serializer {
     }
     else {
         croak
-          "Could not load Data::Serializer - you need to install Data::Serializer to support serializer argument";
+          "Could not load Data::Serializer - install Data::Serializer from CPAN to support serializer argument";
     }
 }
 
