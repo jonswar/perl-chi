@@ -510,8 +510,8 @@ keys, depending on the driver.
 
 The keys may not look the same as they did when passed into L</set>; they may
 have been serialized, utf8 encoded, and/or digested (see L</KEY AND VALUE
-TRANSFORMATION>). However, they may still be passed back into L</get>, L</set>,
-etc. to access the same underlying objects. i.e. the following code is
+TRANSFORMATIONS>). However, they may still be passed back into L</get>,
+L</set>, etc. to access the same underlying objects. i.e. the following code is
 guaranteed to produce all key/value pairs from the cache:
 
   map { ($_, $c->get($_)) } $c->get_keys()
@@ -642,10 +642,12 @@ e.g. the following are all valid duration expressions:
     1 minute and ten seconds
     1 hour
 
-=head1 KEY AND VALUE TRANSFORMATION
+=head1 KEY AND VALUE TRANSFORMATIONS
 
 CHI strives to accept arbitrary keys and values for caching regardless of the
 limitations of the underlying driver.
+
+=head2 Key transformations
 
 =over
 
@@ -655,12 +657,7 @@ Keys that are references are serialized - see L</key_serializer>.
 
 =item *
 
-Keys with a utf8 flag are utf8 encoded.
-
-=item *
-
-For some drivers (e.g. L<CHI::Driver::File|File>), keys containing special
-characters or whitespace are escaped with URL-like escaping.
+Keys with wide (>255) characters are utf8 encoded.
 
 =item *
 
@@ -669,13 +666,30 @@ L</max_key_length> and L</key_digester>.
 
 =item *
 
+For some drivers (e.g. L<CHI::Driver::File|File>), keys containing special
+characters or whitespace are escaped with URL-like escaping.
+
+=back
+
+Note: All transformations above with the exception of escaping are I<one-way>,
+meaning that CHI does not attempt to undo them when returned from L</get_keys>;
+and I<idempotent>, meaning that applying them a second time has no effect. So
+when you call L</get_keys>, the key you get may not be exactly what you passed
+in, but you'll be able to pass that key in to get the corresponding object.
+
+=head2 Value transformations
+
+=over
+
+=item *
+
 Values which are references are automatically serialized before storing, and
 deserialized after retrieving - see L</serializer>.
 
 =item *
 
-Values with a utf8 flag are are utf8 encoded before storing, and utf8 decoded
-after retrieving.
+Values with their utf8 flag on are utf8 encoded before storing, and utf8
+decoded after retrieving.
 
 =back
 
