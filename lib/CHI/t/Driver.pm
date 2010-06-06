@@ -135,7 +135,8 @@ sub extra_test_keys {
         'medium2', 'foo',
         'hashref', 'test_namespace_types',
         "utf8",    "encoded",
-        ( map { "done$_" } ( 0 .. 2 ) ), ( map { "key$_" } ( 0 .. 20 ) )
+        "binary", ( map { "done$_" } ( 0 .. 2 ) ),
+        ( map { "key$_" } ( 0 .. 20 ) )
     );
 }
 
@@ -147,7 +148,7 @@ sub set_some_keys {
     }
 }
 
-sub test_encode : Test(12) {
+sub test_encode : Test(14) {
     my $self  = shift;
     my $cache = $self->new_cleared_cache();
 
@@ -187,6 +188,13 @@ sub test_encode : Test(12) {
     is( $cache->get("encoded"), $encoded, "encoded in scalar" );
     $cache->set( "encoded", [$encoded] );
     is( $cache->get("encoded")->[0], $encoded, "encoded in arrayref" );
+
+    # Value retrieves as same thing whether stored with utf8 flag off or on
+    #
+    $cache->set( "binary", $binary_off );
+    is( $cache->get("binary"), $binary_on, "stored binary_off = binary_on" );
+    $cache->set( "binary", $binary_on );
+    is( $cache->get("binary"), $binary_off, "stored binary_on = binary_off" );
 }
 
 sub test_simple : Test(2) {
