@@ -497,7 +497,7 @@ sub transform_key {
     if ( ref($key) ) {
         $key = $self->key_serializer->serialize($key);
     }
-    elsif ( Encode::is_utf8($key) ) {
+    elsif ( Encode::is_utf8($key) && $key =~ /[^\x00-\xFF]/ ) {
         $key = $self->encode_key($key);
     }
     if ( length($key) > $self->max_key_length ) {
@@ -530,7 +530,7 @@ sub unescape_key { $_[1] }
 sub escape_for_filename {
     my ( $self, $key ) = @_;
 
-    $key =~ s/([^\w\=\-\~])/$escapes{$1} || $_fail_hi->($1)/ge;
+    $key =~ s/([^A-Za-z0-9_\=\-\~])/$escapes{$1} || $_fail_hi->($1)/ge;
     return $key;
 }
 
