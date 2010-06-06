@@ -131,9 +131,11 @@ sub set_standard_keys_and_values {
 sub extra_test_keys {
     my ($class) = @_;
     return (
-        '', '2', 'medium2', 'foo', 'hashref', 'test_namespace_types',
-        ( map { "done$_" } ( 0 .. 2 ) ),
-        ( map { "key$_" }  ( 0 .. 20 ) )
+        '',        '2',
+        'medium2', 'foo',
+        'hashref', 'test_namespace_types',
+        "utf8",    "encoded",
+        ( map { "done$_" } ( 0 .. 2 ) ), ( map { "key$_" } ( 0 .. 20 ) )
     );
 }
 
@@ -145,12 +147,46 @@ sub set_some_keys {
     }
 }
 
-sub test_mixed : Test(2) {
-    my $self = shift;
-    my $cache = shift || $self->{cache};
+sub test_encode : Test(12) {
+    my $self  = shift;
+    my $cache = $self->new_cleared_cache();
 
-    ok( $cache->set( $self->{keys}->{mixed}, $self->{values}->{mixed} ) );
-    is( $cache->get( $self->{keys}->{mixed} ), $self->{values}->{mixed} );
+    my $utf8       = $self->{keys}->{utf8};
+    my $encoded    = encode( utf8 => $utf8 );
+    my $binary_off = $self->{keys}->{binary};
+    my $binary_on  = substr( $binary_off . $utf8, 0, length($binary_off) );
+
+    ok( $binary_off eq $binary_on, "binary_off eq binary_on" );
+    ok( !Encode::is_utf8($binary_off), "!is_utf8(binary_off)" );
+    ok( Encode::is_utf8($binary_on),   "is_utf8(binary_on)" );
+
+    # Key maps to same thing whether encoded or non-encoded
+    #
+    my $value = time;
+    $cache->set( $utf8, $value );
+    is( $cache->get($utf8), $value, "get" );
+    is( $cache->get($encoded), $value,
+        "encoded and non-encoded map to same value" );
+
+    # Key maps to same thing whether utf8 flag is off or on
+    #
+    $cache->set( $binary_off, $value );
+    is( $cache->get($binary_off), $value, "get binary_off" );
+    is( $cache->get($binary_on),
+        $value, "binary_off and binary_on map to same value" );
+    $cache->clear($binary_on);
+    ok( !$cache->get($binary_off), "cleared binary_off" );
+
+    # Value is maintained as a utf8 or binary string, in scalar or in arrayref
+    $cache->set( "utf8", $utf8 );
+    is( $cache->get("utf8"), $utf8, "utf8 in scalar" );
+    $cache->set( "utf8", [$utf8] );
+    is( $cache->get("utf8")->[0], $utf8, "utf8 in arrayref" );
+
+    $cache->set( "encoded", $encoded );
+    is( $cache->get("encoded"), $encoded, "encoded in scalar" );
+    $cache->set( "encoded", [$encoded] );
+    is( $cache->get("encoded")->[0], $encoded, "encoded in arrayref" );
 }
 
 sub test_simple : Test(2) {
@@ -173,7 +209,7 @@ sub test_driver_class : Tests(3) {
 sub test_key_types : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
-    $self->num_tests( $self->{key_count} * 7 + 1 );
+    $self->num_tests( $self->{key_count} * 9 + 1 );
 
     my @keys_set;
     my $check_keys_set = sub {
@@ -199,14 +235,23 @@ sub test_key_types : Tests {
             "miss after remove for key '$keyname'" );
         pop(@keys_set);
         $check_keys_set->("after removal of key '$keyname'");
+    }
 
-        # Confirm that transform_key is idempotent
-        #
+    # Confirm that transform_key is idempotent
+    #
+    foreach my $keyname ( @{ $self->{keynames} } ) {
+        my $key   = $self->{keys}->{$keyname};
+        my $value = $self->{values}->{$keyname};
         is(
             $cache->transform_key( $cache->transform_key($key) ),
             $cache->transform_key($key),
             "transform_key is idempotent for '$keyname'"
         );
+        $cache->clear();
+        $cache->set( $key, $value );
+        is( scalar( $cache->get_keys() ), 1, "exactly one key" );
+        cmp_deeply( $cache->get( ( $cache->get_keys )[0] ),
+            $value, "get with get_keys[0] got same value" );
     }
 }
 
