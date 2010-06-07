@@ -2,6 +2,7 @@ package CHI::t::Driver::FastMmap;
 use strict;
 use warnings;
 use CHI::Test;
+use Encode;
 use File::Temp qw(tempdir);
 use base qw(CHI::t::Driver);
 
@@ -73,6 +74,59 @@ sub test_value_too_large : Tests(2) {
     is( $cache->get('small'), $values{small}, "got small" );
     throws_ok { $cache->set( 'large', $values{large} ) }
     qr/error during cache set.*fastmmap set failed/;
+}
+
+# Copied from t/Driver.pm, but commented out "Key maps to same thing whether
+# utf8 flag is off or on". This fails with FastMmap.pm because utf8 flag of
+# key is apparently used as part of key.
+#
+sub test_encode : Test(11) {
+    my $self  = shift;
+    my $cache = $self->new_cleared_cache();
+
+    my $utf8       = $self->{keys}->{utf8};
+    my $encoded    = encode( utf8 => $utf8 );
+    my $binary_off = $self->{keys}->{binary};
+    my $binary_on  = substr( $binary_off . $utf8, 0, length($binary_off) );
+
+    ok( $binary_off eq $binary_on, "binary_off eq binary_on" );
+    ok( !Encode::is_utf8($binary_off), "!is_utf8(binary_off)" );
+    ok( Encode::is_utf8($binary_on),   "is_utf8(binary_on)" );
+
+    # Key maps to same thing whether encoded or non-encoded
+    #
+    my $value = time;
+    $cache->set( $utf8, $value );
+    is( $cache->get($utf8), $value, "get" );
+    is( $cache->get($encoded), $value,
+        "encoded and non-encoded map to same value" );
+
+    # Key maps to same thing whether utf8 flag is off or on
+    #
+    # $cache->set( $binary_off, $value );
+    # is( $cache->get($binary_off), $value, "get binary_off" );
+    # is( $cache->get($binary_on),
+    #     $value, "binary_off and binary_on map to same value" );
+    # $cache->clear($binary_on);
+    # ok( !$cache->get($binary_off), "cleared binary_off" );
+
+    # Value is maintained as a utf8 or binary string, in scalar or in arrayref
+    $cache->set( "utf8", $utf8 );
+    is( $cache->get("utf8"), $utf8, "utf8 in scalar" );
+    $cache->set( "utf8", [$utf8] );
+    is( $cache->get("utf8")->[0], $utf8, "utf8 in arrayref" );
+
+    $cache->set( "encoded", $encoded );
+    is( $cache->get("encoded"), $encoded, "encoded in scalar" );
+    $cache->set( "encoded", [$encoded] );
+    is( $cache->get("encoded")->[0], $encoded, "encoded in arrayref" );
+
+    # Value retrieves as same thing whether stored with utf8 flag off or on
+    #
+    $cache->set( "binary", $binary_off );
+    is( $cache->get("binary"), $binary_on, "stored binary_off = binary_on" );
+    $cache->set( "binary", $binary_on );
+    is( $cache->get("binary"), $binary_off, "stored binary_on = binary_off" );
 }
 
 1;
