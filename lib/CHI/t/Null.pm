@@ -1,4 +1,4 @@
-package CHI::t::Driver::Null;
+package CHI::t::Null;
 use strict;
 use warnings;
 use CHI::Test;
