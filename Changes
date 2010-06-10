@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.36  Jun 6, 2010
+0.36  Jun 9, 2010
 
 * Fixes
   - Only encode keys with wide characters
