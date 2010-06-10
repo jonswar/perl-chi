@@ -1,3 +1,3 @@
 #!perl -w
-use CHI::t::Driver::Null;
-CHI::t::Driver::Null->runtests;
+use CHI::t::Null;
+CHI::t::Null->runtests;
