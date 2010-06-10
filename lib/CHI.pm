@@ -5,7 +5,7 @@ use CHI::Stats;
 use strict;
 use warnings;
 
-our $VERSION = '0.36';
+our $VERSION = '0.37';
 
 my ( %final_class_seen, %stats );
 
