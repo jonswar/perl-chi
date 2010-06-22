@@ -26,7 +26,7 @@ my %cache_generators = cache_generators();
 
 sub usage {
     printf(
-        "usage: %s [-I path,...] [-c count] [-s sets] [-d driver_regex...]\ndrivers: %s\n",
+        "usage: %s [-I path,...] [-c count] [-s set_frequency] [-d driver_regex] [-x|--complex]\ndrivers: %s\n",
         $0, join( ", ", sort keys(%cache_generators) ) );
     exit;
 }
@@ -34,19 +34,20 @@ sub usage {
 usage() if !@ARGV;
 my $drivers_pattern = '.';
 my $count           = 10000;
-my ( $sets, $incs, $complex );
+my $set_frequency   = 0.05;
+my ( $incs, $complex );
 GetOptions(
-    'c|count=i'   => \$count,
-    's|sets=i'    => \$sets,
-    'd|drivers=s' => \$drivers_pattern,
-    'x|complex'   => \$complex,
-    'I=s'         => \$incs,
+    'c|count=i'         => \$count,
+    's|set_frequency=s' => \$set_frequency,
+    'd|drivers=s'       => \$drivers_pattern,
+    'x|complex'         => \$complex,
+    'I=s'               => \$incs,
 );
 my $value =
   $complex
   ? { map { ( $_, scalar( $_ x 100 ) ) } qw(a b c d e) }
   : scalar( 'x' x 500 );
-$sets ||= $count * 0.05;
+my $sets = int( $count * $set_frequency );
 
 unshift( @INC, split( /,/, $incs ) ) if $incs;
 require CHI;
@@ -62,6 +63,7 @@ my %common_chi_opts = ( on_get_error => 'die', on_set_error => 'die' );
 
 my @drivers = grep { /$drivers_pattern/ } keys(%cache_generators);
 my %caches = map { ( $_, $cache_generators{$_}->() ) } @drivers;
+print "Drivers: " . join( ", ", @drivers ) . "\n";
 
 my $cb = new Cache::Benchmark();
 $cb->init( keys => $sets, access_counter => $count, value => $value );
@@ -142,7 +144,7 @@ sub cache_generators {
                 datastore => {},
             );
         },
-        chi_mysql => sub {
+        chi_dbi_mysql => sub {
             my $mysql_dbh =
               DBI->connect( "DBI:mysql:database=chibench;host=localhost",
                 "chibench", "chibench" );
@@ -150,6 +152,17 @@ sub cache_generators {
                 %common_chi_opts,
                 driver       => 'DBI',
                 dbh          => $mysql_dbh,
+                create_table => 1,
+            );
+        },
+        chi_dbi_sqlite => sub {
+            my $sqlite_dbh =
+              DBI->connect( "DBI:SQLite:dbname=$data/sqlite.db",
+                "chibench", "chibench" );
+            CHI->new(
+                %common_chi_opts,
+                driver       => 'DBI',
+                dbh          => $sqlite_dbh,
                 create_table => 1,
             );
         },
