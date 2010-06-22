@@ -1,0 +1,16 @@
+Run ./bench.pl with no arguments for help.
+
+To benchmark all CHI modules:
+
+1) Install from CPAN:
+
+   CHI CHI::Driver::BerkeleyDB CHI::Driver::FastMmap CHI::Driver::Memcached Cache::Memcached
+   Cache::Memcached::Fast Cache::Memcached::libmemcached DBD::SQLite DBD::mysql
+
+2) Create a mysql database 'chibench' on localhost with user='chibench', pass='chibench'
+
+3) Install and start memcached on the default port (11211)
+
+4) Run
+
+    ./bench.pl -c 10000 -d 'chi_'

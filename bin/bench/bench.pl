@@ -10,6 +10,7 @@ use File::Basename;
 use File::Path;
 use Getopt::Long;
 use Hash::MoreUtils qw(slice_def);
+use Pod::Usage;
 use Text::Table;
 use YAML::Any qw(DumpFile);
 use warnings;
@@ -25,24 +26,24 @@ require Cache::Benchmark;
 my %cache_generators = cache_generators();
 
 sub usage {
-    printf(
-        "usage: %s [-I path,...] [-c count] [-s set_frequency] [-d driver_regex] [-x|--complex]\ndrivers: %s\n",
-        $0, join( ", ", sort keys(%cache_generators) ) );
-    exit;
+    pod2usage( -verbose => 1, -exitval => "NOEXIT" );
+    print "Valid drivers: " . join( ", ", sort keys(%cache_generators) ) . "\n";
+    exit(1);
 }
 
+my $count         = 10000;
+my $set_frequency = 0.05;
+my ( $drivers_pattern, $incs, $complex );
 usage() if !@ARGV;
-my $drivers_pattern = '.';
-my $count           = 10000;
-my $set_frequency   = 0.05;
-my ( $incs, $complex );
 GetOptions(
     'c|count=i'         => \$count,
     's|set_frequency=s' => \$set_frequency,
     'd|drivers=s'       => \$drivers_pattern,
     'x|complex'         => \$complex,
     'I=s'               => \$incs,
-);
+) or usage();
+usage() if !$drivers_pattern;
+
 my $value =
   $complex
   ? { map { ( $_, scalar( $_ x 100 ) ) } qw(a b c d e) }
@@ -156,8 +157,7 @@ sub cache_generators {
             );
         },
         chi_dbi_sqlite => sub {
-            my $sqlite_dbh =
-              DBI->connect( "DBI:SQLite:dbname=$data/sqlite.db",
+            my $sqlite_dbh = DBI->connect( "DBI:SQLite:dbname=$data/sqlite.db",
                 "chibench", "chibench" );
             CHI->new(
                 %common_chi_opts,
@@ -196,3 +196,23 @@ sub cache_generators {
         },
     );
 }
+
+__END__
+
+=head1 NAME
+
+bench.pl -- Benchmark cache modules against each other
+
+=head1 SYNOPSIS
+
+bench.pl -d driver_regex [options]
+
+=head1 OPTIONS
+
+  -d driver_regex    Run drivers matching this regex (required)
+  -I path,...        Add one or more comma-separated paths to @INC
+  -c count           Run this many iterations (default 10000)
+  -s set_frequency   Run this many sets as a percentage of gets (default 0.05)
+  -x|--complex       Use a complex data structure instead of a scalar
+
+=cut
