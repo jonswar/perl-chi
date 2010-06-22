@@ -26,7 +26,7 @@ my %cache_generators = cache_generators();
 
 sub usage {
     printf(
-        "usage: %s [-I path,...] [-c count] [-d driver_regex...] [-s sets]\ndrivers: %s\n",
+        "usage: %s [-I path,...] [-c count] [-s sets] [-d driver_regex...]\ndrivers: %s\n",
         $0, join( ", ", sort keys(%cache_generators) ) );
     exit;
 }
@@ -54,10 +54,9 @@ require CHI;
 print "running $count iterations\n";
 print "CHI version $CHI::VERSION\n";
 
-my $cwd  = dirname( realpath($0) );
-my $root = "$cwd/data";
-rmtree($root);
-mkpath( $root, 0, 0775 );
+my $data = "$cwd/data";
+rmtree($data);
+mkpath( $data, 0, 0775 );
 
 my %common_chi_opts = ( on_get_error => 'die', on_set_error => 'die' );
 
@@ -97,28 +96,42 @@ sub cache_generators {
             CHI->new(
                 %common_chi_opts,
                 driver   => 'BerkeleyDB',
-                root_dir => "$root/chi/berkeleydb",
+                root_dir => "$data/chi/berkeleydb",
             );
         },
         chi_fastmmap => sub {
             CHI->new(
                 %common_chi_opts,
                 driver   => 'FastMmap',
-                root_dir => "$root/chi/fastmmap",
+                root_dir => "$data/chi/fastmmap",
             );
         },
         chi_file => sub {
             CHI->new(
                 %common_chi_opts,
                 driver   => 'File',
-                root_dir => "$root/chi/file",
+                root_dir => "$data/chi/file",
                 depth    => 2
             );
         },
-        chi_memcached => sub {
+        chi_memcached_std => sub {
             CHI->new(
                 %common_chi_opts,
                 driver  => 'Memcached',
+                servers => ["localhost:11211"],
+            );
+        },
+        chi_memcached_fast => sub {
+            CHI->new(
+                %common_chi_opts,
+                driver  => 'Memcached::Fast',
+                servers => ["localhost:11211"],
+            );
+        },
+        chi_memcached_libmemcached => sub {
+            CHI->new(
+                %common_chi_opts,
+                driver  => 'Memcached::libmemcached',
                 servers => ["localhost:11211"],
             );
         },
@@ -126,13 +139,6 @@ sub cache_generators {
             CHI->new(
                 %common_chi_opts,
                 driver    => 'Memory',
-                datastore => {},
-            );
-        },
-        chi_raw_memory => sub {
-            CHI->new(
-                %common_chi_opts,
-                driver    => 'RawMemory',
                 datastore => {},
             );
         },
@@ -149,17 +155,24 @@ sub cache_generators {
         },
         cache_fastmmap => sub {
             require Cache::FastMmap;
-            my $fastmmap_file = "$root/fastmmap.fm";
+            my $fastmmap_file = "$data/fastmmap.fm";
             Cache::FastMmap->new( share_file => $fastmmap_file, );
         },
-        cache_memcached => sub {
+        cache_memcached_std => sub {
             Cache::Memcached->new( servers => ["localhost:11211"], );
+        },
+        cache_memcached_fast => sub {
+            Cache::Memcached::Fast->new( servers => ["localhost:11211"], );
+        },
+        cache_memcached => sub {
+            Cache::Memcached::libmemcached->new( servers => ["localhost:11211"],
+            );
         },
         cache_cache_file => sub {
             require Cache::FileCache;
             Cache::FileCache->new(
                 {
-                    cache_root  => "$root/cachecache/file",
+                    cache_root  => "$data/cachecache/file",
                     cache_depth => 2,
                 }
             );
