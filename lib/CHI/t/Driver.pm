@@ -1450,8 +1450,13 @@ sub test_discard_timeout : Test(4) {
     my $start_time = time;
     $cache->set( 2, 2 );
     throws_ok { $cache->discard_to_size(0) } qr/discard timeout .* reached/;
-    ok( time >= $start_time && time <= $start_time + 3,
-        "timed out in 1 second" );
+    ok(
+        time >= $start_time && time <= $start_time + 4,
+        sprintf(
+            "time (%d) is between %d and %d",
+            time, $start_time, $start_time + 4
+        )
+    );
 }
 
 sub test_size_awareness_with_subcaches : Test(19) {
