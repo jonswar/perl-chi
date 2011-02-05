@@ -7,11 +7,13 @@
 ^docs
 ^git
 ^inc/\.author
+^lib/Pod
 ^lib/Test
 ^localcpan
 ^misc
 ^perlcriticrc
 ^perltidyrc
+^release
 ^tmp
 ^wiki
 ^README.DEVELOPERS

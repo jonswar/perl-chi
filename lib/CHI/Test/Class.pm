@@ -1,6 +1,6 @@
 package CHI::Test::Class;
 use Getopt::Long;
-use Module::Load::Conditional qw(can_load);
+use CHI::Util qw(can_load);
 use strict;
 use warnings;
 use base qw(Test::Class);

@@ -11,70 +11,67 @@ use warnings;
 extends 'CHI::Driver::Base::CacheContainer';
 
 has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
-has 'root_dir' => (
-is        => 'ro',
-  isa     => 'Str',
-  default => catdir( tmpdir(), "chi-driver-fastmmap" ) );
+has 'root_dir'        => ( is => 'ro', isa => 'Str', default => catdir( tmpdir(), "chi-driver-fastmmap" ) );
 
 __PACKAGE__->meta->make_immutable();
 
 sub BUILD {
-      my ( $self, $params ) = @_;
+    my ( $self, $params ) = @_;
 
-      mkpath( $self->root_dir, 0, $self->dir_create_mode )
-        if !-d $self->root_dir;
-      $self->{fm_params} = {
-          raw_values     => 1,
-          unlink_on_exit => 0,
-          share_file     => catfile(
-              $self->root_dir,
-              $self->escape_for_filename( $self->namespace ) . ".dat"
-          ),
-          %{ $self->non_common_constructor_params($params) },
-      };
-      $self->{_contained_cache} = $self->_build_contained_cache;
+    mkpath( $self->root_dir, 0, $self->dir_create_mode )
+      if !-d $self->root_dir;
+    $self->{fm_params} = {
+        raw_values     => 1,
+        unlink_on_exit => 0,
+        share_file     => catfile(
+            $self->root_dir,
+            $self->escape_for_filename( $self->namespace ) . ".dat"
+        ),
+        %{ $self->non_common_constructor_params($params) },
+    };
+    $self->{_contained_cache} = $self->_build_contained_cache;
 }
 
 sub _build_contained_cache {
-      my ($self) = @_;
+    my ($self) = @_;
 
-      return Cache::FastMmap->new( %{ $self->{fm_params} } );
+    return Cache::FastMmap->new( %{ $self->{fm_params} } );
 }
 
 sub fm_cache {
-      my $self = shift;
-      return $self->_contained_cache(@_);
+    my $self = shift;
+    return $self->_contained_cache(@_);
 }
 
 sub get_keys {
-      my ($self) = @_;
+    my ($self) = @_;
 
-      my @keys = $self->_contained_cache->get_keys(0);
-      return @keys;
+    my @keys = $self->_contained_cache->get_keys(0);
+    return @keys;
 }
 
 sub get_namespaces {
-      my ($self) = @_;
+    my ($self) = @_;
 
-      my $root_dir = $self->root_dir;
-      my @contents = read_dir($root_dir);
-      my @namespaces =
-        map { $self->unescape_for_filename( substr( $_, 0, -4 ) ) }
-        grep { /\.dat$/ } @contents;
-      return @namespaces;
+    my $root_dir = $self->root_dir;
+    my @contents = read_dir($root_dir);
+    my @namespaces =
+      map { $self->unescape_for_filename( substr( $_, 0, -4 ) ) }
+      grep { /\.dat$/ } @contents;
+    return @namespaces;
 }
 
 # Capture set failures
 sub store {
-      my $self   = shift;
-      my $result = $self->_contained_cache->set(@_);
-      if ( !$result ) {
-          my ( $key, $value ) = @_;
-          croak(
-              sprintf( "fastmmap set failed - value too large? (%d bytes)",
-                  length($value) )
-          );
-      }
+    my $self   = shift;
+    my $result = $self->_contained_cache->set(@_);
+    if ( !$result ) {
+        my ( $key, $value ) = @_;
+        croak(
+            sprintf( "fastmmap set failed - value too large? (%d bytes)",
+                length($value) )
+        );
+    }
 }
 
 1;

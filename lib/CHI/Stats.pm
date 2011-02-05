@@ -5,9 +5,9 @@ use strict;
 use warnings;
 
 has 'chi_root_class' => ( is => 'ro' );
-has 'data' => ( is => 'ro', default => sub { {} } );
-has 'enabled' => ( is => 'ro', default => 0 );
-has 'start_time' => ( is => 'ro', default => sub { time } );
+has 'data'           => ( is => 'ro', default => sub { {} } );
+has 'enabled'        => ( is => 'ro', default => 0 );
+has 'start_time'     => ( is => 'ro', default => sub { time } );
 
 __PACKAGE__->meta->make_immutable();
 

@@ -1,15 +1,18 @@
 package CHI::Util;
 use Carp qw( croak longmess );
+use Class::MOP;
 use Data::Dumper;
 use Data::UUID;
 use Fcntl qw( :DEFAULT );
 use File::Spec::Functions qw(catdir catfile);
 use Time::Duration::Parse;
+use Try::Tiny;
 use strict;
 use warnings;
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(
+  can_load
   dump_one_line
   fast_catdir
   fast_catfile
@@ -24,6 +27,29 @@ our @EXPORT_OK = qw(
 
 my $Fetch_Flags = O_RDONLY | O_BINARY;
 my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
+
+sub can_load {
+
+    # Load $class_name if possible. Return 1 if successful, 0 if it could not be
+    # found, and rethrow load error (other than not found).
+    #
+    my ($class_name) = @_;
+
+    my $result;
+    try {
+        Class::MOP::load_class($class_name);
+        $result = 1;
+    }
+    catch {
+        if ( /Can\'t locate .* in \@INC/ && !/Compilation failed/ ) {
+            $result = 0;
+        }
+        else {
+            die $_;
+        }
+    };
+    return $result;
+}
 
 sub dump_one_line {
     my ($value) = @_;

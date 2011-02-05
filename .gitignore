@@ -22,5 +22,6 @@ docs
 inc
 localcpan*
 pm_to_blib*
+release
 tmp
 wiki

@@ -6,8 +6,8 @@ use Scalar::Util qw(weaken);
 use strict;
 use warnings;
 
-has 'l1_cache'     => ( is => 'ro', isa     => 'CHI::Types::UnblessedHashRef' );
-has 'mirror_cache' => ( is => 'ro', isa     => 'CHI::Types::UnblessedHashRef' );
+has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
 has 'subcaches'    => ( is => 'ro', default => sub { [] }, init_arg => undef );
 
 # List of parameter keys that initialize a subcache

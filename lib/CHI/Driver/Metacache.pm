@@ -4,9 +4,9 @@ use Moose;
 use strict;
 use warnings;
 
-has 'meta_cache'      => ( is => 'ro', builder    => '_build_meta_cache' );
+has 'meta_cache'      => ( is => 'ro', builder => '_build_meta_cache' );
 has 'owner_namespace' => ( is => 'ro', lazy_build => 1 );
-has 'owner_cache'     => ( is => 'ro', weak_ref   => 1 );
+has 'owner_cache'     => ( is => 'ro', weak_ref => 1 );
 
 __PACKAGE__->meta->make_immutable;
 

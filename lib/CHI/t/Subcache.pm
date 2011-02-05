@@ -1,6 +1,6 @@
 package CHI::t::Subcache;
 use CHI::Test;
-use Module::Load::Conditional qw(can_load check_install);
+use CHI::Util qw(can_load);
 use base qw(CHI::Test::Class);
 use strict;
 use warnings;
@@ -9,7 +9,7 @@ sub test_option_inheritance : Tests(8) {
     my $self = shift;
 
     return 'Data::Serializer not installed'
-      unless can_load( modules => { 'Data::Serializer' => undef } );
+      unless can_load('Data::Serializer');
 
     my %params = (
         expires_variance => 0.2,

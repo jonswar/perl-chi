@@ -7,7 +7,7 @@ use warnings;
 
 extends 'CHI::Driver::Base::CacheContainer';
 
-has 'cc_class'   => ( is => 'ro', isa => 'Str',     required => 1 );
+has 'cc_class'   => ( is => 'ro', isa => 'Str', required => 1 );
 has 'cc_options' => ( is => 'ro', isa => 'HashRef', required => 1 );
 
 __PACKAGE__->meta->make_immutable();

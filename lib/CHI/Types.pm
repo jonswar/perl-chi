@@ -1,7 +1,6 @@
 package CHI::Types;
 use Carp;
-use CHI::Util qw(parse_duration parse_memory_size);
-use Module::Load::Conditional qw(can_load);
+use CHI::Util qw(can_load parse_duration parse_memory_size);
 use Moose;
 use Moose::Util::TypeConstraints;
 use strict;
@@ -39,10 +38,9 @@ coerce 'CHI::Types::Digester' => from 'Str' => via {
 
 __PACKAGE__->meta->make_immutable;
 
-my $data_serializer_loaded =
-  can_load( modules => { 'Data::Serializer' => undef } );
+my $data_serializer_loaded = can_load('Data::Serializer');
 
-my $digest_loaded = can_load( modules => { 'Digest' => undef } );
+my $digest_loaded = can_load('Digest');
 
 sub _build_data_serializer {
     my ($params) = @_;
