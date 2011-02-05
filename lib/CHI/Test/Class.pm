@@ -12,7 +12,7 @@ sub runtests {
     #
     if ( my $required_modules = $class->required_modules ) {
         while ( my ( $key, $value ) = each(%$required_modules) ) {
-            unless ( can_load( modules => { $key, $value } ) ) {
+            unless ( can_load($key) ) {
                 $class->SKIP_ALL("one of required modules not installed: $key");
             }
         }
