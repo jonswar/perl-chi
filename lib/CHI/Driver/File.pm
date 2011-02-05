@@ -234,13 +234,9 @@ sub path_to_key {
 1;
 
 __END__
+# ABSTRACT: File-based cache using one file per entry in a multi-level directory structure
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::File -- File-based cache using one file per entry in a multi-level
-directory structure
 
 =head1 SYNOPSIS
 
@@ -334,20 +330,5 @@ renamed to the proper file.  This eliminates the need for locking. You can
 subclass and override method I<generate_temporary_filename> to either change
 the path of the temporary filename, or skip the temporary file and rename
 altogether by having it return undef.
-
-=head1 SEE ALSO
-
-L<CHI|CHI>
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

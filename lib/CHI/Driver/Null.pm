@@ -16,12 +16,9 @@ sub get_namespaces { return () }
 1;
 
 __END__
+# ABSTRACT: nothing is cached
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::Null - nothing is cached
 
 =head1 SYNOPSIS
 
@@ -35,16 +32,5 @@ CHI::Driver::Null - nothing is cached
 
 This cache driver implements the full CHI interface without ever actually
 storing items. Useful for disabling caching in an application, for example.
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

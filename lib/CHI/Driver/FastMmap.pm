@@ -77,12 +77,9 @@ sub store {
 1;
 
 __END__
+# ABSTRACT: Shared memory interprocess cache via mmap'ed files
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::FastMmap -- Shared memory interprocess cache via mmap'ed files
 
 =head1 SYNOPSIS
 
@@ -143,20 +140,5 @@ call FastMmap-specific methods that are not supported by the general API, e.g.
     $self->fm_cache->get_and_set("key", sub { ... });
 
 =back
-
-=head1 SEE ALSO
-
-Cache::FastMmap CHI
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

@@ -54,27 +54,13 @@ sub _prefixed_key {
 1;
 
 __END__
+# ABSTRACT: metacache for internal CHI use
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::Metacache
 
 =head1 SYNOPSIS
 
     $cache->metacache->get($meta_key);
     $cache->metacache->set($meta_key => $value);
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

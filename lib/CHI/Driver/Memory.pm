@@ -93,12 +93,9 @@ sub discard_policy_lru {
 1;
 
 __END__
+# ABSTRACT: In-process memory based cache
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::Memory -- In-process memory based cache.
 
 =head1 SYNOPSIS
 
@@ -148,20 +145,5 @@ unrelated code).
 For L<CHI/SIZE AWARENESS|size aware> caches, this driver implements an 'LRU'
 policy, which discards the least recently used items first. This is the default
 policy.
-
-=head1 SEE ALSO
-
-CHI
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

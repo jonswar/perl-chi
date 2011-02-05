@@ -35,12 +35,9 @@ sub _build_contained_cache {
 1;
 
 __END__
+#ABSTRACT: CHI wrapper for Cache::Cache
 
 =pod
-
-=head1 NAME
-
-CHI::Driver::CacheCache -- CHI wrapper for Cache::Cache
 
 =head1 SYNOPSIS
 
@@ -72,20 +69,5 @@ Name of Cache::Cache class to create, e.g. Cache::FileCache. Required.
 Hashref of options to pass to Cache::Cache constructor. Required.
 
 =back
-
-=head1 SEE ALSO
-
-Cache::Cache CHI
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
