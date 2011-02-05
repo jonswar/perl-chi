@@ -82,13 +82,10 @@ sub new {
 
 1;
 
+# ABSTRACT: Unified cache handling interface
 __END__
 
 =pod
-
-=head1 NAME
-
-CHI -- Unified cache handling interface
 
 =head1 SYNOPSIS
 
@@ -1147,24 +1144,8 @@ CHI was originally designed and developed for the Digital Media group of the
 Hearst Corporation, a diversified media company based in New York City.  Many
 thanks to Hearst management for agreeing to this open source release.
 
-=head1 AUTHOR
-
-Jonathan Swartz
-
 =head1 SEE ALSO
 
-L<Cache::Cache|Cache::Cache>, L<Cache::Memcached|Cache::Memcached>,
-L<Cache::FastMmap|Cache::FastMmap>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-CHI is provided "as is" and without any express or implied warranties,
-including, without limitation, the implied warranties of merchantibility and
-fitness for a particular purpose.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+L<Cache::Cache|Cache::Cache>
 
 =cut

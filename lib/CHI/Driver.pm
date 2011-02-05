@@ -1,5 +1,3 @@
-## Please see file perltidy.ERR
-## Please see file perltidy.ERR
 package CHI::Driver;
 use Carp;
 use CHI::CacheObject;
@@ -3808,12 +3806,9 @@ sub _describe_cache_set {
 1;
 
 __END__
+# ABSTRACT: Base class for all CHI drivers.
 
 =pod
-
-=head1 NAME
-
-CHI::Driver -- Base class for all CHI drivers.
 
 =head1 DESCRIPTION
 
@@ -3823,16 +3818,5 @@ methods that one calls on $cache handles, such as get() and set().
 See L<CHI/METHODS> for documentation on $cache methods, and
 L<CHI::Driver::Development|CHI::Driver::Development> for documentation on
 creating new subclasses of CHI::Driver.
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

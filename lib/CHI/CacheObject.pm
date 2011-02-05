@@ -143,13 +143,10 @@ sub value {
 
 1;
 
+# ABSTRACT: Contains information about cache entries
 __END__
 
 =pod
-
-=head1 NAME
-
-CHI::CacheObject -- Contains information about cache entries.
 
 =head1 SYNOPSIS
 
@@ -203,20 +200,5 @@ Returns boolean indicating whether item has expired. This may be
 probabilistically determined if an L</expires_variance> was used.
 
 =back
-
-=head1 SEE ALSO
-
-CHI
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut

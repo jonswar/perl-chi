@@ -125,12 +125,9 @@ sub clear {
 1;
 
 __END__
+# ABSTRACT: Record and report per-namespace cache statistics
 
 =pod
-
-=head1 NAME
-
-CHI::Stats -- Record and report per-namespace cache statistics
 
 =head1 SYNOPSIS
 
@@ -246,20 +243,5 @@ Each parameter to this method may be a filename or a reference to an open
 filehandle.
 
 =back
-
-=head1 SEE ALSO
-
-L<CHI|CHI>
-
-=head1 AUTHOR
-
-Jonathan Swartz
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
 
 =cut
