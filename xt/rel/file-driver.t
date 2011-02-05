@@ -2,6 +2,7 @@
 #
 use strict;
 use warnings;
+use Cwd qw(realpath);
 use File::Basename;
 use File::Temp qw(tempdir);
 use Test::More;
@@ -12,6 +13,8 @@ my $root_dir = tempdir( "file-digest-XXXX", TMPDIR => 1, CLEANUP => 1 );
 my $cache;
 my ($keys, $values) = set_standard_keys_and_values();
 my @keynames = sort keys (%$keys);
+
+my $cwd = dirname(realpath($0));
 
 plan tests => (scalar(@keynames) * 2 + 1);
 
@@ -31,7 +34,7 @@ is( $file, 'db62ffe116024a7a4e1bd949c0e30dbae9b5db77.sha', 'SHA-1 digest' );
 # key escaping or metadata format changes between versions, this will break
 # - we at least want to know about it to warn users.
 #
-my $perm_cache = CHI->new(driver => 'File', root_dir => "xt/release/permcache");
+my $perm_cache = CHI->new(driver => 'File', root_dir => "$cwd/permcache");
 foreach my $keyname (@keynames) {
     is($perm_cache->get($keys->{$keyname}), $values->{$keyname}, "get $keyname from perm test cache");
     my $obj = $perm_cache->get_object($keys->{$keyname});
