@@ -19,7 +19,6 @@ sub new_cache_options {
 }
 
 {
-
     package CHI::t::Driver::File::NoTempDriver;
     use Moose;
     extends 'CHI::Driver::File';
@@ -32,7 +31,6 @@ sub new_cache_options {
 }
 
 {
-
     package CHI::t::Driver::File::BadTempDriver;
     use Moose;
     extends 'CHI::Driver::File';

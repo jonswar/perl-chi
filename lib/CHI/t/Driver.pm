@@ -560,7 +560,6 @@ sub test_serialize : Tests {
 }
 
 {
-
     package DummySerializer;
     sub serialize   { }
     sub deserialize { }

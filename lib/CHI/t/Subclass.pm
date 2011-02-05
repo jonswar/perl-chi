@@ -7,7 +7,6 @@ use base qw(CHI::Test::Class);
 # Test declare_unsupported_methods
 #
 {
-
     package CHI::t::Subclass::Driver::HasUnsupported;
     use Moose;
     extends 'CHI::Driver::Memory';
