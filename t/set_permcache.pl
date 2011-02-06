@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+#
+# Write permcache - for xt/author/file-driver.t and possibly other tests.
+#
 use CHI;
 use warnings;
 use strict;
@@ -29,14 +32,13 @@ sub set_standard_keys_and_values {
     return ( \%keys, \%values );
 }
 
-my ($keys, $values) = set_standard_keys_and_values();
-my $perm_cache = CHI->new(driver => 'File', root_dir => "permcache", on_set_error => 'die');
+my ( $keys, $values ) = set_standard_keys_and_values();
+my $perm_cache =
+  CHI->new( driver => 'File', root_dir => "permcache", on_set_error => 'die' );
 $perm_cache->clear();
-foreach my $keyname (sort keys (%$keys)) {
-    $perm_cache->set($keys->{$keyname}, $values->{$keyname});
+foreach my $keyname ( sort keys(%$keys) ) {
+    $perm_cache->set( $keys->{$keyname}, $values->{$keyname} );
 
     use d;
-    dp [$keys->{$keyname}, $perm_cache->path_to_key($keys->{$keyname})];
+    dp [ $keys->{$keyname}, $perm_cache->path_to_key( $keys->{$keyname} ) ];
 }
-
-
