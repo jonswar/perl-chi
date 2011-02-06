@@ -4,6 +4,13 @@ Revision history for CHI
 
 0.37  Jun 9, 2010
 
+* Fixes
+  - Eliminate Module::Load::Conditional which was causing problems with version.pm - RT
+    #64900 - reported by dgl@dgl.cx
+
+* Implementation
+  - Switch to Dist::Zilla
+
 0.36  Jun 9, 2010
 
 * Fixes
