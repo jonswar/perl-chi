@@ -2,7 +2,14 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.37  Feb 6, 2010
+0.39  Feb  6, 2011
+
+0.38  Feb 6, 2011
+
+* Fixes
+  - Move some smoke tests back to author tests
+
+0.37  Feb 6, 2011
 
 * Fixes
   - Eliminate Module::Load::Conditional which was causing problems with version.pm - RT
