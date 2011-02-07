@@ -15,6 +15,7 @@
 ^perltidyrc
 ^release
 ^tmp
+^weaver.ini
 ^wiki
 ^README.DEVELOPERS
 ^TODO
