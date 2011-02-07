@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.37  Jun 9, 2010
+0.37  Feb 6, 2010
 
 * Fixes
   - Eliminate Module::Load::Conditional which was causing problems with version.pm - RT
