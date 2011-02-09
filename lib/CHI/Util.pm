@@ -174,4 +174,3 @@ sub has_moose_class {
 1;
 
 __END__
-# ABSTRACT: Utilities for internal CHI use

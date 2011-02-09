@@ -77,9 +77,12 @@ sub store {
 1;
 
 __END__
-# ABSTRACT: Shared memory interprocess cache via mmap'ed files
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::FastMmap - Shared memory interprocess cache via mmap'ed files
 
 =head1 SYNOPSIS
 

@@ -81,9 +81,12 @@ sub new {
 1;
 
 __END__
-# ABSTRACT: Unified cache handling interface
 
 =pod
+
+=head1 NAME
+
+CHI - Unified cache handling interface
 
 =head1 SYNOPSIS
 

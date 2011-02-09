@@ -125,9 +125,12 @@ sub clear {
 1;
 
 __END__
-# ABSTRACT: Record and report per-namespace cache statistics
 
 =pod
+
+=head1 NAME
+
+CHI::Stats - Record and report per-namespace cache statistics
 
 =head1 SYNOPSIS
 

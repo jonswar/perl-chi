@@ -5,8 +5,8 @@ use strict;
 use warnings;
 
 has 'meta_cache'      => ( is => 'ro', builder => '_build_meta_cache' );
-has 'owner_namespace' => ( is => 'ro', lazy_build => 1 );
 has 'owner_cache'     => ( is => 'ro', weak_ref => 1 );
+has 'owner_namespace' => ( is => 'ro', lazy_build => 1 );
 
 __PACKAGE__->meta->make_immutable;
 
@@ -54,9 +54,12 @@ sub _prefixed_key {
 1;
 
 __END__
-# ABSTRACT: metacache for internal CHI use
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::Metacache - Metacache for internal CHI use
 
 =head1 SYNOPSIS
 

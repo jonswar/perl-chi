@@ -16,9 +16,12 @@ sub get_namespaces { return () }
 1;
 
 __END__
-# ABSTRACT: nothing is cached
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::Null - Nothing is cached
 
 =head1 SYNOPSIS
 

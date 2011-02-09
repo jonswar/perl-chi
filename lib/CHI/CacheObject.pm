@@ -143,10 +143,13 @@ sub value {
 
 1;
 
-# ABSTRACT: Contains information about cache entries
 __END__
 
 =pod
+
+=head1 NAME
+
+CHI::CacheObject - Contains information about cache entries
 
 =head1 SYNOPSIS
 

@@ -93,9 +93,12 @@ sub discard_policy_lru {
 1;
 
 __END__
-# ABSTRACT: In-process memory based cache
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::Memory - In-process memory based cache
 
 =head1 SYNOPSIS
 

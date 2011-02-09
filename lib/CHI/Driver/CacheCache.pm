@@ -35,9 +35,12 @@ sub _build_contained_cache {
 1;
 
 __END__
-#ABSTRACT: CHI wrapper for Cache::Cache
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::CacheCache - CHI wrapper for Cache::Cache
 
 =head1 SYNOPSIS
 

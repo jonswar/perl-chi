@@ -50,9 +50,12 @@ sub get_namespaces {
 1;
 
 __END__
-# ABSTRACT: Caches that delegate to a contained cache
 
 =pod
+
+=head1 NAME
+
+CHI::Driver::Base::CacheContainer - Caches that delegate to a contained cache
 
 =head1 DESCRIPTION
 

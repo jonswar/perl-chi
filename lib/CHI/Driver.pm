@@ -609,9 +609,12 @@ sub _describe_cache_set {
 1;
 
 __END__
-# ABSTRACT: Base class for all CHI drivers
 
 =pod
+
+=head1 NAME
+
+CHI::Driver - Base class for all CHI drivers
 
 =head1 DESCRIPTION
 

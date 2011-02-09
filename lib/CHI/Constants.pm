@@ -15,10 +15,13 @@ use constant CHI_Max_Time       => 0xffffffff;
 
 1;
 
-# ABSTRACT: Internal constants
 __END__
 
 =pod
+
+=head1 NAME
+
+CHI::Constants - Internal constants
 
 =head1 DESCRIPTION
 

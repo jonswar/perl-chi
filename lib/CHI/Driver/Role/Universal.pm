@@ -22,7 +22,6 @@ around 'remove' => sub {
 1;
 
 __END__
-# ABSTRACT: Universal role applied as the innermost role to all CHI drivers
 
 =pod
 
