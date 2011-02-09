@@ -80,8 +80,8 @@ sub new {
 
 1;
 
-# ABSTRACT: Unified cache handling interface
 __END__
+# ABSTRACT: Unified cache handling interface
 
 =pod
 
