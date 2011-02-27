@@ -392,8 +392,10 @@ sub purge {
     my ($self) = @_;
 
     foreach my $key ( $self->get_keys() ) {
-        if ( $self->get_object($key)->is_expired() ) {
-            $self->remove($key);
+        if ( my $obj = $self->get_object($key) ) {
+            if ( $obj->is_expired() ) {
+                $self->remove($key);
+            }
         }
     }
 }

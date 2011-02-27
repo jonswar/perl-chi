@@ -6,6 +6,7 @@ Revision history for CHI
 
 * Improvements
   - Reverse order of 2nd and 3rd arguments in compute() (old order will still work)
+  - Throw error if arguments passed to clear() 
 
 * Fixes
   - Fix CHI::Driver::Metacache to work with Moose 1.99+
