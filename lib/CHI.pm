@@ -1098,6 +1098,7 @@ mailing list:
 Bugs and feature requests will be tracked at RT:
 
     http://rt.cpan.org/NoAuth/Bugs.html?Dist=CHI
+    bug-chi@rt.cpan.org
 
 The latest source code can be browsed and fetched at:
 
