@@ -1,6 +1,7 @@
 # $Id: $
 #
 package CHI::Test;
+use Log::Any::Test;    # as early as possible
 use List::MoreUtils qw(uniq);
 use Class::MOP;
 use CHI;

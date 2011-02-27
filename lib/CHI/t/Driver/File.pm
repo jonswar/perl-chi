@@ -2,7 +2,7 @@ package CHI::t::Driver::File;
 use strict;
 use warnings;
 use CHI::Test;
-use CHI::Test::Util qw(random_string activate_test_logger);
+use CHI::Test::Util qw(random_string);
 use CHI::Util qw(fast_catdir unique_id);
 use File::Basename;
 use File::Path;
