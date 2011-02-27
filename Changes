@@ -9,7 +9,9 @@ Revision history for CHI
   - Throw error if arguments passed to clear() 
 
 * Fixes
-  - Fix CHI::Driver::Metacache to work with Moose 1.99+
+  - Fix CHI::Driver::Metacache::meta_cache to build lazily, eliminating intermittent bug
+    and making compatible with Moose 1.99+ (autarch)
+  - Check if get_object defined in purge - RT #63699 (forrest)
 
 0.39  Feb 6, 2011
 
