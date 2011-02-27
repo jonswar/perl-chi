@@ -1657,4 +1657,21 @@ sub test_missing_params : Tests(13) {
     }
 }
 
+sub test_compute : Tests {
+    my $self  = shift;
+    my $cache = $self->{cache};
+
+    # Test current arg order and pre-0.40 arg order
+    my $expire_time = time + 10;
+    my @orig = ( { expires_at => $expire_time }, sub { 'bar' } );
+    foreach my $args ( [@orig], [ reverse(@orig) ] ) {
+        $cache->clear;
+        is( $cache->get('foo'), undef, "miss" );
+        $cache->compute( 'foo', @$args );
+        is( $cache->get('foo'), 'bar', "hit" );
+        is( $cache->get_object('foo')->expires_at, $expire_time,
+            "expire time" );
+    }
+}
+
 1;
