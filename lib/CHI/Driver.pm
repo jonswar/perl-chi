@@ -351,7 +351,8 @@ sub get_keys_iterator {
 }
 
 sub clear {
-    my ($self) = @_;
+    my $self = shift;
+    die "clear takes no arguments" if @_;
 
     $self->remove_multi( [ $self->get_keys() ] );
 }
@@ -370,7 +371,13 @@ sub expire {
 }
 
 sub compute {
-    my ( $self, $key, $code, $set_options ) = @_;
+    my $self = shift;
+    my $key  = shift;
+
+    # Allow these in either order for backward compatibility
+    my ( $code, $set_options ) =
+      ( ref( $_[0] ) eq 'CODE' ) ? ( $_[0], $_[1] ) : ( $_[1], $_[0] );
+
     croak "must specify key and code" unless defined($key) && defined($code);
 
     my $value = $self->get($key);
