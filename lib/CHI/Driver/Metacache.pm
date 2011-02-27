@@ -4,7 +4,7 @@ use Moose;
 use strict;
 use warnings;
 
-has 'meta_cache'      => ( is => 'ro', builder => '_build_meta_cache' );
+has 'meta_cache'      => ( is => 'ro', lazy_build => 1 );
 has 'owner_namespace' => ( is => 'ro', lazy_build => 1 );
 has 'owner_cache'     => ( is => 'ro', weak_ref => 1 );
 
