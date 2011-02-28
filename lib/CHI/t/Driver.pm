@@ -769,7 +769,7 @@ sub test_l1_cache : Test(238) {
 
     my $test_l1_cache = sub {
 
-        is( $l1_cache->subcache_type, "l1_cache" );
+        is( $l1_cache->subcache_type, "l1_cache", "subcache_type = l1_cache" );
 
         # Get on cache should populate l1 cache
         #
@@ -825,8 +825,8 @@ sub test_l1_cache : Test(238) {
     $cache =
       $self->new_cache( l1_cache => { driver => 'Memory', datastore => {} } );
     $l1_cache = $cache->l1_cache;
-    isa_ok( $cache,    $self->testing_driver_class );
-    isa_ok( $l1_cache, 'CHI::Driver::Memory' );
+    isa_ok( $cache,    $self->testing_driver_class, 'cache' );
+    isa_ok( $l1_cache, 'CHI::Driver::Memory',       'l1_cache' );
     $test_l1_cache->();
 
     # and in l1 position
@@ -837,8 +837,8 @@ sub test_l1_cache : Test(238) {
         l1_cache  => { $self->new_cache_options() }
     );
     $l1_cache = $cache->l1_cache;
-    isa_ok( $cache,    'CHI::Driver::Memory' );
-    isa_ok( $l1_cache, $self->testing_driver_class );
+    isa_ok( $cache,    'CHI::Driver::Memory',       'cache' );
+    isa_ok( $l1_cache, $self->testing_driver_class, 'l1_cache' );
     $test_l1_cache->();
 }
 
