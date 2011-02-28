@@ -55,10 +55,7 @@ sub new {
     #
     my $is_transformed = 0;
     my $raw_value      = $value;
-
-    # Conditionalize this for CacheObject::RawMemory
-    #
-    if ( $class->serialize_and_encode ) {
+    if ($serializer) {
         if ( ref($raw_value) ) {
             $raw_value      = $serializer->serialize($raw_value);
             $is_transformed = T_SERIALIZED;
@@ -83,6 +80,7 @@ sub new {
 sub unpack_from_data {
     my ( $class, $key, $data, $serializer ) = @_;
 
+    return $data if !$serializer;
     my $metadata  = substr( $data, 0, $Metadata_Length );
     my $raw_value = substr( $data, $Metadata_Length );
     my $obj       = bless [
@@ -97,6 +95,7 @@ sub unpack_from_data {
 sub pack_to_data {
     my ($self) = @_;
 
+    return $self if !$self->serializer;
     if ( !defined( $self->[f_packed_data] ) ) {
         my $data = pack( $Metadata_Format,
             ( @{$self} )[ f_created_at .. f_cache_version ] )

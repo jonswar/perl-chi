@@ -87,18 +87,17 @@ after 'set_object' => sub {
 
     my $subcaches = $self->subcaches;
     foreach my $subcache (@$subcaches) {
-        $subcache->set_object( $key, $obj );
-        $subcache->_log_set_result( $log, $obj )
-          if $log->is_debug;
+        $subcache->set( $key, $obj->value, { expires_at => $obj->expires_at } );
     }
 };
 
 around 'get' => sub {
-    my $orig     = shift;
-    my $self     = shift;
+    my $orig = shift;
+    my $self = shift;
+    my ( $key, %params ) = @_;
     my $l1_cache = $self->l1_cache;
 
-    if ( !defined($l1_cache) ) {
+    if ( !defined($l1_cache) || $params{obj} ) {
         return $self->$orig(@_);
     }
     else {
@@ -114,11 +113,11 @@ around 'get' => sub {
             my $value = $self->$orig( $key, %params );
             if ( defined($value) ) {
 
-                # If found in primary cache, write back to l1 cache. Use same $obj,
-                # meaning same metadata and serialization.
+                # If found in primary cache, write back to l1 cache.
                 #
                 my $obj = ${ $params{obj_ref} };
-                $l1_cache->set_object( $key, $obj );
+                $l1_cache->set( $key, $obj->value,
+                    { expires_at => $obj->expires_at } );
             }
             return $value;
         }
