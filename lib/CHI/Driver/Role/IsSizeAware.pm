@@ -4,10 +4,10 @@ use Moose::Role;
 use strict;
 use warnings;
 
-has 'max_size'                  => ( is => 'rw', isa => 'CHI::Types::MemorySize', coerce => 1 );
-has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 has 'discard_policy'            => ( is => 'ro', isa => 'Maybe[CHI::Types::DiscardPolicy]', builder => '_build_discard_policy' );
 has 'discard_timeout'           => ( is => 'rw', isa => 'Num', default => 10 );
+has 'max_size'                  => ( is => 'rw', isa => 'CHI::Types::MemorySize', coerce => 1 );
+has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
 
 use constant Size_Key => 'CHI_IsSizeAware_size';
 
@@ -36,11 +36,11 @@ around 'remove' => sub {
     my $self  = shift;
     my ($key) = @_;
 
-    my ( $size_delta, $data );
+    my ( $size_delta, $obj );
     if ( !$self->{_no_set_size_on_remove}
-        && ( $data = $self->fetch($key) ) )
+        && ( $obj = $self->get_object($key) ) )
     {
-        $size_delta = -1 * length($data);
+        $size_delta = -1 * $obj->size;
     }
     $self->$orig(@_);
     if ($size_delta) {
@@ -54,8 +54,8 @@ around 'set_object' => sub {
     # If item exists, record its size so we can subtract it below
     #
     my $size_delta = 0;
-    if ( my $data = $self->fetch($key) ) {
-        $size_delta = -1 * length($data);
+    if ( my $obj = $self->get_object($key) ) {
+        $size_delta = -1 * $obj->size;
     }
 
     my $result = $self->$orig( $key, $obj );
@@ -116,9 +116,9 @@ sub discard_to_size {
         while ( $size > $ceiling )
         {
             if ( defined( my $key = $discard_iterator->() ) ) {
-                if ( my $data = $self->fetch($key) ) {
+                if ( my $obj = $self->get_object($key) ) {
                     $self->remove($key);
-                    $size -= length($data);
+                    $size -= $obj->size;
                 }
             }
             else {

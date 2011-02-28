@@ -14,6 +14,7 @@ use constant f_is_transformed   => 6;
 use constant f_cache_version    => 7;
 use constant f_value            => 8;
 use constant f_packed_data      => 9;
+use constant f_size             => 10;
 
 use constant T_SERIALIZED   => 1;
 use constant T_UTF8_ENCODED => 2;
@@ -30,7 +31,7 @@ sub early_expires_at { $_[0]->[f_early_expires_at] }
 sub expires_at       { $_[0]->[f_expires_at] }
 sub serializer       { $_[0]->[f_serializer] }
 sub _is_transformed  { $_[0]->[f_is_transformed] }
-sub size             { length( $_[0]->[f_raw_value] ) + $Metadata_Length }
+sub size             { $_[0]->[f_size] }
 
 sub set_early_expires_at {
     $_[0]->[f_early_expires_at] = $_[1];
@@ -55,6 +56,7 @@ sub new {
     #
     my $is_transformed = 0;
     my $raw_value      = $value;
+    my $size;
     if ($serializer) {
         if ( ref($raw_value) ) {
             $raw_value      = $serializer->serialize($raw_value);
@@ -64,6 +66,10 @@ sub new {
             $raw_value = Encode::encode( utf8 => $raw_value );
             $is_transformed = T_UTF8_ENCODED;
         }
+        $size = length($raw_value) + $Metadata_Length;
+    }
+    else {
+        $size = 1;
     }
 
     # Not sure where this should be set and checked
@@ -71,9 +77,9 @@ sub new {
     my $cache_version = 1;
 
     return bless [
-        $key,            $raw_value,        $serializer,
-        $created_at,     $early_expires_at, $expires_at,
-        $is_transformed, $cache_version,    $value,
+        $key,              $raw_value,  $serializer,     $created_at,
+        $early_expires_at, $expires_at, $is_transformed, $cache_version,
+        $value,            undef,       $size
     ], $class;
 }
 
@@ -89,6 +95,7 @@ sub unpack_from_data {
       ],
       $class;
     $obj->[f_packed_data] = $data;
+    $obj->[f_size]        = length($data);
     return $obj;
 }
 

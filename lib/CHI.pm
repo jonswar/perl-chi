@@ -884,7 +884,7 @@ At this time, subcache behavior is hardcoded into CHI::Driver, so there is no
 easy way to modify the behavior of existing subcache types or create new ones.
 We'd like to make this more flexible eventually.
 
-=head1 SIZE AWARENESS
+=head1  SIZE AWARENESS
 
 If L</is_size_aware> or L</max_size> are passed to the constructor, the cache
 will be I<size aware> - that is, it will keep track of its own size (in bytes)
