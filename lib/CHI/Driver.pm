@@ -80,6 +80,8 @@ sub declare_unsupported_methods {
     }
 }
 
+sub cache_object_class { 'CHI::CacheObject' }
+
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
 our $Build_Depth = 0;    ## no critic (ProhibitPackageVars)
@@ -199,7 +201,8 @@ sub get {
 sub unpack_from_data {
     my ( $self, $key, $data ) = @_;
 
-    return CHI::CacheObject->unpack_from_data( $key, $data, $self->serializer );
+    return $self->cache_object_class->unpack_from_data( $key, $data,
+        $self->serializer );
 }
 
 sub get_object {
@@ -308,8 +311,8 @@ sub set_with_options {
     # Pack into data, and store
     #
     my $obj =
-      CHI::CacheObject->new( $key, $value, $created_at, $early_expires_at,
-        $expires_at, $self->serializer );
+      $self->cache_object_class->new( $key, $value, $created_at,
+        $early_expires_at, $expires_at, $self->serializer );
     if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
         $$obj_ref = $obj;
     }

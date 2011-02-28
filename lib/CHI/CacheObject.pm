@@ -42,6 +42,8 @@ sub set_expires_at {
     undef $_[0]->[f_packed_data];
 }
 
+sub serialize_and_encode { 1 }
+
 ## no critic (ProhibitManyArgs)
 sub new {
     my ( $class, $key, $value, $created_at, $early_expires_at, $expires_at,
@@ -53,13 +55,18 @@ sub new {
     #
     my $is_transformed = 0;
     my $raw_value      = $value;
-    if ( ref($raw_value) ) {
-        $raw_value      = $serializer->serialize($raw_value);
-        $is_transformed = T_SERIALIZED;
-    }
-    elsif ( Encode::is_utf8($raw_value) ) {
-        $raw_value = Encode::encode( utf8 => $raw_value );
-        $is_transformed = T_UTF8_ENCODED;
+
+    # Conditionalize this for CacheObject::RawMemory
+    #
+    if ( $class->serialize_and_encode ) {
+        if ( ref($raw_value) ) {
+            $raw_value      = $serializer->serialize($raw_value);
+            $is_transformed = T_SERIALIZED;
+        }
+        elsif ( Encode::is_utf8($raw_value) ) {
+            $raw_value = Encode::encode( utf8 => $raw_value );
+            $is_transformed = T_UTF8_ENCODED;
+        }
     }
 
     # Not sure where this should be set and checked
