@@ -8,6 +8,9 @@ Revision history for CHI
   - Add RawMemory driver, a faster version of Memory that does not serialize/deserialize
     values
 
+* Testing
+  - Stop using test counts (http://stackoverflow.com/questions/690342/)
+
 0.40  Feb 27, 2011
 
 * Improvements
