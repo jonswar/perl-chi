@@ -4,7 +4,7 @@ To benchmark all CHI modules:
 
 1) Install from CPAN:
 
-   CHI CHI::Driver::BerkeleyDB CHI::Driver::FastMmap CHI::Driver::Memcached Cache::Memcached
+   cpanm CHI::Driver::BerkeleyDB CHI::Driver::FastMmap CHI::Driver::Memcached Cache::Memcached
    Cache::Memcached::Fast Cache::Memcached::libmemcached DBD::SQLite DBD::mysql
 
 2) Create a mysql database 'chibench' on localhost with user='chibench', pass='chibench'

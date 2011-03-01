@@ -884,7 +884,7 @@ At this time, subcache behavior is hardcoded into CHI::Driver, so there is no
 easy way to modify the behavior of existing subcache types or create new ones.
 We'd like to make this more flexible eventually.
 
-=head1  SIZE AWARENESS
+=head1 SIZE AWARENESS
 
 If L</is_size_aware> or L</max_size> are passed to the constructor, the cache
 will be I<size aware> - that is, it will keep track of its own size (in bytes)
@@ -936,6 +936,11 @@ L<CHI::Driver::Memory|CHI::Driver::Memory> - In-process memory based cache
 
 =item *
 
+L<CHI::Driver::RawMemory|CHI::Driver::RawMemory> - In-process memory based
+cache that stores references directly instead of deep-copying
+
+=item *
+
 L<CHI::Driver::File|CHI::Driver::File> - File-based cache using one file per
 entry in a multi-level directory structure
 
@@ -974,12 +979,24 @@ L<CHI::Driver::DBI|CHI::Driver::DBI> - Cache in any DBI-supported database
 
 L<CHI::Driver::BerkeleyDB|CHI::Driver::BerkeleyDB> - Cache in BerkeleyDB files
 
+=item *
+
+L<CHI::Driver::Redis|CHI::Driver::Redis> - Cache in L<Redis|http://redis.io/>
+
 =back
 
 This list is likely incomplete. A complete set of drivers can be found on CPAN
 by searching for "CHI::Driver".
 
 =for readme stop
+
+=head1 PERFORMANCE COMPARISON OF DRIVERS
+
+See L<CHI::Benchmarks> for a comparison of read/write times of both CHI and
+non-CHI cache implementations.
+
+C<etc/bench> in the C<CHI> distribution contains a script to run these types of
+benchmarks on your own system.
 
 =head1 DEVELOPING NEW DRIVERS
 
