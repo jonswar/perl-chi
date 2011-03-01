@@ -24,7 +24,7 @@ sub is_bad {
         sprintf( "died with params '%s'", dump_one_line( \@params ) ) );
 }
 
-sub test_driver_options : Test(7) {
+sub test_driver_options : Tests {
     my $cache;
     is_good( driver       => 'Memory',              global => 1 );
     is_good( driver       => 'File' );

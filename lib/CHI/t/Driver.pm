@@ -147,7 +147,7 @@ sub set_some_keys {
     }
 }
 
-sub test_encode : Test(11) {
+sub test_encode : Tests {
     my $self  = shift;
     my $cache = $self->new_cleared_cache();
 
@@ -202,7 +202,7 @@ sub test_encode : Test(11) {
     is( $cache->get("binary"), $binary_off, "stored binary_on = binary_off" );
 }
 
-sub test_simple : Test(2) {
+sub test_simple : Tests {
     my $self = shift;
     my $cache = shift || $self->{cache};
 
@@ -210,7 +210,7 @@ sub test_simple : Test(2) {
     is( $cache->get( $self->{keys}->{medium} ), $self->{values}->{medium} );
 }
 
-sub test_driver_class : Tests(3) {
+sub test_driver_class : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -268,7 +268,7 @@ sub test_key_types : Tests {
     }
 }
 
-sub test_deep_copy : Test(9) {
+sub test_deep_copy : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -296,7 +296,7 @@ sub test_deep_copy : Test(9) {
         "altering original set structure does not affect cached copy" );
 }
 
-sub test_expires_immediately : Test(32) {
+sub test_expires_immediately : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -324,7 +324,7 @@ sub test_expires_immediately : Test(32) {
     $test_expires_immediately->("now");
 }
 
-sub test_expires_shortly : Test(18) {
+sub test_expires_shortly : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -358,7 +358,7 @@ sub test_expires_shortly : Test(18) {
     $test_expires_shortly->( { expires_at => time + 2 } );
 }
 
-sub test_expires_later : Test(30) {
+sub test_expires_later : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -391,7 +391,7 @@ sub test_expires_later : Test(30) {
     $test_expires_later->( { expires_at => time + 3600 } );
 }
 
-sub test_expires_never : Test(6) {
+sub test_expires_never : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -412,7 +412,7 @@ sub test_expires_never : Test(6) {
     $test_expires_never->('never');
 }
 
-sub test_expires_defaults : Test(4) {
+sub test_expires_defaults : Tests {
     my $self = shift;
 
     my $start_time = time();
@@ -446,7 +446,7 @@ sub test_expires_defaults : Test(4) {
         "after expires_at method" );
 }
 
-sub test_expires_manually : Test(3) {
+sub test_expires_manually : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -459,7 +459,7 @@ sub test_expires_manually : Test(3) {
     ok( !$cache->is_valid($key),    "invalid after expire ($desc)" );
 }
 
-sub test_expires_conditionally : Test(8) {
+sub test_expires_conditionally : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -492,7 +492,7 @@ sub test_expires_conditionally : Test(8) {
     );
 }
 
-sub test_expires_variance : Test(9) {
+sub test_expires_variance : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -530,7 +530,7 @@ sub test_expires_variance : Test(9) {
     }
 }
 
-sub test_not_in_cache : Test(3) {
+sub test_not_in_cache : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -626,7 +626,7 @@ sub test_serializers : Tests {
     }
 }
 
-sub test_namespaces : Test(12) {
+sub test_namespaces : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -684,7 +684,7 @@ sub test_namespaces : Test(12) {
     }
 }
 
-sub test_persist : Test(1) {
+sub test_persist : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -699,7 +699,7 @@ sub test_persist : Test(1) {
         'cache persisted between cache object creations' );
 }
 
-sub test_multi : Test(8) {
+sub test_multi : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -747,7 +747,7 @@ sub test_multi : Test(8) {
     cmp_set( [ $cache->get_keys ], [], "get_keys after remove_multi" );
 }
 
-sub test_multi_no_keys : Test(4) {
+sub test_multi_no_keys : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -759,7 +759,7 @@ sub test_multi_no_keys : Test(4) {
     lives_ok { $cache->remove_multi( [] ) } "remove_multi (no args)";
 }
 
-sub test_l1_cache : Test(238) {
+sub test_l1_cache : Tests {
     my $self   = shift;
     my @keys   = map { "key$_" } ( 0 .. 2 );
     my @values = map { "value$_" } ( 0 .. 2 );
@@ -842,7 +842,7 @@ sub test_l1_cache : Test(238) {
     $test_l1_cache->();
 }
 
-sub test_mirror_cache : Test(216) {
+sub test_mirror_cache : Tests {
     my $self = shift;
     my ( $cache, $mirror_cache );
     my ( $key, $value, $key2, $value2 ) = $self->kvpair(2);
@@ -895,7 +895,7 @@ sub test_mirror_cache : Test(216) {
     $test_mirror_cache->();
 }
 
-sub test_subcache_overridable_params : Tests(5) {
+sub test_subcache_overridable_params : Tests {
     my ($self) = @_;
 
     my $cache;
@@ -1150,7 +1150,7 @@ sub test_clear : Tests {
     }
 }
 
-sub test_logging : Test(12) {
+sub test_logging : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1197,7 +1197,7 @@ sub test_logging : Test(12) {
     $log->empty_ok();
 }
 
-sub test_stats : Test(5) {
+sub test_stats : Tests {
     my $self = shift;
 
     my $stats = $self->testing_chi_root_class->stats;
@@ -1277,7 +1277,7 @@ sub test_stats : Test(5) {
     );
 }
 
-sub test_cache_object : Test(6) {
+sub test_cache_object : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
     my ( $key, $value ) = $self->kvpair();
@@ -1304,7 +1304,7 @@ sub test_cache_object : Test(6) {
     );
 }
 
-sub test_size_awareness : Test(12) {
+sub test_size_awareness : Tests {
     my $self = shift;
     my ( $key, $value ) = $self->kvpair();
 
@@ -1338,7 +1338,7 @@ sub test_size_awareness : Test(12) {
         $time, "set options respected by size aware cache" );
 }
 
-sub test_max_size : Test(22) {
+sub test_max_size : Tests {
     my $self = shift;
 
     is( $self->new_cache( max_size => '30k' )->max_size,
@@ -1360,7 +1360,7 @@ sub test_max_size : Test(22) {
     }
 }
 
-sub test_max_size_with_l1_cache : Test(44) {
+sub test_max_size_with_l1_cache : Tests {
     my $self = shift;
 
     my $cache = $self->new_cleared_cache(
@@ -1403,7 +1403,7 @@ sub test_max_size_with_l1_cache : Test(44) {
     }
 }
 
-sub test_custom_discard_policy : Test(10) {
+sub test_custom_discard_policy : Tests {
     my $self          = shift;
     my $value_20      = 'x' x 6;
     my $highest_first = sub {
@@ -1432,7 +1432,7 @@ sub test_custom_discard_policy : Test(10) {
     }
 }
 
-sub test_discard_timeout : Test(4) {
+sub test_discard_timeout : Tests {
     my $self       = shift;
     my $bad_policy = sub {
         return sub { '1' };
@@ -1457,7 +1457,7 @@ sub test_discard_timeout : Test(4) {
     );
 }
 
-sub test_size_awareness_with_subcaches : Test(19) {
+sub test_size_awareness_with_subcaches : Tests {
     my $self = shift;
 
     my ( $cache, $l1_cache );
@@ -1535,7 +1535,7 @@ sub is_about {
     }
 }
 
-sub test_busy_lock : Test(5) {
+sub test_busy_lock : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1562,7 +1562,7 @@ sub test_busy_lock : Test(5) {
     is( $cache->get( $key, @bl ), $value, "hit after busy lock" );
 }
 
-sub test_obj_ref : Tests(8) {
+sub test_obj_ref : Tests {
     my $self = shift;
 
     # Make sure obj_ref works in conjunction with subcaches too
@@ -1587,7 +1587,7 @@ sub test_obj_ref : Tests(8) {
     $validate_obj->();
 }
 
-sub test_metacache : Tests(3) {
+sub test_metacache : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1597,7 +1597,7 @@ sub test_metacache : Tests(3) {
     is( $cache->metacache->get('foo'), 5 );
 }
 
-sub test_scalar_return_values : Tests(5) {
+sub test_scalar_return_values : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1615,7 +1615,7 @@ sub test_scalar_return_values : Tests(5) {
     $check->( sub { $cache->get('a') } );
 }
 
-sub test_no_leak : Tests(2) {
+sub test_no_leak : Tests {
     my ($self) = @_;
 
     my $weakref;
@@ -1631,7 +1631,7 @@ sub test_no_leak : Tests(2) {
 
 Class::MOP::Class->create( 'My::CHI' => ( superclasses => ['CHI'] ) );
 
-sub test_driver_properties : Tests(2) {
+sub test_driver_properties : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 
@@ -1640,7 +1640,7 @@ sub test_driver_properties : Tests(2) {
     is( $cache2->chi_root_class, 'My::CHI', 'chi_root_class=My::CHI' );
 }
 
-sub test_missing_params : Tests(13) {
+sub test_missing_params : Tests {
     my $self  = shift;
     my $cache = $self->{cache};
 

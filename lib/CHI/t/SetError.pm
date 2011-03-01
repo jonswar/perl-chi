@@ -15,7 +15,7 @@ sub readonly_cache {
     );
 }
 
-sub test_set_errors : Test(14) {
+sub test_set_errors : Tests {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
     my $error_pattern =

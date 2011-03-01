@@ -4,7 +4,7 @@ use warnings;
 use CHI::Test;
 use base qw(CHI::Test::Class);
 
-sub test_import : Test(4) {
+sub test_import : Tests {
     {
         package Foo;
         use CHI::Constants qw(CHI_Meta_Namespace);

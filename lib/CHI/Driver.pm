@@ -148,7 +148,7 @@ sub get {
 
     # Fetch cache object
     #
-    my $obj = $params{obj} || eval { $self->get_object($key) };
+    my $obj = eval { $params{obj} || $self->get_object($key) };
     if ( my $error = $@ ) {
         $ns_stats->{'get_errors'}++ if defined($ns_stats);
         $self->_handle_get_error( $error, $key );

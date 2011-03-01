@@ -87,7 +87,14 @@ after 'set_object' => sub {
 
     my $subcaches = $self->subcaches;
     foreach my $subcache (@$subcaches) {
-        $subcache->set( $key, $obj->value, { expires_at => $obj->expires_at } );
+        $subcache->set(
+            $key,
+            $obj->value,
+            {
+                expires_at       => $obj->expires_at,
+                early_expires_at => $obj->early_expires_at
+            }
+        );
     }
 };
 
@@ -116,8 +123,14 @@ around 'get' => sub {
                 # If found in primary cache, write back to l1 cache.
                 #
                 my $obj = ${ $params{obj_ref} };
-                $l1_cache->set( $key, $obj->value,
-                    { expires_at => $obj->expires_at } );
+                $l1_cache->set(
+                    $key,
+                    $obj->value,
+                    {
+                        expires_at       => $obj->expires_at,
+                        early_expires_at => $obj->early_expires_at
+                    }
+                );
             }
             return $value;
         }

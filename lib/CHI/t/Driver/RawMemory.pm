@@ -107,7 +107,7 @@ sub test_cache_ref : Tests {
     is( $cache->get('key1')->[0], 'bar', "changed value in cache" );
 }
 
-sub test_short_driver_name : Tests(1) {
+sub test_short_driver_name : Tests {
     my ($self) = @_;
 
     my $cache = $self->{cache};

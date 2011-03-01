@@ -44,7 +44,7 @@ sub new_cache_options {
 
 # Test that we can override how temporary files are generated
 #
-sub test_generate_temporary_filename : Tests(3) {
+sub test_generate_temporary_filename : Tests {
     my $self = shift;
 
     $self->{cache} =
@@ -55,14 +55,14 @@ sub test_generate_temporary_filename : Tests(3) {
     throws_ok { $self->test_simple() } qr/error during cache set/;
 }
 
-sub test_default_depth : Test(1) {
+sub test_default_depth : Tests {
     my $self = shift;
 
     my $cache = $self->new_cache();
     is( $cache->depth, 2 );
 }
 
-sub test_creation_and_deletion : Test(7) {
+sub test_creation_and_deletion : Tests {
     my $self = shift;
 
     my $cache = $self->new_cache();
@@ -88,7 +88,7 @@ sub test_creation_and_deletion : Test(7) {
         "namespace dir '$namespace_dir' does not exist after clear" );
 }
 
-sub test_root_dir_does_not_exist : Test(4) {
+sub test_root_dir_does_not_exist : Tests {
     my $self = shift;
 
     my $parent_dir =
@@ -102,7 +102,7 @@ sub test_root_dir_does_not_exist : Test(4) {
     ok( -d $non_existent_root, "$non_existent_root exists after set" );
 }
 
-sub test_ignore_bad_namespaces : Tests(1) {
+sub test_ignore_bad_namespaces : Tests {
     my $self  = shift;
     my $cache = $self->new_cleared_cache(
         root_dir => tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 )
@@ -118,7 +118,7 @@ sub test_ignore_bad_namespaces : Tests(1) {
     );
 }
 
-sub test_default_discard : Tests(1) {
+sub test_default_discard : Tests {
     my $self = shift;
     my $cache = $self->new_cleared_cache( is_size_aware => 1 );
     is( $cache->discard_policy, 'arbitrary' );

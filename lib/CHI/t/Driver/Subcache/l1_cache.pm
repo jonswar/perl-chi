@@ -24,7 +24,7 @@ sub new_cache_options {
     );
 }
 
-sub test_stats : Test(3) {
+sub test_stats : Tests {
     my $self = shift;
 
     my $stats = $self->testing_chi_root_class->stats;

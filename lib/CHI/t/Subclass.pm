@@ -14,7 +14,7 @@ use base qw(CHI::Test::Class);
     __PACKAGE__->meta->make_immutable;
 }
 
-sub test_unsupported : Tests(2) {
+sub test_unsupported : Tests {
     my $cache = CHI->new(
         driver_class => 'CHI::t::Subclass::Driver::HasUnsupported',
         global       => 1

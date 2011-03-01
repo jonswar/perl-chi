@@ -15,7 +15,7 @@ sub writeonly_cache {
     );
 }
 
-sub test_get_errors : Test(10) {
+sub test_get_errors : Tests {
     my ( $key, $value ) = ( 'medium', 'medium' );
 
     my $error_pattern =

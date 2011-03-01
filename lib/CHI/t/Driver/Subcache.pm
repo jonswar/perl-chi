@@ -18,15 +18,15 @@ sub set_standard_keys_and_values {
 
 # Skip these tests - the logging will be wrong
 #
-sub test_l1_cache : Tests(1) {
+sub test_l1_cache : Tests {
     ok(1);
 }
 
-sub test_mirror_cache : Tests(1) {
+sub test_mirror_cache : Tests {
     ok(1);
 }
 
-sub test_logging : Tests(1) {
+sub test_logging : Tests {
     ok(1);
 }
 

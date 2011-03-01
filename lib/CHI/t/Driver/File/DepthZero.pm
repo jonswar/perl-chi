@@ -16,7 +16,7 @@ sub new_cache_options {
     return ( $self->SUPER::new_cache_options(), depth => 0 );
 }
 
-sub test_default_depth : Test(2) {
+sub test_default_depth : Tests {
     my $self = shift;
 
     my $cache = $self->new_cache();

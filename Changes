@@ -4,6 +4,10 @@ Revision history for CHI
 
 0.41  Feb 27, 2011
 
+* Improvements
+  - Add RawMemory driver, a faster version of Memory that does not serialize/deserialize
+    values
+
 0.40  Feb 27, 2011
 
 * Improvements
