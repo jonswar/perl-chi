@@ -31,10 +31,10 @@ CHI::Driver::RawMemory - In-process memory cache that stores direct references
 =head1 DESCRIPTION
 
 This is a subclass of L<CHI::Driver::Memory|CHI::Driver::Memory> that stores
-references directly instead of serializing / deserializing.  This makes the
-cache significantly faster, but unlike most drivers, modifications to the
-original data structure I<will> affect the data structure stored in the cache,
-and vica versa. e.g.
+references to data structures directly instead of serializing / deserializing. 
+This makes the cache faster at getting and setting complex data structures, but
+unlike most drivers, modifications to the original data structure I<will>
+affect the data structure stored in the cache, and vica versa. e.g.
 
     my $cache = CHI->new( driver => 'Memory', global => 1 );
     my $lst = ['foo'];

@@ -145,6 +145,13 @@ sub cache_generators {
                 datastore => {},
             );
         },
+        chi_memory_raw => sub {
+            CHI->new(
+                %common_chi_opts,
+                driver    => 'RawMemory',
+                datastore => {},
+            );
+        },
         chi_dbi_mysql => sub {
             my $mysql_dbh =
               DBI->connect( "DBI:mysql:database=chibench;host=localhost",
