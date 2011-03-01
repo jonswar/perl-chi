@@ -995,8 +995,8 @@ by searching for "CHI::Driver".
 See L<CHI::Benchmarks> for a comparison of read/write times of both CHI and
 non-CHI cache implementations.
 
-C<etc/bench> in the C<CHI> distribution contains a script to run these types of
-benchmarks on your own system.
+C<etc/bench/bench.pl> in the C<CHI> distribution contains a script to run these
+types of benchmarks on your own system.
 
 =head1 DEVELOPING NEW DRIVERS
 
