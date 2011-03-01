@@ -10,27 +10,27 @@ CHI::Benchmarks - Benchmarks of CHI and non-CHI drivers
 These benchmarks were created with the script C<etc/bench/bench.pl> in this
 distribution.
 
-9510 gets, 490 sets, 10000 total operations, divided among 10 iterations.
+For each cache: 9510 gets, 490 sets, 10000 total operations.
 
 OS X v10.6.6, 2.2 GHz Intel Core 2 Duo, Perl 5.12.2.
 
-    Cache                Get time Set time Run time Description                         
-    cache_ref            0.01ms   0.01ms   0.09s    Cache::Ref                          
-    chi_memory_raw       0.02ms   0.04ms   0.19s    CHI::Driver::MemoryRaw              
-    cache_fastmmap       0.02ms   0.05ms   0.23s    Cache::FastMmap                     
-    chi_memory           0.04ms   0.07ms   0.42s    CHI::Driver::Memory                 
-    chi_berkeleydb       0.05ms   0.13ms   0.53s    CHI::Driver::BerkeleyDB             
-    chi_fastmmap         0.06ms   0.09ms   0.59s    CHI::Driver::FastMmap               
-    cache_cache_memory   0.07ms   0.08ms   0.69s    Cache::MemoryCache                  
-    cache_memcached_fast 0.09ms   0.13ms   0.91s    Cache::Memcached::Fast              
-    cache_memcached_lib  0.10ms   0.13ms   1.02s    Cache::Memcached::libmemcached      
-    chi_memcached_lib    0.14ms   0.19ms   1.44s    CHI::Driver::Memcached::libmemcached
-    chi_memcached_fast   0.15ms   0.20ms   1.49s    CHI::Driver::Memcached::Fast        
-    chi_file             0.14ms   0.81ms   1.73s    CHI::Driver::File                   
-    chi_dbi_sqlite       0.13ms   1.62ms   1.99s    CHI::Driver::DBI (sqlite)           
-    chi_dbi_mysql        0.22ms   0.28ms   2.20s    CHI::Driver::DBI (mysql)            
-    cache_memcached_std  0.24ms   0.19ms   2.34s    Cache::Memcached                    
-    chi_memcached_std    0.28ms   0.25ms   2.78s    CHI::Driver::Memcached              
-    cache_cache_file     0.46ms   1.35ms   5.05s    Cache::FileCache                    
+ Cache                Get time Set time Run time Description                         
+ cache_ref            0.01ms   0.01ms   0.09s    Cache::Ref                          
+ chi_memory_raw       0.02ms   0.04ms   0.19s    CHI::Driver::MemoryRaw              
+ cache_fastmmap       0.02ms   0.05ms   0.23s    Cache::FastMmap                     
+ chi_memory           0.04ms   0.07ms   0.42s    CHI::Driver::Memory                 
+ chi_berkeleydb       0.05ms   0.13ms   0.53s    CHI::Driver::BerkeleyDB             
+ chi_fastmmap         0.06ms   0.09ms   0.59s    CHI::Driver::FastMmap               
+ cache_cache_memory   0.07ms   0.08ms   0.69s    Cache::MemoryCache                  
+ cache_memcached_fast 0.09ms   0.13ms   0.91s    Cache::Memcached::Fast              
+ cache_memcached_lib  0.10ms   0.13ms   1.02s    Cache::Memcached::libmemcached      
+ chi_memcached_lib    0.14ms   0.19ms   1.44s    CHI::Driver::Memcached::libmemcached
+ chi_memcached_fast   0.15ms   0.20ms   1.49s    CHI::Driver::Memcached::Fast        
+ chi_file             0.14ms   0.81ms   1.73s    CHI::Driver::File                   
+ chi_dbi_sqlite       0.13ms   1.62ms   1.99s    CHI::Driver::DBI (sqlite)           
+ chi_dbi_mysql        0.22ms   0.28ms   2.20s    CHI::Driver::DBI (mysql)            
+ cache_memcached_std  0.24ms   0.19ms   2.34s    Cache::Memcached                    
+ chi_memcached_std    0.28ms   0.25ms   2.78s    CHI::Driver::Memcached              
+ cache_cache_file     0.46ms   1.35ms   5.05s    Cache::FileCache                    
 
 =cut
