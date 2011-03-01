@@ -1,10 +1,11 @@
-^bench
 ^bin
 ^cp\.yml
 ^data
 ^depends
 ^dist
 ^docs
+^etc/bench/data
+^etc/bench/results.dat
 ^git
 ^inc/\.author
 ^lib/Pod
