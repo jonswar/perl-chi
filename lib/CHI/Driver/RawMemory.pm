@@ -64,6 +64,10 @@ good way to determine their size.)
     #
     my $cache = CHI->new( driver => 'RawMemory', datastore => {}, max_size => 10 );
 
+=head1 ACKNOWLEDGEMENTS
+
+Thanks to Yugal Kogman whose L<Cache::Ref> inspired me to do this.
+
 =head1 SEE ALSO
 
 L<CHI::Driver::Memory>, L<CHI>
