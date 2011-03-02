@@ -66,7 +66,7 @@ good way to determine their size.)
 
 =head1 ACKNOWLEDGEMENTS
 
-Thanks to Yugal Kogman whose L<Cache::Ref> inspired me to do this.
+Thanks to Yuval Kogman whose L<Cache::Ref> inspired me to do this.
 
 =head1 SEE ALSO
 

@@ -833,7 +833,7 @@ have its own subcaches, and so on. e.g.
         l1_cache => {
             driver     => 'File',
             root_dir   => '/path/to/root',
-            l1_cache   => { driver => 'Memory' }
+            l1_cache   => { driver => 'RawMemory' }
         }
     );
 
