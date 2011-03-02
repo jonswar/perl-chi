@@ -95,6 +95,7 @@ CHI - Unified cache handling interface
     # Choose a standard driver
     #
     my $cache = CHI->new( driver => 'Memory', global => 1 );
+    my $cache = CHI->new( driver => 'RawMemory', global => 1 );
     my $cache = CHI->new( driver => 'File',
         root_dir => '/path/to/root'
     );
@@ -102,7 +103,7 @@ CHI - Unified cache handling interface
         root_dir   => '/path/to/root',
         cache_size => '1k'
     );
-    my $cache = CHI->new( driver  => 'Memcached',
+    my $cache = CHI->new( driver  => 'Memcached::libmemcached',
         servers => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
         l1_cache => { driver => 'FastMmap', root_dir => '/path/to/root' }
     );
@@ -115,15 +116,18 @@ CHI - Unified cache handling interface
 
     # Create your own driver
     # 
-    my $cache = CHI->new( driver_class => 'My::Special::Driver' );
+    my $cache = CHI->new( driver_class => 'My::Special::Driver', ... );
 
-    # Basic cache operations
+    # Cache operations
     #
     my $customer = $cache->get($name);
     if ( !defined $customer ) {
         $customer = get_customer_from_db($name);
         $cache->set( $name, $customer, "10 minutes" );
     }
+    my $customer2 = $cache->compute($name2, "10 minutes", sub {
+        get_customer_from_db($name2)
+    });
     $cache->remove($name);
 
 =head1 DESCRIPTION
@@ -451,8 +455,8 @@ background just before it actually expires, so that users are not impacted by
 recompute time.
 
 Note: Prior to version 0.40, the last two arguments were in reverse order; both
-will be accepted for backward compatibility. We think the code looks better at
-the end.
+will be accepted for backward compatibility. We think the coderef looks better
+at the end.
 
 =back
 

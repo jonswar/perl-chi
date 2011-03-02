@@ -115,9 +115,11 @@ This cache driver stores data on a per-process basis.  This is the fastest of
 the cache implementations, but data can not be shared between processes.  Data
 will remain in the cache until cleared, expired, or the process dies.
 
-To maintain the same semantics as other caches, data structures are deep-copied
-on set and get. Thus, modifications to the original data structure will not
-affect the data structure stored in the cache, and vica versa.
+To maintain the same semantics as other caches, references to data structures
+are deep-copied on set and get. Thus, modifications to the original data
+structure will not affect the data structure stored in the cache, and vica
+versa. See L<CHI::Driver::RawMemory> for a faster memory cache that sacrifices
+this behavior.
 
 =head1 CONSTRUCTOR OPTIONS
 
@@ -148,5 +150,9 @@ unrelated code).
 For L<CHI/SIZE AWARENESS|size aware> caches, this driver implements an 'LRU'
 policy, which discards the least recently used items first. This is the default
 policy.
+
+=head1 SEE ALSO
+
+L<CHI::Driver::RawMemory>, L<CHI>
 
 =cut
