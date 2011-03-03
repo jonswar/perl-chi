@@ -7,6 +7,9 @@ Revision history for CHI
 * Fixes
   - Put parens around qw in various places to fix for perl 5.13+
 
+* Improvements
+  - Improve accuracy of benchmarks (nothingmuch)
+
 0.41  Mar 1, 2011
 
 * Improvements

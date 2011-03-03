@@ -337,8 +337,8 @@ bench.pl -- Benchmark cache modules against each other
 
 =head1 DESCRIPTION
 
-Uses Cache::Benchmark to compare a variety of CHI and non-CHI caches in terms
-of raw reading and writing speed. Sorts results by read performance. Does not
+Uses L<Benchmark> to compare a variety of CHI and non-CHI caches in terms of
+raw reading and writing speed. Sorts results by read performance. Does not
 attempt to test discard policies.
 
 =head1 SYNOPSIS
@@ -352,6 +352,8 @@ bench.pl -d driver_regex [options]
   -n                 Sort results by name instead of by read performance
   -t time            Number of seconds to benchmark each operation (default 2)
   -x|--complex       Use a complex data structure instead of a scalar
+
+Run bench.pl with no arguemnts to get a full list of available drivers.
 
 =head1 REQUIREMENTS
 
