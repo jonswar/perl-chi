@@ -7,8 +7,11 @@ CHI::Benchmarks - Benchmarks of CHI and non-CHI drivers
 
 =head1 DESCRIPTION
 
-These benchmarks were created with the script C<etc/bench/bench.pl> in this
-distribution, on OS X v10.6.6, 2.2 GHz Intel Core 2 Duo, Perl 5.12.2.
+These benchmarks were created by running
+
+   etc/bench/bench.pl -d . -t 10 -x
+
+for CHI 0.42, on OS X v10.6.6, 2.2 GHz Intel Core 2 Duo, Perl 5.12.2.
 
 For each cache, bench.pl does repeated gets and sets of a data structure for at
 least 10 seconds and measures the wallclock time per operation.
@@ -16,7 +19,7 @@ least 10 seconds and measures the wallclock time per operation.
 These numbers should just be used as a rough guideline! Actual results will
 vary widely depending on system, get/set pattern, actual values being set, the
 proper tuning of memcached/mysql, etc. For best results run the benchmark
-script on your own system.
+script (available in this distribution) on your own system.
 
    Cache                Get time Set time Description                         
    cache_ref            0.009ms  0.008ms  Cache::Ref (CART)                   

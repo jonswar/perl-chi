@@ -37,10 +37,10 @@ my $time          = 2;
 my ( $complex, $drivers_pattern, $help, $incs, $sort_by_name );
 usage() if !@ARGV;
 GetOptions(
+    'd|drivers=s'       => \$drivers_pattern,
     'h|help'            => \$help,
     'n'                 => \$sort_by_name,
     't|time=s'          => \$time,
-    'd|drivers=s'       => \$drivers_pattern,
     'x|complex'         => \$complex,
 ) or usage();
 usage() if $help || !$drivers_pattern;
@@ -348,7 +348,7 @@ bench.pl -d driver_regex [options]
 =head1 OPTIONS
 
   -d driver_regex    Run drivers matching this regex (required) - use '.' for all
-  -c count           Run this many iterations (default 10000)
+  -h --help          Print help message
   -n                 Sort results by name instead of by read performance
   -t time            Number of seconds to benchmark each operation (default 2)
   -x|--complex       Use a complex data structure instead of a scalar
