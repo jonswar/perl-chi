@@ -2,7 +2,8 @@
 #
 # Compare various cache backends
 #
-use Cache::Benchmark;
+use Benchmark qw(:hireswallclock timethese);
+use Capture::Tiny qw(capture);
 use Cwd qw(realpath);
 use Data::Dump qw(dump);
 use DBI;
@@ -25,19 +26,20 @@ my %cache_generators = cache_generators();
 sub usage {
     pod2usage( -verbose => 1, -exitval => "NOEXIT" );
     print "Valid drivers: " . join( ", ", sort keys(%cache_generators) ) . "\n";
-    print "To install all requirements:\n  cpanm " . join(" ", sort(uniq(map { @{$_->{req} || []} } values(%cache_generators)))) . "\n";
+    print "To install all requirements:\n  cpanm "
+      . join( " ",
+        sort( uniq( map { @{ $_->{req} || [] } } values(%cache_generators) ) ) )
+      . "\n";
     exit(1);
 }
 
-my $count         = 10000;
-my $set_frequency = 0.05;
+my $time          = 2;
 my ( $complex, $drivers_pattern, $help, $incs, $sort_by_name );
 usage() if !@ARGV;
 GetOptions(
-    'c|count=i'         => \$count,
     'h|help'            => \$help,
     'n'                 => \$sort_by_name,
-    's|set_frequency=s' => \$set_frequency,
+    't|time=s'          => \$time,
     'd|drivers=s'       => \$drivers_pattern,
     'x|complex'         => \$complex,
 ) or usage();
@@ -47,15 +49,13 @@ my $value =
   $complex
   ? { map { ( $_, scalar( $_ x 100 ) ) } qw(a b c d e) }
   : scalar( 'x' x 500 );
-my $sets = int( $count * $set_frequency );
-my $iterations = 10;
+my $num_keys = 1000;
 
 require CHI;
 
-print "benchmarking $count operations split over $iterations iterations\n";
 print "CHI version $CHI::VERSION\n" if $CHI::VERSION;
 
-my $cwd = dirname(realpath($0));
+my $cwd  = dirname( realpath($0) );
 my $data = "$cwd/data";
 rmtree($data);
 mkpath( $data, 0, 0775 );
@@ -63,76 +63,97 @@ mkpath( $data, 0, 0775 );
 my %common_chi_opts = ( on_get_error => 'die', on_set_error => 'die' );
 
 my %caches;
-foreach my $name (grep { /$drivers_pattern/ } keys(%cache_generators)) {
+foreach my $name ( grep { /$drivers_pattern/ } keys(%cache_generators) ) {
     try {
-        if (my $req = $cache_generators{$name}->{req}) {
+        if ( my $req = $cache_generators{$name}->{req} ) {
             Class::MOP::load_class($_) foreach @$req;
         }
-        $caches{$name} = $cache_generators{$name}->{code}->($count);
-    } catch {
-        warn "error initializing '$name', will skip - $_";
+        $caches{$name} = $cache_generators{$name}->{code}->();
     }
+    catch {
+        warn "error initializing '$name', will skip - $_";
+    };
 }
-my @names = sort(keys(%caches));
+
+my @names = sort( keys(%caches) );
 print "Drivers: " . join( ", ", @names ) . "\n";
 
-my $cb = new Cache::Benchmark();
-$cb->init( keys => int($sets / $iterations), access_counter => int($count / $iterations), value => $value );
+my %counts;
 
-my %results;
-foreach my $iter (0..$iterations-1) {
-    print "Iteration $iter\n";
-    foreach my $name (@names) {
-        my $cache = $caches{$name};
-        add_fake_purge($cache);
-        $cb->run($cache);
-        foreach my $field qw(get_time set_time reads writes runtime) {
-            $results{$name}->{$field} += $cb->get_raw_result->{$field};
-        }
+# Sets
+my $set_results;
+print "Benchmarking sets\n";
+$set_results = timethese(
+    -1 * $time,
+    {
+        map {
+            my $name  = $_;
+            my $cache = $caches{$name};
+            my $key   = 0;
+            (
+                $name,
+                sub {
+                    my $key = ( $counts{$name}++ % 100 );
+                    $cache->set( $key, $value );
+                }
+            );
+          } @names
     }
-}
+);
 
-my (%colvalues, $reads, $writes);
+# Gets
+my $get_results;
+print "Benchmarking gets\n";
+$get_results = timethese(
+    -1 * $time,
+    {
+        map {
+            my $name  = $_;
+            my $cache = $caches{$name};
+            my $key   = 0;
+            (
+                $name,
+                sub {
+                    my $key = ( $counts{$name}++ % 100 );
+                    $cache->get($key);
+                }
+            );
+          } @names
+    }
+);
+
+my %colvalues;
 foreach my $name (@names) {
     my $generator = $cache_generators{$name};
-    my $result = $results{$name};
-    my @colvalues = (
-        $name,
-        sprintf( "%.2fms", $result->{get_time} * 1000 / $result->{reads} ),
-        sprintf( "%.2fms", $result->{set_time} * 1000 / $result->{writes} ),
-        sprintf( "%.2fs",  $result->{runtime} ),
-        $generator->{desc},
-        );
+    my $get       = ms_time( $get_results->{$name} );
+    my $set       = ms_time( $set_results->{$name} );
+    my @colvalues = ( $name, $get . "ms", $set . "ms", $generator->{desc}, );
     $colvalues{$name} = \@colvalues;
-    $reads = $result->{reads};
-    $writes = $result->{writes};
 }
 
-my $tb = Text::Table->new( 'Cache', "Get time\n&right", "Set time\n&right", "Run time\n&right",  'Description' );
-my $sort_field = $sort_by_name ? 0 : 3;
+my $tb = Text::Table->new(
+    'Cache',
+    "Get time\n&right",
+    "Set time\n&right",
+    'Description'
+);
+my $sort_field = $sort_by_name ? 0 : 1;
 my @rows =
   sort { $colvalues{$a}->[$sort_field] cmp $colvalues{$b}->[$sort_field] }
   keys(%colvalues);
 $tb->add( @{ $colvalues{$_} } ) for @rows;
 
-printf ("%s gets, %s sets, %s total operations\n", $reads, $writes, $reads+$writes); 
-
 print $tb;
-DumpFile( 'results.dat', \%colvalues );
 
-sub add_fake_purge {
-    my ($cache) = @_;
-    if (!$cache->can('purge')) {
-        my $method_name = ref($cache) . "::purge";
-        no strict 'refs';
-        *$method_name = sub {};
-    }
+sub ms_time {
+    my $result = shift;
+    return sprintf( "%0.3f", ( $result->[0] / $result->[5] ) * 1000 );
 }
 
 sub cache_generators {
     return (
         cache_cache_file => {
-            req => ['Cache::FileCache'],
+            req  => ['Cache::FileCache'],
             desc => 'Cache::FileCache',
             code => sub {
                 Cache::FileCache->new(
@@ -144,54 +165,54 @@ sub cache_generators {
               }
         },
         cache_cache_memory => {
-            req => ['Cache::MemoryCache'],
+            req  => ['Cache::MemoryCache'],
             desc => 'Cache::MemoryCache',
             code => sub {
                 Cache::MemoryCache->new();
               }
         },
         cache_fastmmap => {
-            req => ['Cache::FastMmap'],
+            req  => ['Cache::FastMmap'],
             desc => 'Cache::FastMmap',
             code => sub {
-               
+
                 my $fastmmap_file = "$data/fastmmap.fm";
                 Cache::FastMmap->new( share_file => $fastmmap_file, );
               }
         },
         cache_memcached_lib => {
-            req => ['Cache::Memcached::libmemcached'],
+            req  => ['Cache::Memcached::libmemcached'],
             desc => 'Cache::Memcached::libmemcached',
             code => sub {
                 Cache::Memcached::libmemcached->new(
-                    { servers => ["localhost:11211"] }, );
+                    { servers => ["localhost:11211"] },
+                );
               }
         },
         cache_memcached_fast => {
-            req => ['Cache::Memcached::Fast'],
+            req  => ['Cache::Memcached::Fast'],
             desc => 'Cache::Memcached::Fast',
             code => sub {
-                Cache::Memcached::Fast->new( { servers => ["localhost:11211"] } );
+                Cache::Memcached::Fast->new(
+                    { servers => ["localhost:11211"] } );
               }
         },
         cache_memcached_std => {
-            req => ['Cache::Memcached'],
+            req  => ['Cache::Memcached'],
             desc => 'Cache::Memcached',
             code => sub {
                 Cache::Memcached->new( { servers => ["localhost:11211"] } );
               }
         },
         cache_ref => {
-            req => ['Cache::Ref::CART'],
-            desc => 'Cache::Ref',
+            req  => ['Cache::Ref::CART'],
+            desc => 'Cache::Ref (CART)',
             code => sub {
-                my $count = shift;
-               
-                Cache::Ref::CART->new( size => $count * 2 );
+                Cache::Ref::CART->new( size => 10000 );
               }
         },
         chi_berkeleydb => {
-            req => ['CHI::Driver::BerkeleyDB'],
+            req  => ['CHI::Driver::BerkeleyDB'],
             desc => 'CHI::Driver::BerkeleyDB',
             code => sub {
                 CHI->new(
@@ -202,7 +223,7 @@ sub cache_generators {
               }
         },
         chi_dbi_mysql => {
-            req => ['CHI::Driver::DBI', 'DBD::mysql'],
+            req  => [ 'CHI::Driver::DBI', 'DBD::mysql' ],
             desc => 'CHI::Driver::DBI (mysql)',
             code => sub {
                 my $mysql_dbh =
@@ -217,7 +238,7 @@ sub cache_generators {
               }
         },
         chi_dbi_sqlite => {
-            req => ['CHI::Driver::DBI', 'DBD::SQLite'],
+            req  => [ 'CHI::Driver::DBI', 'DBD::SQLite' ],
             desc => 'CHI::Driver::DBI (sqlite)',
             code => sub {
                 my $sqlite_dbh =
@@ -253,7 +274,7 @@ sub cache_generators {
               }
         },
         chi_memcached_fast => {
-            req => ['CHI::Driver::Memcached::Fast'],
+            req  => ['CHI::Driver::Memcached::Fast'],
             desc => 'CHI::Driver::Memcached::Fast',
             code => sub {
                 CHI->new(
@@ -264,7 +285,7 @@ sub cache_generators {
               }
         },
         chi_memcached_lib => {
-            req => ['CHI::Driver::Memcached::libmemcached'],
+            req  => ['CHI::Driver::Memcached::libmemcached'],
             desc => 'CHI::Driver::Memcached::libmemcached',
             code => sub {
                 CHI->new(
@@ -275,7 +296,7 @@ sub cache_generators {
               }
         },
         chi_memcached_std => {
-            req => ['CHI::Driver::Memcached'],
+            req  => ['CHI::Driver::Memcached'],
             desc => 'CHI::Driver::Memcached',
             code => sub {
                 CHI->new(
@@ -329,7 +350,7 @@ bench.pl -d driver_regex [options]
   -d driver_regex    Run drivers matching this regex (required) - use '.' for all
   -c count           Run this many iterations (default 10000)
   -n                 Sort results by name instead of by read performance
-  -s set_frequency   Run this many sets as a percentage of gets (default 0.05)
+  -t time            Number of seconds to benchmark each operation (default 2)
   -x|--complex       Use a complex data structure instead of a scalar
 
 =head1 REQUIREMENTS
