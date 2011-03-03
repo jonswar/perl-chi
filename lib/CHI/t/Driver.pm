@@ -273,7 +273,7 @@ sub test_deep_copy : Tests {
     my $cache = $self->{cache};
 
     $self->set_some_keys($cache);
-    foreach my $keyname qw(arrayref hashref) {
+    foreach my $keyname (qw(arrayref hashref)) {
         my $key   = $self->{keys}->{$keyname};
         my $value = $self->{values}->{$keyname};
         cmp_deeply( $cache->get($key), $value,
