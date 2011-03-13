@@ -940,13 +940,13 @@ sub _test_logging_with_l1_cache {
         qr/cache get for .* key='$key', cache='.*l1.*': $miss_not_in_cache/);
     $log->empty_ok();
 
-    $cache->set( $key, $value, 80 );
+    $cache->set( $key, $value, 81 );
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m2[012]s', cache='$driver'/
     );
 
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='.*l1.*'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m2[012]s', cache='.*l1.*'/
     );
     $log->empty_ok();
 
@@ -990,13 +990,13 @@ sub _test_logging_with_mirror_cache {
         qr/cache get for .* key='$key', cache='$driver': $miss_not_in_cache/);
     $log->empty_ok();
 
-    $cache->set( $key, $value, 80 );
+    $cache->set( $key, $value, 81 );
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m2[012]s', cache='$driver'/
     );
 
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='.*mirror.*'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m2[012]s', cache='.*mirror.*'/
     );
     $log->empty_ok();
 
@@ -1174,9 +1174,9 @@ sub test_logging : Tests {
         qr/cache set for .* key='$key', size=\d+, expires='never', cache='$driver'/
     );
     $log->empty_ok();
-    $cache->set( $key, $value, 80 );
+    $cache->set( $key, $value, 81 );
     $log->contains_ok(
-        qr/cache set for .* key='$key', size=\d+, expires='1m20s', cache='$driver'/
+        qr/cache set for .* key='$key', size=\d+, expires='1m2[012]s', cache='$driver'/
     );
     $log->empty_ok();
 
