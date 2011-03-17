@@ -4,6 +4,10 @@ Revision history for CHI
 
 0.44  Mar 17, 2011
 
+* Fixes
+  - Recreate tarball so that it can be read with older tars
+  - Remove more unnecessary packages from CPAN index
+
 0.43  Mar 17, 2011
 
 * Improvements
