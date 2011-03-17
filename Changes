@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.43  Mar 3, 2011
 
+* Improvements
+  - Add compress_threshold parameter
+
 0.42  Mar 3, 2011
 
 * Fixes

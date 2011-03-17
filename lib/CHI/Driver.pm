@@ -26,6 +26,7 @@ my $default_key_serializer = CHI::Serializer::JSON->new();
 my $default_key_digester   = Digest::MD5->new();
 
 has 'chi_root_class'     => ( is => 'ro' );
+has 'compress_threshold' => ( is => 'ro', isa => 'Int' );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
 has 'expires_at'         => ( is => 'rw', default => CHI_Max_Time );
@@ -306,7 +307,8 @@ sub set_with_options {
     #
     my $obj =
       $self->cache_object_class->new( $key, $value, $created_at,
-        $early_expires_at, $expires_at, $self->serializer );
+        $early_expires_at, $expires_at, $self->serializer,
+        $self->compress_threshold );
     if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
         $$obj_ref = $obj;
     }
