@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.43  Mar 16, 2011
+0.43  Mar 17, 2011
 
 * Improvements
   - Add compress_threshold parameter
