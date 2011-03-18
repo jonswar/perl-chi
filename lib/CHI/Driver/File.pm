@@ -185,6 +185,7 @@ my %hex_strings = map { ( $_, sprintf( "%x", $_ ) ) } ( 0x0 .. 0xf );
 
 sub path_to_key {
     my ( $self, $key, $dir_ref ) = @_;
+    return undef if !defined($key);
 
     my @paths = ( $self->path_to_namespace );
 
