@@ -213,6 +213,18 @@ The exact CHI::Driver subclass to drive the cache, for example
 
 Provide default values for the corresponding L</set> options.
 
+=item expires_on_backend [BOOL]
+
+If true, pass expiration times to backend driver if the driver supports it --
+for example, L<CHI::Driver::Memcached|Memcached> and
+L<CHI::Driver::CacheCache|CacheCache>. This may allow the driver to better
+manage its space and evict items. Note that only simple expiration time will be
+passed along, e.g. not L</expires_variance>.
+
+Defaults to false, which means that CHI alone is aware of the expiration time
+and does not pass it along to the backend driver. This allows you to use
+L</get_object> to retrieve expired items, for example.
+
 =item key_digester [STRING|HASHREF|OBJECT]
 
 Digest algorithm to use on keys longer than L</max_key_length> - e.g. "MD5",

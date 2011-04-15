@@ -7,6 +7,8 @@ use base qw(CHI::t::Driver);
 
 my $root_dir;
 
+sub supports_expires_on_backend { 1 }
+
 sub required_modules {
     return { 'Cache::Cache' => undef, 'Cache::FileCache' => undef };
 }

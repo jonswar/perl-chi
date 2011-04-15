@@ -22,7 +22,7 @@ CHI::Driver::Development -- Manual for developing new CHI drivers
     }
 
     sub store {
-        my ( $self, $key, $data ) = @_;
+        my ( $self, $key, $data[, $expires_in] ) = @_;
 
     }
 
@@ -110,19 +110,16 @@ your subclass:
 
 =over
 
-=item store ( $self, $key, $data, $expires_at, $options )
+=item store ( $self, $key, $data[, $expires_in] )
 
 Associate I<$data> with I<$key> in the namespace, overwriting any existing
 entry.  Called by L</set>. I<$data> will contain any necessary metadata,
 including expiration options, so you can just store it as a single block.
 
-The I<$expires_at> epoch value is provided in case you are working with an
-existing cache implementation (like memcached) that also has an interest in
-storing the expiration time for its own purposes. Normally, you can ignore
-this.
-
-<$options> contains the hash of options passed to L</set>, in case you want to
-implement driver-specific set options. Normally, you can ignore this.
+I<$expires_in> is optionally the number of seconds from now when the entry will
+expire. This will only be passed if L<CHI/expires_on_backend> is set to true.
+If your driver does not support expiration, or if you'd rather just let CHI
+manage expiration, you can ignore this.
 
 =item fetch ( $self, $key )
 

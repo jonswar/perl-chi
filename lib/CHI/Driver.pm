@@ -31,6 +31,7 @@ has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
 has 'expires_at'         => ( is => 'rw', default => CHI_Max_Time );
 has 'expires_in'         => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
+has 'expires_on_backend' => ( is => 'ro', isa => 'Bool' );
 has 'expires_variance'   => ( is => 'rw', default => 0.0 );
 has 'has_subcaches'      => ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
 has 'is_size_aware'      => ( is => 'ro', isa => 'Bool', default => undef );
@@ -332,8 +333,13 @@ sub set_with_options {
 sub set_object {
     my ( $self, $key, $obj ) = @_;
 
-    my $data = $obj->pack_to_data();
-    eval { $self->store( $key, $data ) };
+    my $data       = $obj->pack_to_data();
+    my @expires_in = (
+        $self->expires_on_backend && $obj->expires_at < CHI_Max_Time
+        ? ( $obj->expires_at - time )
+        : ()
+    );
+    eval { $self->store( $key, $data, @expires_in ) };
     if ( my $error = $@ ) {
         $self->{ns_stats}->{'set_errors'}++ if defined( $self->{ns_stats} );
         $self->_handle_set_error( $error, $obj );
