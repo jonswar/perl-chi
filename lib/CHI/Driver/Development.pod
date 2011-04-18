@@ -117,9 +117,9 @@ entry.  Called by L</set>. I<$data> will contain any necessary metadata,
 including expiration options, so you can just store it as a single block.
 
 I<$expires_in> is optionally the number of seconds from now when the entry will
-expire. This will only be passed if L<CHI/expires_on_backend> is set to true.
-If your driver does not support expiration, or if you'd rather just let CHI
-manage expiration, you can ignore this.
+expire. This will only be passed if L<CHI/expires_on_backend> is set. If your
+driver does not support expiration, or if you'd rather just let CHI manage
+expiration, you can ignore this.
 
 =item fetch ( $self, $key )
 

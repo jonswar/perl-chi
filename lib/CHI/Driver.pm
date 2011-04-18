@@ -31,8 +31,8 @@ has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
 has 'expires_at'         => ( is => 'rw', default => CHI_Max_Time );
 has 'expires_in'         => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
-has 'expires_on_backend' => ( is => 'ro', isa => 'Bool' );
-has 'expires_variance'   => ( is => 'rw', default => 0.0 );
+has 'expires_on_backend' => ( is => 'ro', isa => 'Num', default => 0 );
+has 'expires_variance'   => ( is => 'rw', isa => 'Num', default => 0 );
 has 'has_subcaches'      => ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
 has 'is_size_aware'      => ( is => 'ro', isa => 'Bool', default => undef );
 has 'is_subcache'        => ( is => 'ro', isa => 'Bool', default => undef );
@@ -333,10 +333,11 @@ sub set_with_options {
 sub set_object {
     my ( $self, $key, $obj ) = @_;
 
-    my $data       = $obj->pack_to_data();
-    my @expires_in = (
-        $self->expires_on_backend && $obj->expires_at < CHI_Max_Time
-        ? ( $obj->expires_at - time )
+    my $data               = $obj->pack_to_data();
+    my $expires_on_backend = $self->expires_on_backend;
+    my @expires_in         = (
+        $expires_on_backend && $obj->expires_at < CHI_Max_Time
+        ? ( ( $obj->expires_at - time ) * $expires_on_backend )
         : ()
     );
     eval { $self->store( $key, $data, @expires_in ) };
