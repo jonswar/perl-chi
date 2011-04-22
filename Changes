@@ -2,7 +2,10 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.46  Apr 18, 2011
+0.46  Apr 22, 2011
+
+* Other
+  - Only generate version numbers for .pm files with documentation, to reduce inter-version churn
 
 0.45  Apr 18, 2011
 
