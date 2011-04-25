@@ -425,6 +425,35 @@ sub is_empty {
 }
 
 #
+# (SEMI-) ATOMIC OPERATIONS
+#
+
+sub add {
+    my $self = shift;
+    my $key  = shift;
+
+    if ( !$self->is_valid($key) ) {
+        $self->set( $key, @_ );
+    }
+}
+
+sub append {
+    my ( $self, $key, $new ) = @_;
+
+    my $current = $self->fetch($key) or return undef;
+    $self->store( $key, $current . $new );
+}
+
+sub replace {
+    my $self = shift;
+    my $key  = shift;
+
+    if ( $self->is_valid($key) ) {
+        $self->set( $key, @_ );
+    }
+}
+
+#
 # MULTI KEY OPERATIONS
 #
 

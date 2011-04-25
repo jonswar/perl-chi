@@ -12,12 +12,14 @@ around 'get_namespaces' => sub {
     return grep { $_ ne CHI_Meta_Namespace } $self->$orig(@_);
 };
 
-around 'remove' => sub {
-    my ( $orig, $self, $key ) = @_;
+foreach my $method (qw(remove append)) {
+    around $method => sub {
+        my ( $orig, $self, $key, @rest ) = @_;
 
-    # Call transform_key before passing to remove
-    return $self->$orig( $self->transform_key($key) );
-};
+        # Call transform_key before passing to method
+        return $self->$orig( $self->transform_key($key), @rest );
+    };
+}
 
 1;
 

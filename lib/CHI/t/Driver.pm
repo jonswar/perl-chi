@@ -1734,4 +1734,64 @@ sub test_expires_on_backend : Tests {
     }
 }
 
+sub test_append : Tests {
+    my $self  = shift;
+    my $cache = $self->{cache};
+    my ( $key, $value ) =
+      ( $self->{keys}->{arrayref}, $self->{values}->{medium} );
+
+    # Appending to non-existent key has no effect
+    #
+    $cache->append( $key, $value );
+    ok( !$cache->get($key) );
+
+    ok( $cache->set( $key, $value ) );
+    $cache->append( $key, $value );
+    is( $cache->get($key), $value . $value );
+    $cache->append( $key, $value );
+    is( $cache->get($key), $value . $value . $value );
+}
+
+sub test_add : Tests {
+    my $self  = shift;
+    my $cache = $self->{cache};
+    my ( $key, $value ) =
+      ( $self->{keys}->{arrayref}, $self->{values}->{medium} );
+
+    my $t = time();
+
+    $cache->add( $key, $value, { expires_at => $t + 100 } );
+    is( $cache->get($key),                    $value,   "get" );
+    is( $cache->get_object($key)->expires_at, $t + 100, "expires_at" );
+
+    $cache->add( $key, $value . $value, { expires_at => $t + 200 } );
+    is( $cache->get($key), $value, "get (after add)" );
+    is( $cache->get_object($key)->expires_at,
+        $t + 100, "expires_at (after add)" );
+
+    $cache->expire($key);
+    $cache->add( $key, $value . $value, { expires_at => $t + 200 } );
+    is( $cache->get($key), $value . $value, "get (after expire and add)" );
+    is( $cache->get_object($key)->expires_at,
+        $t + 200, "expires_at (after expire and add)" );
+}
+
+sub test_replace : Tests {
+    my $self  = shift;
+    my $cache = $self->{cache};
+    my ( $key, $value ) =
+      ( $self->{keys}->{arrayref}, $self->{values}->{medium} );
+
+    my $t = time();
+
+    $cache->replace( $key, $value, { expires_at => $t + 100 } );
+    ok( !$cache->get_object($key), "get" );
+
+    $cache->set( $key, $value . $value, { expires_at => $t + 200 } );
+    $cache->replace( $key, $value, { expires_at => $t + 100 } );
+    is( $cache->get($key), $value, "get (after replace)" );
+    is( $cache->get_object($key)->expires_at,
+        $t + 100, "expires_at (after replace)" );
+}
+
 1;

@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.47  Apr 22, 2011
 
+* Improvements
+  - Add atomic operations: add, append, replace
+
 0.46  Apr 22, 2011
 
 * Other
