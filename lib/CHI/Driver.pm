@@ -381,11 +381,18 @@ sub compute {
     my $key  = shift;
 
     # Allow these in either order for backward compatibility
-    my ( $code, $set_options ) =
+    my ( $code, $options ) =
       ( ref( $_[0] ) eq 'CODE' ) ? ( $_[0], $_[1] ) : ( $_[1], $_[0] );
 
     croak "must specify key and code" unless defined($key) && defined($code);
 
+    my %get_options =
+      ( ref($options) eq 'HASH' )
+      ? (
+        map { exists( $options->{$_} ) ? ( $_, delete( $options->{$_} ) ) : () }
+          qw(expire_if busy_lock)
+      )
+      : ();
     my $value = $self->get($key);
     if ( !defined $value ) {
         $value = $code->();

@@ -465,15 +465,22 @@ as soon as it is determined to be expired. But it's something to be aware of.
 
 =back
 
-=item compute( $key, $set_options, $code )
+=item compute( $key, $options, $code )
 
 Combines the C<get> and C<set> operations in a single call. Attempts to get
 I<$key>; if successful, returns the value. Otherwise, calls I<$code> and uses
 the return value as the new value for I<$key>, which is then returned.
-I<$set_options> is a scalar or hash reference, used as the third argument to
-set.
+
+I<$options> is a scalar or hash reference. If a scalar, it is treated as the
+C<expires_in> duration and passed as the third argument to C<set>. If it is a
+hash reference, it may contain name/value pairs for both C<get> and C<set>.
+e.g.
 
     $cache->compute($key, '5min', sub {
+        # compute and return value for $key here
+    });
+
+    $cache->compute($key, { expires_in => '5min', expire_if => sub { ... } }, sub {
         # compute and return value for $key here
     });
 
