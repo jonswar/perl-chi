@@ -393,10 +393,10 @@ sub compute {
           qw(expire_if busy_lock)
       )
       : ();
-    my $value = $self->get($key);
+    my $value = $self->get( $key, %get_options );
     if ( !defined $value ) {
         $value = $code->();
-        $self->set( $key, $value, $set_options );
+        $self->set( $key, $value, $options );
     }
     return $value;
 }
