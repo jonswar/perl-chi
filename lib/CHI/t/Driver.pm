@@ -1663,15 +1663,28 @@ sub test_compute : Tests {
     my $cache = $self->{cache};
 
     # Test current arg order and pre-0.40 arg order
-    my $expire_time = time + 10;
-    my @orig = ( { expires_at => $expire_time }, sub { 'bar' } );
-    foreach my $args ( [@orig], [ reverse(@orig) ] ) {
+    foreach my $iter ( 0 .. 1 ) {
+        my $count       = 5;
+        my $expire_time = time + 10;
+        my @args1       = ( { expires_at => $expire_time }, sub { $count++ } );
+        my @args2       = (
+            {
+                expire_if => sub { 1 }
+            },
+            sub { $count++ }
+        );
+        if ($iter) {
+            @args1 = reverse(@args1);
+            @args2 = reverse(@args2);
+        }
         $cache->clear;
         is( $cache->get('foo'), undef, "miss" );
-        $cache->compute( 'foo', @$args );
-        is( $cache->get('foo'), 'bar', "hit" );
+        is( $cache->compute( 'foo', @args1 ), 5, "compute - 5" );
+        is( $cache->get('foo'), 5, "hit - 5" );
         is( $cache->get_object('foo')->expires_at, $expire_time,
             "expire time" );
+        is( $cache->compute( 'foo', @args2 ), 6, "compute - 6" );
+        is( $cache->get('foo'), 6, "hit - 6" );
     }
 }
 
