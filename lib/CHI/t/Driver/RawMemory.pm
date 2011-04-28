@@ -28,6 +28,7 @@ sub test_serializers          { }
 
 # Would need tweaking to pass
 #
+sub test_append                        { }
 sub test_compress_threshold            { }
 sub test_custom_discard_policy         { }
 sub test_lru_discard                   { }

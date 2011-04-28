@@ -7,6 +7,12 @@ extends 'CHI::Driver::Memory';
 
 has 'serializer' => ( is => 'ro', default => undef, init_arg => undef );
 
+sub append {
+    my ( $self, $key, $new ) = @_;
+
+    return "append not yet supported in this driver";
+}
+
 __PACKAGE__->meta->make_immutable();
 
 1;

@@ -1782,7 +1782,7 @@ sub test_add : Tests {
     is( $cache->get_object($key)->expires_at,
         $t + 100, "expires_at (after add)" );
 
-    $cache->expire($key);
+    $cache->remove($key);
     $cache->add( $key, $value . $value, { expires_at => $t + 200 } );
     is( $cache->get($key), $value . $value, "get (after expire and add)" );
     is( $cache->get_object($key)->expires_at,
