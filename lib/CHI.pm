@@ -539,7 +539,7 @@ be returned even if the entry has expired, as long as it has not been removed.
 
 =back
 
-=head2 Atomic operations
+=head2 Atomic operations (ALPHA)
 
 These methods combine both reading and writing of a cache entry in a single
 operation. The names and behaviors were adapted from
@@ -547,16 +547,24 @@ L<memcached|http://memcached.org/>.
 
 Some drivers (e.g.
 L<CHI::Driver::Memcached::libmemcached|Memcached::libmemcached>,
-L<CHI::Driver::DBI|DBI>) implement these as truly atomic operations, and will
-be documented thusly.  The default implementations are not atomic: the get and
-set occur discretely and another process could potentially modify the cache in
-between them.
+L<CHI::Driver::DBI|DBI>) may implement these as truly atomic operations, and
+will be documented thusly.  The default implementations are not atomic: the get
+and set occur discretely and another process could potentially modify the cache
+in between them.
+
+These operations are labelled ALPHA because we haven't yet figured out how they
+integrate with other CHI features, in particular L</SUBCACHES>. APIs and
+behavior may change.
 
 =over
 
 =item add( $key, $data, [$expires_in | "now" | "never" | options] )
 
 Do a L<set>, but only if I<$key> is not L<valid|is_valid> in the cache.
+
+=item replace( $key, $data, [$expires_in | "now" | "never" | options] )
+
+Do a L<set>, but only if I<$key> is L<valid|is_valid> in the cache.
 
 =item append( $key, $new_data)
 
@@ -572,10 +580,6 @@ retrieve the value.
 
 If you use a driver with the non-atomic (default) implementation, some appends
 may be lost due to race conditions.
-
-=item replace( $key, $data, [$expires_in | "now" | "never" | options] )
-
-Do a L<set>, but only if I<$key> is L<valid|is_valid> in the cache.
 
 =back
 
