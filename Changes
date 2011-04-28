@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.47  Apr 22, 2011
+0.47  Apr 28, 2011
 
 * Improvements
   - Allow compute() to take get options - expire_if and busy_lock
