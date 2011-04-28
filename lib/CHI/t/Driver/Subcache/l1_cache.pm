@@ -52,4 +52,7 @@ sub test_stats : Tests {
 
 }
 
+# not working yet
+sub test_append { }
+
 1;
