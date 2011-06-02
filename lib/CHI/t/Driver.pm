@@ -1434,7 +1434,9 @@ sub test_custom_discard_policy : Tests {
 }
 
 sub test_discard_timeout : Tests {
-    my $self       = shift;
+    my $self = shift;
+    return 'author testing only' unless ( $ENV{AUTHOR_TESTING} );
+
     my $bad_policy = sub {
         return sub { '1' };
     };

@@ -90,6 +90,8 @@ sub test_clear_datastore : Tests {
 
 sub test_lru_discard : Tests {
     my $self = shift;
+    return 'author testing only' unless ( $ENV{AUTHOR_TESTING} );
+
     my $cache = $self->new_cleared_cache( max_size => 41 );
     is( $cache->discard_policy, 'lru' );
     my $value_20 = 'x' x 6;
