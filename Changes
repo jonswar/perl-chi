@@ -2,7 +2,10 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.48  Apr 28, 2011
+0.48  Jun 11, 2011
+
+* Fixes
+  - Disregard default expires_at and expires_in if either are provided - RT #67970 (spjw)
 
 0.47  Apr 28, 2011
 

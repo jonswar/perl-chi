@@ -280,7 +280,18 @@ sub set {
                 $options = { expires_in => $options };
             }
         }
-        $options = { %{ $self->_default_set_options }, %$options };
+
+        # Disregard default expires_at and expires_in if either are provided
+        #
+        if (   exists( $options->{expires_at} )
+            || exists( $options->{expires_in} ) )
+        {
+            $options =
+              { expires_variance => $self->expires_variance, %$options };
+        }
+        else {
+            $options = { %{ $self->_default_set_options }, %$options };
+        }
     }
 
     $self->set_with_options( $key, $value, $options );

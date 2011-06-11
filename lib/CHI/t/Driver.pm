@@ -298,8 +298,10 @@ sub test_deep_copy : Tests {
 }
 
 sub test_expires_immediately : Tests {
-    my $self  = shift;
-    my $cache = $self->{cache};
+    my $self = shift;
+
+    # expires_in default should be ignored
+    my $cache = $self->new_cache( expires_in => '1 hour' );
 
     # Expires immediately
     my $test_expires_immediately = sub {
@@ -326,8 +328,10 @@ sub test_expires_immediately : Tests {
 }
 
 sub test_expires_shortly : Tests {
-    my $self  = shift;
-    my $cache = $self->{cache};
+    my $self = shift;
+
+    # expires_in default should be ignored
+    my $cache = $self->new_cache( expires_in => '1 hour' );
 
     # Expires shortly (real time)
     my $test_expires_shortly = sub {
@@ -360,8 +364,10 @@ sub test_expires_shortly : Tests {
 }
 
 sub test_expires_later : Tests {
-    my $self  = shift;
-    my $cache = $self->{cache};
+    my $self = shift;
+
+    # expires_in default should be ignored
+    my $cache = $self->new_cache( expires_in => '1s' );
 
     # Expires later (test time)
     my $test_expires_later = sub {
@@ -393,8 +399,8 @@ sub test_expires_later : Tests {
 }
 
 sub test_expires_never : Tests {
-    my $self  = shift;
-    my $cache = $self->{cache};
+    my $self = shift;
+    my $cache;
 
     # Expires never (will fail in 2037)
     my ( $key, $value ) = $self->kvpair();
@@ -409,7 +415,13 @@ sub test_expires_never : Tests {
         ok( !$cache->exists_and_is_expired($key), "not expired" );
         ok( $cache->is_valid($key),               "valid" );
     };
+
+    # never is default
+    $cache = $self->new_cache();
     $test_expires_never->();
+
+    # expires_in default should be ignored when never passed to set (RT #67970)
+    $cache = $self->new_cache( expires_in => '1s' );
     $test_expires_never->('never');
 }
 
