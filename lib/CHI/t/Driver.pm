@@ -379,16 +379,16 @@ sub test_expires_later : Tests {
         my $start_time = time();
         is_between(
             $cache->get_expires_at($key),
-            $start_time + 3599,
-            $start_time + 3601,
+            $start_time + 3590,
+            $start_time + 3610,
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key),               "valid ($desc)" );
-        local $CHI::Driver::Test_Time = $start_time + 3598;
+        local $CHI::Driver::Test_Time = $start_time + 3590;
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key),               "valid ($desc)" );
-        local $CHI::Driver::Test_Time = $start_time + 3602;
+        local $CHI::Driver::Test_Time = $start_time + 3610;
         ok( !defined $cache->get($key),          "miss after 1 hour ($desc)" );
         ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
         ok( !$cache->is_valid($key),             "invalid ($desc)" );
