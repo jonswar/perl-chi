@@ -2,7 +2,10 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.49  Jun 15, 2011
+0.49  Jun 23, 2011
+
+* Fixes
+  - Go back to generating version numbers for all sub-modules again
 
 0.48  Jun 15, 2011
 
