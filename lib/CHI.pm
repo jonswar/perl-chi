@@ -1123,9 +1123,6 @@ the built-in driver classes. Method calls are kept to a minimum, data is only
 serialized when necessary, and metadata such as expiration time is stored in
 packed binary format alongside the data.
 
-As an example, using Rob Mueller's cacheperl benchmarks, CHI's file driver runs
-3 to 4 times faster than Cache::FileCache.
-
 =item Ease of subclassing
 
 New Cache::Cache subclasses can be tedious to create, due to a lack of code
@@ -1211,37 +1208,6 @@ The latest source code can be browsed and fetched at:
 
     http://github.com/jonswar/perl-chi/tree/master
     git clone git://github.com/jonswar/perl-chi.git
-
-=head1 TODO
-
-=over
-
-=item *
-
-Perform cache benchmarks comparing both CHI and non-CHI cache implementations
-
-=item *
-
-Release BerkeleyDB drivers as separate CPAN distributions
-
-=item *
-
-Add docs comparing various strategies for reducing miss stampedes and cost of
-recomputes
-
-=item *
-
-Add expires_next syntax (e.g. expires_next => 'hour')
-
-=item *
-
-Support automatic serialization and escaping of keys
-
-=item *
-
-Create XS versions of main functions in Driver.pm (e.g. get, set)
-
-=back
 
 =head1 ACKNOWLEDGMENTS
 
