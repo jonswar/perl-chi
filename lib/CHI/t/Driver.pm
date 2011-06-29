@@ -344,23 +344,23 @@ sub test_expires_shortly : Tests {
         is_between(
             $cache->get_expires_at($key),
             $start_time + 1,
-            $start_time + 5,
+            $start_time + 6,
             "expires_at ($desc)"
         );
         ok( !$cache->exists_and_is_expired($key), "not expired ($desc)" );
         ok( $cache->is_valid($key),               "valid ($desc)" );
 
         # Only bother sleeping and expiring for one of the variants
-        if ( $set_option eq "2 seconds" ) {
+        if ( $set_option eq "3 seconds" ) {
             sleep(3);
             ok( !defined $cache->get($key), "miss after 2 seconds ($desc)" );
             ok( $cache->exists_and_is_expired($key), "is_expired ($desc)" );
             ok( !$cache->is_valid($key),             "invalid ($desc)" );
         }
     };
-    $test_expires_shortly->(2);
-    $test_expires_shortly->("2 seconds");
-    $test_expires_shortly->( { expires_at => time + 2 } );
+    $test_expires_shortly->(3);
+    $test_expires_shortly->("3 seconds");
+    $test_expires_shortly->( { expires_at => time + 3 } );
 }
 
 sub test_expires_later : Tests {
