@@ -406,7 +406,7 @@ performed - see L</expires_variance> for another technique.
 
 If L<CHI::CacheObject|CHI::CacheObject> object exists in cache, the scalar
 by SCALARREF will be set to L<CHI::CacheObject|CHI::CacheObject> object.
-It can be useful when you use L</compute> with L</busy_lock> option - we can
+It can be useful when you use L</compute> with I<busy_lock> option - we can
 know a data in cache was there before or not. Example:
 
     my $obj;
@@ -426,7 +426,7 @@ know a data in cache was there before or not. Example:
                 # for example and during this execution an OTHER PROCESS
                 # WILL EXECUTE SAME CODE AGAIN from compute method for this key
                 # we will have two processes with running code and so on
-                # We can get a snowball effect
+                # We can get a SNOWBALL EFFECT
                 $cache->set($key, { please_wait => $$ }, '1m');
             }
 
