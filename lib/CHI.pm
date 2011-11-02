@@ -115,7 +115,7 @@ CHI - Unified cache handling interface
     );
 
     # Create your own driver
-    # 
+    #
     my $cache = CHI->new( driver_class => 'My::Special::Driver', ... );
 
     # Cache operations
@@ -359,7 +359,7 @@ e.g.
 
 The default is to use raw Storable.
 
-=back    
+=back
 
 Some drivers will take additional constructor options. For example, the File
 driver takes C<root_dir> and C<depth> options.
@@ -395,11 +395,51 @@ computed:
 
 =item busy_lock [DURATION]
 
-If the value has expired, set its expiration time to the current time plus the
-specified L<duration|/DURATION EXPRESSIONS> before returning undef.  This is
-used to prevent multiple processes from recomputing the same expensive value
-simultaneously. The problem with this technique is that it doubles the number
-of writes performed - see L</expires_variance> for another technique.
+If the value has expired, a get returns undef value but expired object in cache
+will be replaced again but its expiration time will be set to the current time plus
+the specified L<duration|/DURATION EXPRESSIONS>.  This is used to prevent
+multiple processes from recomputing the same expensive value simultaneously.
+The problem with this technique is that it doubles the number of writes
+performed - see L</expires_variance> for another technique.
+
+=item obj_ref [SCALARREF]
+
+If L<CHI::CacheObject|CHI::CacheObject> object exists in cache, the scalar
+by SCALARREF will be set to L<CHI::CacheObject|CHI::CacheObject> object.
+It can be useful when you use L</compute> with I<busy_lock> option - we can
+know a data in cache was there before or not. Example:
+
+    my $obj;
+
+    $value = $cache->compute(
+        $key,
+        {
+            busy_lock	=> '1m',
+            expires_in	=> '1h',
+            obj_ref	=> \$obj
+
+        },
+        sub {
+            if ( ! defined($obj) ) {
+                # Setting up a stub for other processes
+                # WITHOUT this if our code will be executed ~ 15 seconds
+                # for example and during this execution an OTHER PROCESS
+                # WILL EXECUTE SAME CODE AGAIN from compute method for this key
+                # we will have two processes with running code and so on
+                # We can get a SNOWBALL EFFECT
+                $cache->set($key, { please_wait => $$ }, '1m');
+            }
+
+            return { result => code_for_value_getting() };
+        }
+    );
+
+    if (exists $value->{please_wait}) {
+        # Other process (pid is $value->{please_wait}) has already run the code
+        # We should wait here some time and try again for example
+        # or generate a message for user to waiting
+    }
+
 
 =back
 
@@ -693,12 +733,12 @@ e.g.
     label
     on_get_error
     on_set_error
-    
+
 =item Standard read-only accessors
 
     namespace
     serializer
-    
+
 =back
 
 =head2 Deprecated methods
@@ -1109,7 +1149,7 @@ from the logs and report a summary. See L<CHI::Stats|CHI::Stats> for details.
 CHI is intended as an evolution of DeWitt Clinton's
 L<Cache::Cache|Cache::Cache> package. It starts with the same basic API (which
 has proven durable over time) but addresses some implementation shortcomings
-that cannot be fixed in Cache::Cache due to backward compatibility concerns. 
+that cannot be fixed in Cache::Cache due to backward compatibility concerns.
 In particular:
 
 =over
