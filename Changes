@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.50  Jun 23, 2011
 
+* Docs
+  - Clarify busy_lock doc, add obj_ref doc (perlover)
+
 0.49  Jun 23, 2011
 
 * Fixes
