@@ -395,11 +395,17 @@ computed:
 
 =item busy_lock [DURATION]
 
-If the value has expired, set its expiration time to the current time plus the
-specified L<duration|/DURATION EXPRESSIONS> before returning undef.  This is
-used to prevent multiple processes from recomputing the same expensive value
-simultaneously. The problem with this technique is that it doubles the number
-of writes performed - see L</expires_variance> for another technique.
+If the value has expired, the get will still return undef, but the expiration
+time of the cache entry will be set to the current time plus the specified
+L<duration|/DURATION EXPRESSIONS>.  This is used to prevent multiple processes
+from recomputing the same expensive value simultaneously. The problem with this
+technique is that it doubles the number of writes performed - see
+L</expires_variance> for another technique.
+
+=item obj_ref [SCALARREF]
+
+If the item exists in cache, place the <CHI::CacheObject|CHI::CacheObject>
+object in the provided SCALARREF.
 
 =back
 
