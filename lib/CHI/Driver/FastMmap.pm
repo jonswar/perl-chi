@@ -82,7 +82,7 @@ __END__
 
 =head1 NAME
 
-CHI::Driver::FastMmap - Shared memory interprocess cache via mmap'ed files
+CHI::Driver::FastMmap - Persistent interprocess cache via mmap'ed files
 
 =head1 SYNOPSIS
 
