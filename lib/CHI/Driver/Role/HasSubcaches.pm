@@ -72,7 +72,7 @@ sub add_subcache {
 
 # Call these methods first on the main cache, then on any subcaches.
 #
-foreach my $method (qw(clear expire purge remove)) {
+foreach my $method (qw(clear expire purge remove set)) {
     after $method => sub {
         my $self      = shift;
         my $subcaches = $self->subcaches;
@@ -81,22 +81,6 @@ foreach my $method (qw(clear expire purge remove)) {
         }
     };
 }
-
-after 'set_object' => sub {
-    my ( $self, $key, $obj ) = @_;
-
-    my $subcaches = $self->subcaches;
-    foreach my $subcache (@$subcaches) {
-        $subcache->set(
-            $key,
-            $obj->value,
-            {
-                expires_at       => $obj->expires_at,
-                early_expires_at => $obj->early_expires_at
-            }
-        );
-    }
-};
 
 around 'get' => sub {
     my $orig = shift;
