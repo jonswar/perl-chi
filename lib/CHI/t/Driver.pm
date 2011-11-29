@@ -1830,4 +1830,26 @@ sub test_replace : Tests {
         $t + 100, "expires_at (after replace)" );
 }
 
+sub test_max_key_length : Tests {
+    my $self = shift;
+
+    # Test max_key_length and also that key does not get transformed twice in mirror_cache
+    #
+    my $mirror_store = {};
+    my $cache        = $self->new_cleared_cache(
+        max_key_length => 10,
+        mirror_cache   => { driver => 'Memory', datastore => $mirror_store }
+    );
+
+    foreach my $keyname ( 'medium', 'large' ) {
+        my ( $key, $value ) =
+          ( $self->{keys}->{$keyname}, $self->{values}->{$keyname} );
+        $cache->set( $key, $value );
+        is( $cache->get($key),               $value, $keyname );
+        is( $cache->mirror_cache->get($key), $value, $keyname );
+    }
+    cmp_set( [ $cache->get_keys() ],
+        [ 'medium', '66b08343f81782986329795e0a422a05' ], 'get_keys' );
+}
+
 1;
