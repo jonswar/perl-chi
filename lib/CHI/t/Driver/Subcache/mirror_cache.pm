@@ -24,4 +24,7 @@ sub new_cache_options {
     );
 }
 
+# This tries to create its own mirror cache
+sub test_max_key_length { }
+
 1;

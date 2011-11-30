@@ -55,4 +55,7 @@ sub test_stats : Tests {
 # not working yet
 sub test_append { }
 
+# won't work in presence of l1 cache
+sub test_max_key_length { }
+
 1;
