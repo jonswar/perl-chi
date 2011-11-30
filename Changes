@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.50  Jun 23, 2011
+0.50  Nov 30, 2011
 
 * Docs
   - Clarify busy_lock doc, add obj_ref doc (perlover)
