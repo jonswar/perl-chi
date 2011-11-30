@@ -9,7 +9,9 @@ Revision history for CHI
 
 * Fixes
   - Override set() rather than set_object() in Role/HasSubcaches.pm so that
-    keys are not double-transformed when set in l1 or mirror caches.
+    keys are not double-transformed when set in l1 or mirror caches. This is
+    simpler and should be more robust.
+  - Remove htdocs which were accidentally added into dist
 
 0.49  Jun 23, 2011
 
