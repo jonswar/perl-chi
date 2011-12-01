@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.51  Nov 30, 2011
 
+* Fixes
+  - Fix new test_max_key_length test to work on drivers that do not support get_keys
+
 0.50  Nov 30, 2011
 
 * Docs
