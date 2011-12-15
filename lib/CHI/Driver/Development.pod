@@ -141,7 +141,7 @@ for each, is very inefficient).
 
 =head2 Overridable methods
 
-The following methods have a default implementation, but MAY be overriden by
+The following methods have a default implementation, but MAY be overridden by
 your subclass:
 
 =over
