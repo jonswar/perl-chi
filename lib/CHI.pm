@@ -1026,7 +1026,7 @@ L<CHI::Driver::Memory|CHI::Driver::Memory> - In-process memory based cache
 =item *
 
 L<CHI::Driver::RawMemory|CHI::Driver::RawMemory> - In-process memory based
-cache that stores references directly instead of deep-copying
+cache that stores references directly instead of serializing/deep-copying
 
 =item *
 
@@ -1176,7 +1176,8 @@ handle expiration times. Here's how CHI resolves these overlaps.
 =item Serialization
 
 CHI handles its own serialization, passing a flat binary string to the
-underlying cache backend.
+underlying cache backend. The notable exception is
+L<CHI::Driver::RawMemory|CHI::Driver::RawMemory> which does no serialization.
 
 =item Expiration
 
