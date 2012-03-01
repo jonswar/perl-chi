@@ -5,11 +5,46 @@ use CHI::Stats;
 use strict;
 use warnings;
 
-my ( %final_class_seen, %stats );
+my ( %final_class_seen, %config, %memoized_cache_objects, %stats );
+
+my %valid_config_keys =
+  map { ( $_, 1 ) } qw(defaults memoize_cache_objects namespace storage);
 
 sub logger {
     warn
       "CHI now uses Log::Any for logging - see Log::Any documentation for details";
+}
+
+sub config {
+    my ( $class, $config ) = @_;
+
+    # Each CHI root class gets its own config hash
+    #
+    if ( defined($config) ) {
+        if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
+            croak "unknown keys in config hash: " . join( ", ", @bad_keys );
+        }
+        $config{$class} = $config;
+    }
+    else {
+        $config{$class} ||= {};
+    }
+    return $config{$class};
+}
+
+sub memoized_cache_objects {
+    my ($class) = @_;
+
+    # Each CHI root class gets its hash of memoized objects
+    #
+    $memoized_cache_objects{$class} ||= {};
+    return $memoized_cache_objects{$class};
+}
+
+sub clear_memoized_cache_objects {
+    my ($class) = @_;
+
+    $memoized_cache_objects{$class} = {};
 }
 
 sub stats {
@@ -23,6 +58,41 @@ sub stats {
 
 sub new {
     my ( $chi_root_class, %params ) = @_;
+
+    my $config = $chi_root_class->config;
+
+    # Cache object memoization: See if cache object with these parameters
+    # has already been created, and return it if so. Only for parameters
+    # with 0 or 1 keys.
+    #
+    my ( $cache_object_key, $cache_objects );
+    if ( $config->{memoize_cache_objects} && keys(%params) <= 1 ) {
+        $cache_object_key = join chr(28), %params;
+        $cache_objects = $chi_root_class->memoized_cache_objects;
+        if ( my $cache_object = $cache_objects->{$cache_object_key} ) {
+            return $cache_object;
+        }
+    }
+
+    # Gather defaults
+    #
+    my $core_defaults = $config->{defaults} || {};
+    my $namespace_defaults =
+      $config->{namespace}->{ $params{namespace} || 'Default' } || {};
+    my $storage =
+         $params{storage}
+      || $namespace_defaults->{storage}
+      || $core_defaults->{storage};
+    my $storage_defaults = {};
+    if ( defined($storage) ) {
+        $storage_defaults = $config->{storage}->{$storage}
+          or croak "no config for storage type '$storage'";
+    }
+
+    # Combine passed params with defaults
+    #
+    %params =
+      ( %$core_defaults, %$storage_defaults, %$namespace_defaults, %params );
 
     # Get driver class from driver or driver_class parameters
     #
@@ -71,11 +141,21 @@ sub new {
     $meta->add_method( 'meta' => sub { $meta } )
       if !$final_class_seen{$final_class}++;
 
-    return $final_class->new(
+    # Finally create the object
+    #
+    my $cache_object = $final_class->new(
         chi_root_class => $chi_root_class,
         driver_class   => $driver_class,
         %params
     );
+
+    # Memoize if appropriate
+    #
+    if ($cache_object_key) {
+        $cache_objects->{$cache_object_key} = $cache_object;
+    }
+
+    return $cache_object;
 }
 
 1;
@@ -665,6 +745,11 @@ cache.
 
 =over
 
+=item chi_root_class( )
+
+Returns the name of the root class under which this object was created, e.g.
+C<CHI> or C<My::CHI>. See L</SUBCLASSING AND CONFIGURING CHI>.
+
 =item driver_class( )
 
 Returns the full name of the driver class. e.g.
@@ -1012,6 +1097,188 @@ L<CHI::Driver::File|File> - there is a race condition in the updating of size
 that can cause the size to grow inaccurate over time.
 
 =for readme continue
+
+=head1 SUBCLASSING AND CONFIGURING CHI
+
+You can subclass CHI for your own application and configure it in a variety of
+ways, e.g. pre-defining storage types and defaults for new cache objects. Your
+configuration will be independent of the main CHI class and other CHI
+subclasses.
+
+Start with a trivial subclass:
+
+    package My::CHI;
+    use base qw(CHI);
+    1;
+
+Then, just use your subclass in place of CHI:
+
+    my $cache = My::CHI->new( ... );
+
+    print $cache->chi_root_class;
+       ==> 'My::CHI'
+
+This obviously doesn't change any behavior by itself. Here's an example with
+actual config:
+
+    package My::CHI;
+    use base qw(CHI);
+
+    __PACKAGE__->config({
+        storage   => {
+            local_file => { driver => 'File', root_dir => '/my/root' },
+            memcached  => {
+                driver  => 'Memcached::libmemcached',
+                servers => [ '10.0.0.15:11211', '10.0.0.15:11212' ]
+            },
+        },
+        namespace => {
+            'Foo' => { storage => 'local_file' },
+            'Bar' => { storage => 'local_file', depth => 3 },
+            'Baz' => { storage => 'memcached' },
+        }
+        defaults  => { storage => 'local_file' },
+        memoize_cache_objects => 1,
+    });
+
+    1;
+
+Each of these config keys is explained in the next section.
+
+=head2 Configuration keys
+
+=over
+
+=item storage
+
+A map of names to parameter hashrefs. This provides a way to encapsulate common
+sets of parameters that might be used in many caches. e.g. if you define
+
+    storage => {
+        local_file => { driver => 'File', root_dir => '/my/root' },
+        ...
+    }
+
+then
+
+    my $cache = My::CHI->new
+       (namespace => 'Foo', storage => 'local_file');
+
+is equivalent to
+
+    my $cache = My::CHI->new
+       (namespace => 'Foo', driver => 'File', root_dir => '/my/root');
+
+=item namespace
+
+A map of namespace names to parameter hashrefs. When you create a cache object
+with the specified namespace, the hashref of parameters will be applied as
+defaults. e.g. if you define
+
+    namespace => {
+        'Foo' => { driver => 'File', root_dir => '/my/root' },
+        'Bar' => { storage => 'database' },
+        ...
+    }
+
+then
+
+    my $cache1 = My::CHI->new
+       (namespace => 'Foo');
+    my $cache2 = My::CHI->new
+       (namespace => 'Bar');
+
+is equivalent to
+
+    my $cache1 = My::CHI->new
+       (namespace => 'Foo', driver => 'File', root_dir => '/my/root');
+    my $cache2 = My::CHI->new
+       (namespace => 'Bar', storage => 'database');
+
+=item defaults
+
+A hash of parameters that will be used as core defaults for all cache objects
+created under this root class. e.g.
+
+    defaults => {
+        on_get_error => 'die',
+        expires_variance => 0.2,
+    }
+
+These can be overriden by namespace defaults, storage settings, or C<new>
+parameters.
+
+=item memoize_cache_objects
+
+True or false, indicates whether C<My::CHI-E<gt>new> should memoize and return
+the same cache object if given the same parameters. This can speed things up if
+you create cache objects frequently. Will currently only work for 0- or 1- key
+parameter hashes. e.g.
+
+    My::CHI->config({
+        memoize_cache_objects => 1,
+    });
+
+then
+
+    # $cache1 and $cache2 will be the same object, regardless of what
+    # namespace and storage defaults are associated with 'Foo'
+    #
+    my $cache1 = My::CHI->new(namespace => 'Foo');
+    my $cache2 = My::CHI->new(namespace => 'Foo');
+
+    # $cache3 and $cache4 will be different objects
+    #
+    my $cache3 = My::CHI->new
+       (namespace => 'Bar', driver => 'File', root_dir => '/my/root');
+    my $cache4 = My::CHI->new
+       (namespace => 'Bar', driver => 'File', root_dir => '/my/root');
+
+To clear the memoized cache objects, call
+
+    My::CHI->clear_memoized_cache_objects;
+
+=back
+
+=head2 How defaults are combined
+
+Defaults are applied in the following order, from highest to lowest precedence:
+
+=over
+
+=item *
+
+Parameters passed in C<new>
+
+=item *
+
+Namespace defaults, if any
+
+=item *
+
+Storage settings, if any
+
+=item *
+
+Core defaults defined under 'defaults'
+
+=back
+
+=head2 Initialization and inheritance of config
+
+Config starts out as an empty hash for each subclass. Config settings are not
+automatically inherited, but you can merge in the parent's config manually:
+
+    __PACKAGE__->config({
+        ...,
+        %{ __PACKAGE__->SUPER::config },
+    });
+
+=head2 Reading config from a file
+
+    use YAML::XS qw(LoadFile);
+
+    __PACKAGE__->config(LoadFile("/path/to/cache.yml"));
 
 =head1 AVAILABILITY OF DRIVERS
 

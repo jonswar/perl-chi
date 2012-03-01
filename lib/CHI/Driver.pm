@@ -47,6 +47,7 @@ has 'on_get_error'       => ( is => 'rw', isa => 'CHI::Types::OnError', default 
 has 'on_set_error'       => ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
 has 'serializer'         => ( is => 'ro', isa => 'CHI::Types::Serializer', coerce => 1, default => sub { $default_serializer } );
 has 'short_driver_name'  => ( is => 'ro', lazy_build => 1 );
+has 'storage'            => ( is => 'ro' );
 
 # These methods must be implemented by subclass
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
