@@ -1096,8 +1096,6 @@ Also, for drivers that cannot atomically read and update a value - for example,
 L<CHI::Driver::File|File> - there is a race condition in the updating of size
 that can cause the size to grow inaccurate over time.
 
-=for readme continue
-
 =head1 SUBCLASSING AND CONFIGURING CHI
 
 You can subclass CHI for your own application and configure it in a variety of
@@ -1279,6 +1277,8 @@ automatically inherited, but you can merge in the parent's config manually:
     use YAML::XS qw(LoadFile);
 
     __PACKAGE__->config(LoadFile("/path/to/cache.yml"));
+
+=for readme continue
 
 =head1 AVAILABILITY OF DRIVERS
 
