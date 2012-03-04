@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.51  Nov 30, 2011
 
+* Improvements
+  - Add CHI->config() to register storage types, and set core and per-namespace defaults
+
 * Fixes
   - Fix new test_max_key_length test to work on drivers that do not support get_keys
 
