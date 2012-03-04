@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.51  Nov 30, 2011
+0.51  Mar 4, 2012
 
 * Improvements
   - Add CHI->config() to register storage types, and set core and per-namespace defaults
