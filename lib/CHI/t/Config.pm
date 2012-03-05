@@ -27,9 +27,14 @@ my %config = (
 }
 
 {
-    package Other::CHI;
+    package My::CHI::Subclass;
+    use base qw(My::CHI);
+}
+
+{
+    package My::CHI::Memo;
     use base qw(CHI);
-    My::CHI->config( { %config, memoize_cache_objects => 1 } );
+    My::CHI::Memo->config( { %config, memoize_cache_objects => 1 } );
 }
 
 sub _create {
@@ -43,19 +48,23 @@ sub _create {
 }
 
 sub test_memoize : Tests {
-    my $cache1 = My::CHI->new( namespace => 'Foo' );
-    my $cache2 = My::CHI->new( namespace => 'Foo' );
+    my $cache1 = My::CHI::Memo->new( namespace => 'Foo' );
+    my $cache2 = My::CHI::Memo->new( namespace => 'Foo' );
     is( $cache1, $cache2, "same - namespace Foo" );
 
-    my $cache3 = My::CHI->new( namespace => 'Bar', depth => 4 );
-    my $cache4 = My::CHI->new( namespace => 'Bar', depth => 4 );
+    my $cache3 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
+    my $cache4 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
     isnt( $cache3, $cache4, "different - namespace Bar" );
 
-    My::CHI->clear_memoized_cache_objects();
-    my $cache5 = My::CHI->new( namespace => 'Foo' );
-    my $cache6 = My::CHI->new( namespace => 'Foo' );
+    My::CHI::Memo->clear_memoized_cache_objects();
+    my $cache5 = My::CHI::Memo->new( namespace => 'Foo' );
+    my $cache6 = My::CHI::Memo->new( namespace => 'Foo' );
     is( $cache5, $cache6, "same - namespace Foo" );
     isnt( $cache1, $cache3, "different - post-clear" );
+
+    my $cache7 = My::CHI->new( namespace => 'Foo' );
+    my $cache8 = My::CHI->new( namespace => 'Foo' );
+    isnt( $cache7, $cache8, "different - namespace Foo - no memoization" );
 }
 
 sub test_config : Tests {
