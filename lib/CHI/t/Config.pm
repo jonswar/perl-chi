@@ -10,17 +10,12 @@ my $root_dir = tempdir( 'CHI-t-Config-XXXX', TMPDIR => 1, CLEANUP => 1 );
 
 my %config = (
     storage => {
-        memory    => { driver => 'Memory', global   => 1 },
-        file      => { driver => 'File',   root_dir => $root_dir },
-        memcached => {
-            driver  => 'Memcached::libmemcached',
-            servers => [ '10.0.0.15:11211', '10.0.0.15:11212' ]
-        },
+        memory => { driver => 'Memory', global   => 1 },
+        file   => { driver => 'File',   root_dir => $root_dir },
     },
     namespace => {
         'Foo' => { storage => 'file' },
         'Bar' => { storage => 'file', depth => 3 },
-        'Baz' => { storage => 'memcached' },
     },
     defaults => { storage => 'memory' },
 );
@@ -104,14 +99,6 @@ sub test_config : Tests {
             short_driver_name => 'File',
             root_dir          => $root_dir,
             depth             => 4
-        }
-    );
-    _create(
-        { namespace => 'Baz' },
-        {
-            namespace         => 'Baz',
-            storage           => 'memcached',
-            short_driver_name => 'Memcached::libmemcached'
         }
     );
 }
