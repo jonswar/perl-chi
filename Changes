@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.52  Mar 4, 2012
+0.52  Mar 5, 2012
 
 * Improvements
   - Subclasses inherit configuration from their parents unless they also call config()
