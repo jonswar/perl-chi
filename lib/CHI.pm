@@ -1270,7 +1270,8 @@ Core defaults defined under 'defaults'
 =head2 Inheritance of config
 
 A subclass will automatically inherit the configuration of its parent if it
-does not call C<config> itself.
+does not call C<config> itself (ala
+L<Class::Data::Inheritable|Class::Data::Inheritable>).
 
 =head2 Reading config from a file
 
