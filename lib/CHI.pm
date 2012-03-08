@@ -2,12 +2,11 @@ package CHI;
 use 5.006;
 use Carp;
 use CHI::Stats;
+use Moose;
 use strict;
 use warnings;
 
 my ( %final_class_seen, %memoized_cache_objects, %stats );
-my %config = ( 'CHI' => {} );
-
 my %valid_config_keys =
   map { ( $_, 1 ) } qw(defaults memoize_cache_objects namespace storage);
 
@@ -17,17 +16,20 @@ sub logger {
 }
 
 sub config {
-    my ( $class, $config ) = @_;
-
-    if ( defined($config) ) {
-        if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
-            croak "unknown keys in config hash: " . join( ", ", @bad_keys );
-        }
-        $config{$class} = $config;
-    }
-    return
-      exists( $config{$class} ) ? $config{$class} : $class->SUPER::config();
+    my $class = shift;
+    $class->_set_config(@_) if @_;
+    return $class->_get_config();
 }
+
+sub _set_config {
+    my ( $class, $config ) = @_;
+    if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
+        croak "unknown keys in config hash: " . join( ", ", @bad_keys );
+    }
+    $class->meta->add_method( '_get_config' => sub { $config } );
+}
+
+CHI->config( {} );
 
 sub memoized_cache_objects {
     my ($class) = @_;

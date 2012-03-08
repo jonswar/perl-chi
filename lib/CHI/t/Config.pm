@@ -40,31 +40,13 @@ my %config = (
 sub _create {
     my ( $params, $checks ) = @_;
 
-    my $desc  = dump_one_line($params);
-    my $cache = My::CHI->new(%$params);
-    while ( my ( $key, $value ) = each(%$checks) ) {
-        is( $cache->$key, $value, "$key == $value ($desc)" );
+    my $desc = dump_one_line($params);
+    foreach my $class (qw(My::CHI My::CHI::Subclass)) {
+        my $cache = $class->new(%$params);
+        while ( my ( $key, $value ) = each(%$checks) ) {
+            is( $cache->$key, $value, "$key == $value ($desc)" );
+        }
     }
-}
-
-sub test_memoize : Tests {
-    my $cache1 = My::CHI::Memo->new( namespace => 'Foo' );
-    my $cache2 = My::CHI::Memo->new( namespace => 'Foo' );
-    is( $cache1, $cache2, "same - namespace Foo" );
-
-    my $cache3 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
-    my $cache4 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
-    isnt( $cache3, $cache4, "different - namespace Bar" );
-
-    My::CHI::Memo->clear_memoized_cache_objects();
-    my $cache5 = My::CHI::Memo->new( namespace => 'Foo' );
-    my $cache6 = My::CHI::Memo->new( namespace => 'Foo' );
-    is( $cache5, $cache6, "same - namespace Foo" );
-    isnt( $cache1, $cache3, "different - post-clear" );
-
-    my $cache7 = My::CHI->new( namespace => 'Foo' );
-    my $cache8 = My::CHI->new( namespace => 'Foo' );
-    isnt( $cache7, $cache8, "different - namespace Foo - no memoization" );
 }
 
 sub test_config : Tests {
@@ -110,6 +92,40 @@ sub test_config : Tests {
             depth             => 4
         }
     );
+
+    my %new_config = %config;
+    $new_config{namespace}->{'Bar'}->{depth} = 5;
+    My::CHI->config( {%new_config} );
+    _create(
+        { namespace => 'Bar' },
+        {
+            namespace         => 'Bar',
+            storage           => 'file',
+            short_driver_name => 'File',
+            root_dir          => $root_dir,
+            depth             => 5
+        }
+    );
+}
+
+sub test_memoize : Tests {
+    my $cache1 = My::CHI::Memo->new( namespace => 'Foo' );
+    my $cache2 = My::CHI::Memo->new( namespace => 'Foo' );
+    is( $cache1, $cache2, "same - namespace Foo" );
+
+    my $cache3 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
+    my $cache4 = My::CHI::Memo->new( namespace => 'Bar', depth => 4 );
+    isnt( $cache3, $cache4, "different - namespace Bar" );
+
+    My::CHI::Memo->clear_memoized_cache_objects();
+    my $cache5 = My::CHI::Memo->new( namespace => 'Foo' );
+    my $cache6 = My::CHI::Memo->new( namespace => 'Foo' );
+    is( $cache5, $cache6, "same - namespace Foo" );
+    isnt( $cache1, $cache3, "different - post-clear" );
+
+    my $cache7 = My::CHI->new( namespace => 'Foo' );
+    my $cache8 = My::CHI->new( namespace => 'Foo' );
+    isnt( $cache7, $cache8, "different - namespace Foo - no memoization" );
 }
 
 1;
