@@ -892,7 +892,7 @@ places an in-process Memory cache in front of a Memcached cache:
     my $cache = CHI->new(
         driver   => 'Memcached',
         servers  => [ "10.0.0.15:11211", "10.0.0.15:11212" ],
-        l1_cache => { driver => 'Memory' }
+        l1_cache => { driver => 'Memory', global => 1, max_size => 1024*1024 }
     );
 
 On a C<get>, the L1 cache is checked first - if a valid value exists, it is
@@ -1008,7 +1008,7 @@ have its own subcaches, and so on. e.g.
         l1_cache => {
             driver     => 'File',
             root_dir   => '/path/to/root',
-            l1_cache   => { driver => 'RawMemory' }
+            l1_cache   => { driver => 'RawMemory', global => 1 }
         }
     );
 
