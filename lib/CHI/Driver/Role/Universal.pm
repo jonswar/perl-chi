@@ -24,7 +24,3 @@ foreach my $method (qw(remove append)) {
 1;
 
 __END__
-
-=pod
-
-=cut
