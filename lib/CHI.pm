@@ -945,7 +945,7 @@ contain a hash of options to create the subcache with.
 The cache containing the subcache is called the I<parent cache>.
 
 The following options are automatically inherited by the subcache from the
-parent cache, and may not be overriden:
+parent cache, and may not be overridden:
 
     expires_at
     expires_in
@@ -956,10 +956,10 @@ parent cache, and may not be overriden:
 object|CHI::CacheObject> and store it in both caches. The cache object contains
 expiration information and is dependent on the serializer.  At some point we
 could conceivably add code that will use a single object or separate objects as
-necessary, and thus allow the above to be overriden.)
+necessary, and thus allow the above to be overridden.)
 
 The following options are automatically inherited by the subcache from the
-parent cache, but may be overriden:
+parent cache, but may be overridden:
 
     namespace
     on_get_error
@@ -1208,7 +1208,7 @@ created under this root class. e.g.
         expires_variance => 0.2,
     }
 
-These can be overriden by namespace defaults, storage settings, or C<new>
+These can be overridden by namespace defaults, storage settings, or C<new>
 parameters.
 
 =item memoize_cache_objects
