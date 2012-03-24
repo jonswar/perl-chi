@@ -317,7 +317,7 @@ sub cache_generators {
               }
         },
         chi_memory_raw => {
-            desc => 'CHI::Driver::MemoryRaw',
+            desc => 'CHI::Driver::RawMemory',
             code => sub {
                 CHI->new(
                     %common_chi_opts,
