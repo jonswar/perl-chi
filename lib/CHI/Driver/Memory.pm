@@ -130,7 +130,7 @@ error eventually) will be thrown.
 
 =over
 
-=item datastore [HASH]
+=item datastore [HASHREF]
 
 A hash to be used for storage. Within the hash, each namespace is used as a key
 to a second-level hash.  This hash may be passed to multiple
