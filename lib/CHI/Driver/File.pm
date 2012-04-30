@@ -135,8 +135,9 @@ sub get_keys {
     my ($self) = @_;
 
     my @filepaths;
-    my $wanted = sub { push( @filepaths, $_ ) if -f && /\.dat$/ };
-    my @keys = $self->_collect_keys_via_file_find( \@filepaths, $wanted );
+    my $re     = quotemeta( $self->file_extension );
+    my $wanted = sub { push( @filepaths, $_ ) if -f && /${re}$/ };
+    my @keys   = $self->_collect_keys_via_file_find( \@filepaths, $wanted );
     return @keys;
 }
 
@@ -150,8 +151,9 @@ sub _collect_keys_via_file_find {
 
     my @keys;
     my $key_start = length($namespace_dir) + 1 + $self->depth * 2;
+    my $subtract  = -1 * length( $self->file_extension );
     foreach my $filepath (@$filepaths) {
-        my $key = substr( $filepath, $key_start, -4 );
+        my $key = substr( $filepath, $key_start, $subtract );
         $key = $self->unescape_key( join( "", splitdir($key) ) );
         push( @keys, $key );
     }

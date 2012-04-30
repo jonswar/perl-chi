@@ -5,6 +5,7 @@ Revision history for CHI
 0.53  Mar 8, 2012
 
 * Fixes
+  - Fix get_keys when file_extension set on CHI::Driver::File (Vitaliy Tokarev)
   - Minor POD fixes (Alessandro Ghedini)
 
 0.52  Mar 7, 2012
