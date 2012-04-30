@@ -1709,6 +1709,16 @@ sub test_compute : Tests {
         is( $cache->compute( 'foo', @args2 ), 6, "compute - 6" );
         is( $cache->get('foo'), 6, "hit - 6" );
     }
+
+    # Test wantarray
+    $cache->clear();
+    my $compute_list = sub {
+        $cache->compute( 'foo', {}, sub { ( int( rand(10000) ) ) x 5 } );
+    };
+    my @list1 = $compute_list->();
+    my @list2 = $compute_list->();
+    is( scalar(@list1), 5, "list has 5 items" );
+    cmp_deeply( \@list1, \@list2, "lists are the same" );
 }
 
 sub test_compress_threshold : Tests {

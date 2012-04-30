@@ -389,8 +389,9 @@ sub expire {
 }
 
 sub compute {
-    my $self = shift;
-    my $key  = shift;
+    my $self      = shift;
+    my $key       = shift;
+    my $wantarray = wantarray();
 
     # Allow these in either order for backward compatibility
     my ( $code, $options ) =
@@ -405,12 +406,22 @@ sub compute {
           qw(expire_if busy_lock)
       )
       : ();
+
     my $value = $self->get( $key, %get_options );
-    if ( !defined $value ) {
-        $value = $code->();
-        $self->set( $key, $value, $options );
+    if ($wantarray) {
+        if ( !defined $value ) {
+            $value = [ $code->() ];
+            $self->set( $key, $value, $options );
+        }
+        return @$value;
     }
-    return $value;
+    else {
+        if ( !defined $value ) {
+            $value = $code->();
+            $self->set( $key, $value, $options );
+        }
+        return $value;
+    }
 }
 
 sub purge {
