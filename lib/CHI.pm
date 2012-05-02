@@ -194,7 +194,7 @@ CHI - Unified cache handling interface
     );
 
     # Create your own driver
-    # 
+    #
     my $cache = CHI->new( driver_class => 'My::Special::Driver', ... );
 
     # Cache operations
@@ -449,7 +449,7 @@ e.g.
 
 The default is to use raw Storable.
 
-=back    
+=back
 
 =head1 INSTANCE METHODS
 
@@ -810,12 +810,12 @@ e.g.
     label
     on_get_error
     on_set_error
-    
+
 =item Standard read-only accessors
 
     namespace
     serializer
-    
+
 =back
 
 =head2 Deprecated methods
@@ -1404,7 +1404,7 @@ from the logs and report a summary. See L<CHI::Stats|CHI::Stats> for details.
 CHI is intended as an evolution of DeWitt Clinton's
 L<Cache::Cache|Cache::Cache> package. It starts with the same basic API (which
 has proven durable over time) but addresses some implementation shortcomings
-that cannot be fixed in Cache::Cache due to backward compatibility concerns. 
+that cannot be fixed in Cache::Cache due to backward compatibility concerns.
 In particular:
 
 =over
@@ -1518,5 +1518,7 @@ thanks to Hearst management for agreeing to this open source release.
 =head1 SEE ALSO
 
 L<Cache::Cache|Cache::Cache>
+
+L<CHI::Cascade> - a cache dependencies (cache and like 'make' utility concept)
 
 =cut
