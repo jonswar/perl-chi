@@ -138,7 +138,7 @@ around 'get_multi_arrayref' => sub {
         my $l1_values = $l1_cache->get_multi_arrayref($keys);
         my @indices   = ( 0 .. scalar(@$keys) - 1 );
         my @primary_keys =
-          map { $keys->[$_] } grep { defined( $l1_values->[$_] ) } @indices;
+          map { $keys->[$_] } grep { !defined( $l1_values->[$_] ) } @indices;
         my $primary_values = $self->$orig( \@primary_keys );
         my $values         = [
             map {
