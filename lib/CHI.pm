@@ -354,6 +354,8 @@ due to file system limits. For most drivers there is no maximum.
 
 Add an mirror cache as a subcache. See L</SUBCACHES>.
 
+=for html <a name="namespace">
+
 =item namespace [STRING]
 
 Identifies a namespace that all cache entries for this object will be in. This
@@ -556,6 +558,8 @@ Typical applications won't be affected by this, since the object is recomputed
 as soon as it is determined to be expired. But it's something to be aware of.
 
 =back
+
+=for html <a name="compute">
 
 =item compute( $key, $options, $code )
 

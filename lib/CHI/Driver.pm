@@ -13,6 +13,7 @@ use CHI::Util qw(has_moose_class parse_duration);
 use CHI::Types;
 use Digest::MD5;
 use Encode;
+use Hash::MoreUtils qw(slice_grep);
 use Log::Any qw($log);
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -88,6 +89,9 @@ sub cache_object_class { 'CHI::CacheObject' }
 # To override time() for testing - must be writable in a dynamically scoped way from tests
 our $Test_Time;    ## no critic (ProhibitPackageVars)
 our $Build_Depth = 0;    ## no critic (ProhibitPackageVars)
+
+sub valid_get_options { qw(expire_if busy_lock) }
+sub valid_set_options { qw(expires_at expires_in expires_variance) }
 
 sub BUILD {
     my ( $self, $params ) = @_;
@@ -401,24 +405,25 @@ sub compute {
 
     my %get_options =
       ( ref($options) eq 'HASH' )
-      ? (
-        map { exists( $options->{$_} ) ? ( $_, delete( $options->{$_} ) ) : () }
-          qw(expire_if busy_lock)
-      )
+      ? slice_grep { /(?:expire_if|busy_lock)/ } $options
       : ();
+    my $set_options =
+        ( ref($options) eq 'HASH' )
+      ? { slice_grep { !/(?:expire_if|busy_lock)/ } $options }
+      : $options;
 
     my $value = $self->get( $key, %get_options );
     if ($wantarray) {
         if ( !defined $value ) {
             $value = [ $code->() ];
-            $self->set( $key, $value, $options );
+            $self->set( $key, $value, $set_options );
         }
         return @$value;
     }
     else {
         if ( !defined $value ) {
             $value = $code->();
-            $self->set( $key, $value, $options );
+            $self->set( $key, $value, $set_options );
         }
         return $value;
     }
