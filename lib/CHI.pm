@@ -293,11 +293,7 @@ The name of a standard driver to drive the cache, for example "Memory" or
 The exact CHI::Driver subclass to drive the cache, for example
 "My::Memory::Driver".
 
-=item expires_in [DURATION]
-
-=item expires_at [INT]
-
-=item expires_variance [FLOAT]
+=item expires_in [DURATION], expires_at [INT], expires_variance [FLOAT]
 
 Provide default values for the corresponding L</set> options.
 
@@ -507,6 +503,8 @@ or else a duration treated as an I<expires_in> value described below. If it is
 a hash reference, it may contain one or more of the following options. Most of
 these options can be provided with defaults in the cache constructor.
 
+=for html <a name="expires_in">
+
 =over
 
 =item expires_in [DURATION]
@@ -514,9 +512,13 @@ these options can be provided with defaults in the cache constructor.
 Amount of time from now until this data expires. I<DURATION> may be an integer
 number of seconds or a L<duration expression|/DURATION EXPRESSIONS>.
 
+=for html <a name="expires_at">
+
 =item expires_at [INT]
 
 The epoch time at which the data expires.
+
+=for html <a name="expires_variance">
 
 =item expires_variance [FLOAT]
 
