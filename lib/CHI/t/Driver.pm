@@ -818,20 +818,20 @@ sub test_l1_cache : Tests {
         # get_multi_* - one from l1 cache, one from primary cache, one miss
         #
         $cache->set( $keys[0], $values[0] );
-        $cache->set( $keys[1], $values[0] );
+        $cache->set( $keys[1], $values[1] );
         $l1_cache->remove( $keys[0] );
-        $l1_cache->set( $keys[1], $values[1] );
+        $l1_cache->set( $keys[1], $values[2] );
 
         cmp_deeply(
             $cache->get_multi_arrayref( [ $keys[0], $keys[1], $keys[2] ] ),
-            [ $values[0], $values[1], undef ],
+            [ $values[0], $values[2], undef ],
             "get_multi_arrayref"
         );
         cmp_deeply(
             $cache->get_multi_hashref( [ $keys[0], $keys[1], $keys[2] ] ),
             {
                 $keys[0] => $values[0],
-                $keys[1] => $values[1],
+                $keys[1] => $values[2],
                 $keys[2] => undef
             },
             "get_multi_hashref"
