@@ -10,6 +10,8 @@ Revision history for CHI
 * Fixes
   - compute() no longer modifies passed-in options hashref
   - Fix get_keys when file_extension set on CHI::Driver::File (Vitaliy Tokarev)
+  - Have set_multi call store_multi underneath as documented in Development.pod - RT
+    #76621 (Oliver Paukstadt)
   - Minor POD fixes (Alessandro Ghedini)
 
 0.52  Mar 7, 2012
