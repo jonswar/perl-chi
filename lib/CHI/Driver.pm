@@ -537,6 +537,11 @@ sub get_multi_hashref {
 }
 
 sub set_multi {
+    my $self = shift;
+    $self->store_multi(@_);
+}
+
+sub store_multi {
     my ( $self, $key_values, $set_options ) = @_;
     croak "must specify key_values" unless defined($key_values);
 
