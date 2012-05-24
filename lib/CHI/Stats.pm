@@ -157,7 +157,7 @@ A single CHI::Stats object is maintained for each CHI root class, and tallies
 statistics over any number of CHI::Driver objects.
 
 Statistics are reported when you call the L</flush> method. You can choose to
-this once at process end, or on a periodic basis.
+do this once at process end, or on a periodic basis.
 
 =head1 STATISTICS
 
