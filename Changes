@@ -6,6 +6,8 @@ Revision history for CHI
 
 * Improvements
   - compute() now handles list or scalar caller context
+  - The driver parameter now accepts full classes prefixed by '+', as is standard.
+    driver_class is still accepted for backward compatibility but no longer documented.
 
 * Fixes
   - compute() no longer modifies passed-in options hashref

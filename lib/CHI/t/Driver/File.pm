@@ -48,10 +48,10 @@ sub test_generate_temporary_filename : Tests {
     my $self = shift;
 
     $self->{cache} =
-      $self->new_cache( driver_class => 'CHI::t::Driver::File::NoTempDriver' );
+      $self->new_cache( driver => '+CHI::t::Driver::File::NoTempDriver' );
     $self->test_simple();
     $self->{cache} =
-      $self->new_cache( driver_class => 'CHI::t::Driver::File::BadTempDriver' );
+      $self->new_cache( driver => '+CHI::t::Driver::File::BadTempDriver' );
     throws_ok { $self->test_simple() } qr/error during cache set/;
 }
 

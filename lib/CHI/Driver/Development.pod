@@ -64,7 +64,7 @@ If you are going to publicly release your driver, call it
 If it's an internal driver, you can call it whatever you like and create it
 like
 
-    CHI->new(driver_class => 'My::Internal::CHI::Driver');
+    CHI->new(driver => '+My::Internal::CHI::Driver');
 
 =head1 MOOSE
 
@@ -249,7 +249,7 @@ distribution containing:
 
         return (
             $self->SUPER::new_cache_options(),
-            driver_class => 'CHI::Driver::MyDriver',
+            driver => '+CHI::Driver::MyDriver',
 
             # Any other CHI->new parameters for your test driver
         );

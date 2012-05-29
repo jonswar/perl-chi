@@ -3,6 +3,7 @@ use 5.006;
 use Carp;
 use CHI::Stats;
 use Moose;
+use String::RewritePrefix;
 use strict;
 use warnings;
 
@@ -97,7 +98,9 @@ sub new {
     #
     my $driver_class;
     if ( my $driver = delete( $params{driver} ) ) {
-        $driver_class = "CHI::Driver::$driver";
+        ($driver_class) =
+          String::RewritePrefix->rewrite( { '' => 'CHI::Driver::', '+' => '' },
+            $driver );
     }
     else {
         $driver_class = delete( $params{driver_class} );
@@ -112,21 +115,26 @@ sub new {
     }
 
     # Select roles depending on presence of certain arguments. Everyone gets
-    # the Universal role.
+    # the Universal role. Accept both 'roles' and 'traits' for backwards
+    # compatibility. Add CHI::Driver::Role:: unless prefixed with '+'.
     #
-    my @roles = ('CHI::Driver::Role::Universal');
-    if ( exists( $params{roles} ) ) {
-        push( @roles, @{ delete( $params{roles} ) } );
+    my @roles = ('Universal');
+    foreach my $param_name (qw(roles traits)) {
+        if ( exists( $params{param_name} ) ) {
+            push( @roles, @{ delete( $params{param_name} ) } );
+        }
     }
     if ( exists( $params{max_size} ) || exists( $params{is_size_aware} ) ) {
-        push( @roles, 'CHI::Driver::Role::IsSizeAware' );
+        push( @roles, 'IsSizeAware' );
     }
     if ( exists( $params{l1_cache} ) || exists( $params{mirror_cache} ) ) {
-        push( @roles, 'CHI::Driver::Role::HasSubcaches' );
+        push( @roles, 'HasSubcaches' );
     }
     if ( $params{is_subcache} ) {
-        push( @roles, 'CHI::Driver::Role::IsSubcache' );
+        push( @roles, 'IsSubcache' );
     }
+    @roles = String::RewritePrefix->rewrite(
+        { '' => 'CHI::Driver::Role::', '+' => '' }, @roles );
 
     # Select a final class based on the driver class and roles, creating it
     # if necessary - adapted from MooseX::Traits
@@ -195,7 +203,7 @@ CHI - Unified cache handling interface
 
     # Create your own driver
     # 
-    my $cache = CHI->new( driver_class => 'My::Special::Driver', ... );
+    my $cache = CHI->new( driver => '+My::Special::Driver', ... );
 
     # Cache operations
     #
@@ -259,8 +267,7 @@ Optional logging and statistics collection of cache activity
 =head1 CONSTRUCTOR
 
 To create a new cache object, call C<<CHI-E<gt>new>. It takes the common
-options listed below. All are optional, except that either I<driver> or
-I<driver_class> must be passed.
+options listed below. I<driver> is required; all others are optional.
 
 Some drivers will take additional constructor options. For example, the File
 driver takes C<root_dir> and C<depth> options.
@@ -285,13 +292,11 @@ same name in L<Cache::Memcached>.
 
 =item driver [STRING]
 
-The name of a standard driver to drive the cache, for example "Memory" or
-"File".  CHI will prefix the string with "CHI::Driver::".
+Required. The name of a cache driver, for example "Memory" or "File".  CHI will
+prefix the string with "CHI::Driver::", unless it begins with '+'. e.g.
 
-=item driver_class [STRING]
-
-The exact CHI::Driver subclass to drive the cache, for example
-"My::Memory::Driver".
+    driver => 'File';                   # uses CHI::Driver::File
+    driver => '+My::CHI::Driver::File'  # uses My::CHI::Driver::File
 
 =item expires_in [DURATION], expires_at [INT], expires_variance [FLOAT]
 
@@ -444,6 +449,14 @@ e.g.
     my $cache = CHI->new(serializer => My::Custom::Serializer->new())
 
 The default is to use raw Storable.
+
+=item traits [LISTREF]
+
+List of one or more roles to apply to the C<CHI::Driver> class that is
+constructed. The roles will automatically be prefixed with
+C<CHI::Driver::Role::> unless preceded with a '+'. e.g.
+
+    traits => ['StoresAccessedAt', '+My::CHI::Driver::Role']
 
 =back    
 
@@ -783,9 +796,9 @@ Returns the full name of the driver class. e.g.
 
     CHI->new(driver=>'File')->driver_class
        => CHI::Driver::File
-    CHI->new(driver_class=>'CHI::Driver::File')->driver_class
+    CHI->new(driver=>'+CHI::Driver::File')->driver_class
        => CHI::Driver::File
-    CHI->new(driver_class=>'My::Driver::File')->driver_class
+    CHI->new(driver=>'+My::Driver::File')->driver_class
        => My::Driver::File
 
 You should use this rather than C<ref()>. Due to some subclassing tricks CHI

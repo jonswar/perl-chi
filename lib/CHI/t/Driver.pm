@@ -87,7 +87,7 @@ sub new_cache_options {
     my $self = shift;
 
     return (
-        driver_class => $self->testing_driver_class(),
+        driver       => '+' . $self->testing_driver_class(),
         on_get_error => 'die',
         on_set_error => 'die'
     );

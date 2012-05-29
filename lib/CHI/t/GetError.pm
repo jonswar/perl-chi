@@ -9,6 +9,8 @@ sub writeonly_cache {
     my ($on_get_error) = @_;
 
     return CHI->new(
+
+        # leave as driver_class rather than driver to test back compat
         driver_class => 'CHI::Test::Driver::Writeonly',
         on_get_error => $on_get_error,
         global       => 1,
