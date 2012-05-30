@@ -1,5 +1,5 @@
 package CHI::Stats;
-use JSON::XS;
+use CHI::Util qw(json_encode json_decode);
 use Log::Any qw($log);
 use Moose;
 use strict;
@@ -44,8 +44,7 @@ sub log_namespace_stats {
     );
     %data =
       map { /_ms$/ ? ( $_, int( $data{$_} ) ) : ( $_, $data{$_} ) } keys(%data);
-    $log->infof( 'CHI stats: %s',
-        JSON::XS->new->utf8->canonical->encode( \%data ) );
+    $log->infof( 'CHI stats: %s', json_encode( \%data ) );
 }
 
 sub format_time {
@@ -83,7 +82,7 @@ sub parse_stats_logs {
         while ( my $line = <$logfh> ) {
             chomp($line);
             if ( my ($json) = ( $line =~ /CHI stats: (\{.*\})$/ ) ) {
-                my %hash       = %{ decode_json($json) };
+                my %hash       = %{ json_decode($json) };
                 my $root_class = delete( $hash{root_class} );
                 my $namespace  = delete( $hash{namespace} );
                 my $label      = delete( $hash{label} );

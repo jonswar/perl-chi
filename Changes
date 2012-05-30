@@ -6,7 +6,6 @@ Revision history for CHI
 
 ** Incompatibile Changes **
   - ** Switch CHI::Stats format to JSON for easier generation and parsing
-  - ** Standardize on JSON::XS for more consistent serialization
 
 0.53  May 30, 2012
 

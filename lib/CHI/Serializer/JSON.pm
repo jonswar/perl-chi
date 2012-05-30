@@ -2,21 +2,19 @@
 # Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::JSON;
+use CHI::Util qw(json_encode json_decode);
 use Moose;
-use JSON::XS;
 use strict;
 use warnings;
 
 __PACKAGE__->meta->make_immutable;
 
-my $json = JSON::XS->new->utf8->canonical;
-
 sub serialize {
-    return $json->encode( $_[1] );
+    return json_encode( $_[1] );
 }
 
 sub deserialize {
-    return $json->decode( $_[1] );
+    return json_decode( $_[1] );
 }
 
 1;

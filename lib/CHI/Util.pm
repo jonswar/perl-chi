@@ -5,6 +5,7 @@ use Data::Dumper;
 use Data::UUID;
 use Fcntl qw( :DEFAULT );
 use File::Spec::Functions qw(catdir catfile);
+use JSON;
 use Time::Duration::Parse;
 use Try::Tiny;
 use strict;
@@ -17,6 +18,8 @@ our @EXPORT_OK = qw(
   fast_catdir
   fast_catfile
   has_moose_class
+  json_decode
+  json_encode
   parse_duration
   parse_memory_size
   read_file
@@ -27,6 +30,11 @@ our @EXPORT_OK = qw(
 
 my $Fetch_Flags = O_RDONLY | O_BINARY;
 my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
+
+# Map null, true and false to real Perl values
+if ( JSON->VERSION < 2 ) {
+    $JSON::UnMapping = 1;
+}
 
 sub can_load {
 
@@ -169,6 +177,23 @@ sub has_moose_class {
 
     my $meta = Class::MOP::class_of($obj);
     return ( defined $meta && $meta->isa("Moose::Meta::Class") );
+}
+
+# Maintain compatibility with both JSON 1 and 2. Borrowed from Data::Serializer::JSON.
+#
+my $json_version = JSON->VERSION;
+my $json = $json_version < 2 ? JSON->new : JSON->new->utf8->canonical;
+
+sub json_decode {
+    return $json_version < 2
+      ? $json->jsonToObj( $_[0] )
+      : $json->decode( $_[0] );
+}
+
+sub json_encode {
+    return $json_version < 2
+      ? $json->objToJson( $_[0] )
+      : $json->encode( $_[0] );
 }
 
 1;

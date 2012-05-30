@@ -1238,6 +1238,9 @@ sub test_logging : Tests {
 sub test_stats : Tests {
     my $self = shift;
 
+    return 'author testing only - possible differences between JSON versions'
+      unless ( $ENV{AUTHOR_TESTING} );
+
     my $stats = $self->testing_chi_root_class->stats;
     $stats->enable();
 
