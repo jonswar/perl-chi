@@ -250,7 +250,9 @@ Log all statistics to L<Log::Any|Log::Any> (at Info level in the CHI::Stats
 category), then clear statistics from memory. There is one log message per
 cache label and namespace, looking like:
 
-    CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05; end=20090102:12:58:05; absent_misses=10; expired_misses=20; hits=50; set_key_size=6; set_value_size=20; sets=30
+    CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05;
+      end=20090102:12:58:05; absent_misses=10; expired_misses=20; hits=50;
+      set_key_size=6; set_value_size=20; sets=30
 
 =item parse_stats_logs (log1, log2, ...)
 
@@ -258,11 +260,23 @@ Parses logs output by CHI::Stats and returns a listref of stats totals by root
 class, cache label, and namespace. e.g.
 
     [
-     {root_class => 'CHI', cache =>'File', namespace => 'Foo', absent_misses => 100, expired_misses => 200, ... },
-     {root_class => 'CHI', cache =>'File', namespace => 'Bar', ... },
+        {
+            root_class     => 'CHI',
+            cache          => 'File',
+            namespace      => 'Foo',
+            absent_misses  => 100,
+            expired_misses => 200,
+            ...
+        },
+        {
+            root_class     => 'CHI',
+            cache          => 'File',
+            namespace      => 'Bar',
+            ...
+        },
     ]
 
-Lines with the root class, cache label, and namespace are summed together.
+Lines with the same root class, cache label, and namespace are summed together.
 Non-stats lines are ignored.
 
 Each parameter to this method may be a filename or a reference to an open
