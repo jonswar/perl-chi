@@ -57,7 +57,7 @@ sub format_time {
     my ($time) = @_;
 
     my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
-      localtime();
+      localtime($time);
     return sprintf(
         "%04d%02d%02d:%02d:%02d:%02d",
         $year + 1900,
