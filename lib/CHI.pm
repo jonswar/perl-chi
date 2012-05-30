@@ -335,6 +335,8 @@ An object to use for serializing keys that are references. See L</serializer>
 above for the different ways this can be passed in. The default is to use JSON
 in canonical mode (sorted hash keys).
 
+=for html <a name="label">
+
 =item label [STRING]
 
 A label for the cache as a whole, independent of namespace - e.g.
@@ -783,6 +785,8 @@ cache.
 =back
 
 =head2 Property accessors
+
+=for html <a name="chi_root_class">
 
 =over
 
