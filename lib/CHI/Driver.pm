@@ -19,6 +19,7 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use Scalar::Util qw(blessed);
 use Time::Duration;
+use Time::HiRes qw(gettimeofday);
 use strict;
 use warnings;
 
@@ -151,20 +152,27 @@ sub get {
     my ( $self, $key, %params ) = @_;
 
     croak "must specify key" unless defined($key);
-    my $ns_stats = $self->{ns_stats};
+    my $ns_stats     = $self->{ns_stats};
+    my $log_is_debug = $log->is_debug;
+    my $measure_time = defined($ns_stats) || $log_is_debug;
+    my ( $start_time, $elapsed_time );
 
     # Fetch cache object
     #
+    $start_time = gettimeofday() if $measure_time;
     my $obj = eval { $params{obj} || $self->get_object($key) };
+    $elapsed_time = ( gettimeofday() - $start_time ) * 1000 if $measure_time;
     if ( my $error = $@ ) {
         $ns_stats->{'get_errors'}++ if defined($ns_stats);
         $self->_handle_get_error( $error, $key );
         return undef;
     }
     if ( !defined $obj ) {
-        $ns_stats->{'absent_misses'}++ if defined($ns_stats);
-        $self->_log_get_result( $log, "MISS (not in cache)", $key )
-          if $log->is_debug;
+        $self->_record_get_stats( 'absent_misses', $elapsed_time )
+          if defined($ns_stats);
+        $self->_log_get_result( $log, "MISS (not in cache)",
+            $key, $elapsed_time )
+          if $log_is_debug;
         return undef;
     }
     if ( defined( my $obj_ref = $params{obj_ref} ) ) {
@@ -176,9 +184,10 @@ sub get {
     my $is_expired = $obj->is_expired()
       || ( defined( $params{expire_if} ) && $params{expire_if}->($obj) );
     if ($is_expired) {
-        $ns_stats->{'expired_misses'}++ if defined($ns_stats);
-        $self->_log_get_result( $log, "MISS (expired)", $key )
-          if $log->is_debug;
+        $self->_record_get_stats( 'expired_misses', $elapsed_time )
+          if defined($ns_stats);
+        $self->_log_get_result( $log, "MISS (expired)", $key, $elapsed_time )
+          if $log_is_debug;
 
         # If busy_lock value provided, set a new "temporary" expiration time that many
         # seconds forward before returning undef
@@ -194,9 +203,15 @@ sub get {
         return undef;
     }
 
-    $ns_stats->{'hits'}++ if defined($ns_stats);
-    $self->_log_get_result( $log, "HIT", $key ) if $log->is_debug;
+    $self->_record_get_stats( 'hits', $elapsed_time ) if defined($ns_stats);
+    $self->_log_get_result( $log, "HIT", $key, $elapsed_time ) if $log_is_debug;
     return $obj->value;
+}
+
+sub _record_get_stats {
+    my ( $self, $stat, $elapsed_time ) = @_;
+    $self->{ns_stats}->{$stat}++;
+    $self->{ns_stats}->{'get_time_ms'} += $elapsed_time;
 }
 
 sub unpack_from_data {
@@ -304,7 +319,10 @@ sub set {
 
 sub set_with_options {
     my ( $self, $key, $value, $options ) = @_;
-    my $ns_stats = $self->{ns_stats};
+    my $ns_stats     = $self->{ns_stats};
+    my $log_is_debug = $log->is_debug;
+    my $measure_time = defined($ns_stats) || $log_is_debug;
+    my ( $start_time, $elapsed_time );
 
     # Determine early and final expiration times
     #
@@ -329,7 +347,10 @@ sub set_with_options {
     if ( defined( my $obj_ref = $options->{obj_ref} ) ) {
         $$obj_ref = $obj;
     }
+    $start_time = gettimeofday() if $measure_time;
     if ( $self->set_object( $key, $obj ) ) {
+        $elapsed_time = ( gettimeofday() - $start_time ) * 1000
+          if $measure_time;
 
         # Log the set
         #
@@ -337,9 +358,10 @@ sub set_with_options {
             $ns_stats->{'sets'}++;
             $ns_stats->{'set_key_size'}   += length( $obj->key );
             $ns_stats->{'set_value_size'} += $obj->size;
+            $ns_stats->{'set_time_ms'}    += $elapsed_time;
         }
-        if ( $log->is_debug ) {
-            $self->_log_set_result( $log, $obj );
+        if ($log_is_debug) {
+            $self->_log_set_result( $log, $obj, $elapsed_time );
         }
     }
 
@@ -679,14 +701,17 @@ sub _dispatch_error_msg {
 }
 
 sub _describe_cache_get {
-    my ( $self, $key ) = @_;
+    my ( $self, $key, $elapsed_time ) = @_;
 
-    return sprintf( "cache get for namespace='%s', key='%s', cache='%s'",
-        $self->namespace, $key, $self->label );
+    return
+      sprintf( "cache get for namespace='%s', key='%s', cache='%s'"
+          . ( defined($elapsed_time) ? ", time='%dms'" : "" ),
+        $self->namespace, $key, $self->label,
+        defined($elapsed_time) ? int($elapsed_time) : () );
 }
 
 sub _describe_cache_set {
-    my ( $self, $obj ) = @_;
+    my ( $self, $obj, $elapsed_time ) = @_;
 
     my $expires_str = (
         ( $obj->expires_at == CHI_Max_Time )
@@ -700,8 +725,11 @@ sub _describe_cache_set {
 
     return
       sprintf(
-        "cache set for namespace='%s', key='%s', size=%d, expires='%s', cache='%s'",
-        $self->namespace, $obj->key, $obj->size, $expires_str, $self->label );
+        "cache set for namespace='%s', key='%s', size=%d, expires='%s', cache='%s'"
+          . ( defined($elapsed_time) ? ", time='%dms'" : "" ),
+        $self->namespace, $obj->key, $obj->size, $expires_str, $self->label,
+        defined($elapsed_time) ? int($elapsed_time) : () );
+
 }
 
 1;

@@ -44,10 +44,10 @@ sub test_stats : Tests {
     $stats->flush();
 
     $log->contains_ok(
-        qr/CHI stats: namespace='Foo'; cache='File'; start=.*; end=.*; absent_misses=1; set_key_size=6; set_value_size=20; sets=1/
+        qr/CHI stats: namespace='Foo'; cache='File'; start=.*; end=.*; absent_misses=1; get_time_ms=\d+; set_key_size=6; set_time_ms=\d+; set_value_size=20; sets=1/
     );
     $log->contains_ok(
-        qr/CHI stats: namespace='Foo'; cache='File:l1_cache'; start=.*; end=.*; absent_misses=1; hits=1/
+        qr/CHI stats: namespace='Foo'; cache='File:l1_cache'; start=.*; end=.*; absent_misses=1; get_time_ms=\d+; hits=1/
     );
 
 }
