@@ -435,20 +435,20 @@ sub compute {
       : $options;
 
     my $value = $self->get( $key, %get_options );
-    if ($wantarray) {
-        if ( !defined $value ) {
-            $value = [ $code->() ];
-            $self->set( $key, $value, $set_options );
+    if ( !defined $value ) {
+        my ( $start_time, $elapsed_time );
+        my $ns_stats = $self->{ns_stats};
+        $start_time = gettimeofday if defined($ns_stats);
+        $value = $wantarray ? [ $code->() ] : $code->();
+        $elapsed_time = ( gettimeofday() - $start_time ) * 1000
+          if defined($ns_stats);
+        $self->set( $key, $value, $set_options );
+        if ( defined($ns_stats) ) {
+            $ns_stats->{'computes'}++;
+            $ns_stats->{'compute_time_ms'} += $elapsed_time;
         }
-        return @$value;
     }
-    else {
-        if ( !defined $value ) {
-            $value = $code->();
-            $self->set( $key, $value, $set_options );
-        }
-        return $value;
-    }
+    return $wantarray ? @$value : $value;
 }
 
 sub purge {

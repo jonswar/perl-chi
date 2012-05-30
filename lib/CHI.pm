@@ -583,10 +583,10 @@ I<$key>; if successful, returns the value. Otherwise, calls I<$code> and uses
 the return value as the new value for I<$key>, which is then returned. Caller
 context (scalar or list) is respected.
 
-I<$options> can be undef, a scalar, or a hash reference. If it is a scalar, it
-is treated as the C<expires_in> duration and passed as the third argument to
-C<set>. If it is a hash reference, it may contain name/value pairs for both
-C<get> and C<set>.  e.g.
+I<$options> can be undef, a scalar, or a hash reference. If it is undef, it has
+no effect. If it is a scalar, it is treated as the C<expires_in> duration and
+passed as the third argument to C<set>. If it is a hash reference, it may
+contain name/value pairs for both C<get> and C<set>.  e.g.
 
     # No expiration
     my $value = $cache->compute($key, undef, sub {

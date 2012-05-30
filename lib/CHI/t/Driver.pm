@@ -12,6 +12,7 @@ use List::Util qw(shuffle);
 use Scalar::Util qw(weaken);
 use Storable qw(dclone);
 use Test::Warn;
+use Time::HiRes qw(usleep);
 use base qw(CHI::Test::Class);
 
 # Flags indicating what each test driver supports
@@ -1257,6 +1258,12 @@ sub test_stats : Tests {
     $cache->set( $key, scalar( $value x 3 ) );
     $cache->set( $key, $value );
 
+    $cache = $self->new_cache( namespace => 'Baz' );
+    my $code = sub { usleep(100000); scalar( $value x 5 ) };
+    $cache->compute( $key, undef, $code );
+    $cache->compute( $key, undef, $code );
+    $cache->compute( $key, undef, $code );
+
     my $log   = activate_test_logger();
     my $label = $cache->label;
     $log->empty_ok();
@@ -1266,6 +1273,9 @@ sub test_stats : Tests {
     );
     $log->contains_ok(
         qr/CHI stats: namespace='Bar'; cache='$label'; start=.*; end=.*; set_key_size=12; set_time_ms=\d+; set_value_size=52; sets=2/
+    );
+    $log->contains_ok(
+        qr/CHI stats: namespace='Baz'; cache='$label'; start=.*; end=.*; absent_misses=1; compute_time_ms=\d\d+; computes=1; get_time_ms=\d+; hits=2; set_key_size=6; set_time_ms=\d+; set_value_size=44; sets=1/
     );
     $log->empty_ok();
 

@@ -171,6 +171,17 @@ absent_misses - Number of gets that failed due to item not being in the cache
 
 =item *
 
+compute_time_ms - Total time spent computing missed results in
+L<compute|CHI/compute>, in ms (divide by number of computes to get average).
+i.e. the amount of time spent in the code reference passed as the third
+argument to compute().
+
+=item *
+
+computes - Number of L<compute|CHI/compute> calls
+
+=item *
+
 expired_misses - Number of gets that failed due to item expiring
 
 =item *

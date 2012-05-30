@@ -5,7 +5,7 @@ Revision history for CHI
 0.53  Mar 8, 2012
 
 * Improvements
-  - Measure time elapsed in get, set, and compute, and record in logs and stats. Only
+  - Measure time elapsed in get, set, and compute; record in logs and stats. Only
     measure when debug logging or stats are enabled.
   - compute() now handles list or scalar caller context
   - The driver parameter now accepts full classes prefixed by '+', as is standard.
