@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.53  Mar 8, 2012
+0.53  May 30, 2012
 
 * Improvements
   - Measure time elapsed in get, set, and compute; record in logs and stats. Only
