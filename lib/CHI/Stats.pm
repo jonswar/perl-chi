@@ -1,4 +1,5 @@
 package CHI::Stats;
+use JSON::XS;
 use Log::Any qw($log);
 use Moose;
 use strict;
@@ -32,25 +33,19 @@ sub flush {
 }
 
 sub log_namespace_stats {
-    my ( $self, $label, $namespace, $ns ) = @_;
+    my ( $self, $label, $namespace, $namespace_stats ) = @_;
 
-    my $fields_string = join( "; ",
-        map { join( "=", $_, ( /_ms$/ ? int( $ns->{$_} ) : $ns->{$_} ) ) }
-        grep { $_ ne 'start_time' }
-        sort keys(%$ns) );
-    if ($fields_string) {
-        my $start_time = $ns->{start_time};
-        my $end_time   = time;
-        $log->infof(
-            '%s stats: namespace=\'%s\'; cache=\'%s\'; start=%s; end=%s; %s',
-            $self->chi_root_class,
-            $namespace,
-            $label,
-            $self->format_time($start_time),
-            $self->format_time($end_time),
-            $fields_string
-        );
-    }
+    my %data = (
+        label      => $label,
+        end_time   => time(),
+        namespace  => $namespace,
+        root_class => $self->chi_root_class,
+        %$namespace_stats
+    );
+    %data =
+      map { /_ms$/ ? ( $_, int( $data{$_} ) ) : ( $_, $data{$_} ) } keys(%data);
+    $log->infof( 'CHI stats: %s',
+        JSON::XS->new->utf8->canonical->encode( \%data ) );
 }
 
 sub format_time {
@@ -70,6 +65,7 @@ sub stats_for_driver {
 
     my $stats =
       ( $self->data->{ $cache->label }->{ $cache->namespace } ||= {} );
+    $stats->{start_time} ||= time;
     return $stats;
 }
 
@@ -86,24 +82,21 @@ sub parse_stats_logs {
         }
         while ( my $line = <$logfh> ) {
             chomp($line);
-            if (
-                my ( $root_class, $namespace, $label, $start, $end, $rest ) = (
-                    $line =~
-                      /(.*) stats: namespace='(.*)'; cache='(.*)'; start=([^;]+); end=([^;]+); (.*)/
-                )
-              )
-            {
+            if ( my ($json) = ( $line =~ /CHI stats: (\{.*\})$/ ) ) {
+                my %hash       = %{ decode_json($json) };
+                my $root_class = delete( $hash{root_class} );
+                my $namespace  = delete( $hash{namespace} );
+                my $label      = delete( $hash{label} );
                 my $results_set =
                   ( $results_hash{$root_class}->{$label}->{$namespace} ||= {} );
                 if ( !%$results_set ) {
                     $results_set->{root_class} = $root_class;
                     $results_set->{namespace}  = $namespace;
-                    $results_set->{cache}      = $label;
+                    $results_set->{label}      = $label;
                     push( @results, $results_set );
                 }
-                my @pairs = split( '; ', $rest );
-                foreach my $pair (@pairs) {
-                    my ( $key, $value ) = split( /=/, $pair );
+                while ( my ( $key, $value ) = each(%hash) ) {
+                    next if $key =~ /_time$/;
                     $results_set->{$key} += $value;
                 }
             }
@@ -247,22 +240,24 @@ and disabling does not affect existing cache objects. e.g.
 =item flush
 
 Log all statistics to L<Log::Any|Log::Any> (at Info level in the CHI::Stats
-category), then clear statistics from memory. There is one log message per
-cache label and namespace, looking like:
+category), then clear statistics from memory. There is one log message for each
+distinct triplet of L<root class|CHI/chi_root_class>, L<cache label|CHI/label>,
+and L<namespace|CHI/namespace>. Each log message contains the string "CHI
+stats:" followed by a JSON encoded hash of statistics. e.g.
 
-    CHI stats: namespace='Foo'; cache='File'; start=20090102:12:53:05;
-      end=20090102:12:58:05; absent_misses=10; expired_misses=20; hits=50;
-      set_key_size=6; set_value_size=20; sets=30
+    CHI stats: {"absent_misses":1,"label":"File","end_time":1338410398,"get_time_ms":5,
+       "namespace":"Foo","root_class":"CHI","set_key_size":6,"set_time_ms":23,
+       "set_value_size":20,"sets":1,"start_time":1338409391}
 
 =item parse_stats_logs (log1, log2, ...)
 
-Parses logs output by CHI::Stats and returns a listref of stats totals by root
-class, cache label, and namespace. e.g.
+Parses logs output by C<CHI::Stats> and returns a listref of stats totals by
+root class, cache label, and namespace. e.g.
 
     [
         {
             root_class     => 'CHI',
-            cache          => 'File',
+            label          => 'File',
             namespace      => 'Foo',
             absent_misses  => 100,
             expired_misses => 200,
@@ -270,14 +265,16 @@ class, cache label, and namespace. e.g.
         },
         {
             root_class     => 'CHI',
-            cache          => 'File',
+            label          => 'File',
             namespace      => 'Bar',
             ...
         },
     ]
 
 Lines with the same root class, cache label, and namespace are summed together.
-Non-stats lines are ignored.
+ Non-stats lines are ignored. The parser will only pay attention to the string
+"CHI stats:" and everything after, ignoring anything preceding on the log line
+(e.g. a timestamp).
 
 Each parameter to this method may be a filename or a reference to an open
 filehandle.

@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.54  May 30, 2012
 
+* Improvements
+  - ** Switch CHI::Stats format to JSON for easier generation and parsing
+
 0.53  May 30, 2012
 
 * Improvements

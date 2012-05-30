@@ -338,8 +338,9 @@ in canonical mode (sorted hash keys).
 =item label [STRING]
 
 A label for the cache as a whole, independent of namespace - e.g.
-"web-file-cache". Used when referring to the cache in logs, statistics, and
-error messages. By default, set to L</short_driver_name>.
+"web-file-cache". Used when referring to the cache in logs,
+L<statistics|CHI::Stats>, and error messages. By default, set to
+L</short_driver_name>.
 
 =item l1_cache [HASHREF]
 
