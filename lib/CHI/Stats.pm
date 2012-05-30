@@ -227,7 +227,9 @@ set_errors - Number of caught runtime errors during sets
 =over
 
 =item enable
+
 =item disable
+
 =item enabled
 
 Enable, disable, and query the current enabled status.
