@@ -3,25 +3,20 @@
 #
 package CHI::Serializer::JSON;
 use Moose;
-use JSON;
+use JSON::XS;
 use strict;
 use warnings;
 
 __PACKAGE__->meta->make_immutable;
 
-my $json_version = JSON->VERSION;
-my $json = $json_version < 2 ? JSON->new : JSON->new->utf8->canonical;
+my $json = JSON::XS->new->utf8->canonical;
 
 sub serialize {
-    return $json_version < 2
-      ? $json->objToJson( $_[1] )
-      : $json->encode( $_[1] );
+    return $json->encode( $_[1] );
 }
 
 sub deserialize {
-    return $json_version < 2
-      ? $json->jsonToObj( $_[1] )
-      : $json->decode( $_[1] );
+    return $json->decode( $_[1] );
 }
 
 1;
