@@ -27,3 +27,4 @@ CHI::Constants - Internal constants
 
 These are constants for internal CHI use.
 
+=cut
