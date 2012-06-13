@@ -3,3 +3,7 @@ argv = -noll
 perl_tidy_class = JS::Perl::Tidy
 
 [PodTidy]
+
+[PerlCritic]
+include = lib
+argv = --severity 5
