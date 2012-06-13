@@ -12,7 +12,7 @@ use strict;
 
 my $main_dir = "/tmp/chi-driver-file-VK12/Test+3A+3AClass/b/6";
 rmtree($main_dir);
-mkpath($main_dir, 0, 0775);
+mkpath( $main_dir, 0, 0775 );
 die "could not create $main_dir" unless -d $main_dir;
 my $main_file = "$main_dir/medium.dat";
 
@@ -34,15 +34,16 @@ sub child_action {
     my $buf = "a" x 100;
     for ( my $i = 0 ; $i < 100000 ; $i++ ) {
         my $temp_file = "/tmp/chi-driver-file." . unique_id();
-        { my $fh; open($fh, ">$temp_file"); print $fh $buf }
+        { my $fh; open( $fh, ">$temp_file" ); print $fh $buf }
+
         # print "$p ($$): renaming $temp_file to $main_file\n";
         die "temp_file $temp_file does not exist!" if !-f $temp_file;
-        die "main_dir $main_dir does not exist!" if !-d $main_dir;
-        for (my $j = 0; $j <= 9; $j++) {
+        die "main_dir $main_dir does not exist!"   if !-d $main_dir;
+        for ( my $j = 0 ; $j <= 9 ; $j++ ) {
             if ( rename( $temp_file, $main_file ) ) {
                 last;
             }
-            elsif ($j == 0) {
+            elsif ( $j == 0 ) {
                 die "could not rename '$temp_file' to '$main_file': $!";
             }
         }

@@ -33,15 +33,15 @@ sub usage {
     exit(1);
 }
 
-my $time          = 2;
+my $time = 2;
 my ( $complex, $drivers_pattern, $help, $incs, $sort_by_name );
 usage() if !@ARGV;
 GetOptions(
-    'd|drivers=s'       => \$drivers_pattern,
-    'h|help'            => \$help,
-    'n'                 => \$sort_by_name,
-    't|time=s'          => \$time,
-    'x|complex'         => \$complex,
+    'd|drivers=s' => \$drivers_pattern,
+    'h|help'      => \$help,
+    'n'           => \$sort_by_name,
+    't|time=s'    => \$time,
+    'x|complex'   => \$complex,
 ) or usage();
 usage() if $help || !$drivers_pattern;
 
