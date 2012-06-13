@@ -1,0 +1,3 @@
+[PerlTidy]
+argv = -noll
+perl_tidy_class = JS::Perl::Tidy
