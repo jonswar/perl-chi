@@ -12,13 +12,13 @@ has 'start_time'     => ( is => 'ro', default => sub { time } );
 
 __PACKAGE__->meta->make_immutable();
 
-   sub enable  { $_[0]->{enabled} = 1 }
+sub enable  { $_[0]->{enabled} = 1 }
 sub disable { $_[0]->{enabled} = 0 }
 
 sub flush {
     my ($self) = @_;
 
-       my $data = $self->data;
+    my $data = $self->data;
     foreach my $label ( sort keys %$data ) {
         my $label_stats = $data->{$label};
         foreach my $namespace ( sort keys(%$label_stats) ) {
