@@ -6,4 +6,4 @@ perl_tidy_class = JS::Perl::Tidy
 
 [PerlCritic]
 include = lib
-argv = --severity 5
+argv = --severity 5 --profile $ROOT/.perlcriticrc
