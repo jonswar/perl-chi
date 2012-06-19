@@ -218,11 +218,7 @@ set_errors - Number of caught runtime errors during sets
 
 =over
 
-=item enable
-
-=item disable
-
-=item enabled
+=item enable, disable, enabled
 
 Enable, disable, and query the current enabled status.
 
@@ -271,8 +267,8 @@ root class, cache label, and namespace. e.g.
     ]
 
 Lines with the same root class, cache label, and namespace are summed together.
- Non-stats lines are ignored. The parser will ignore anything on the line
-before the "CHI stats:" string, e.g. a timestamp.
+Non-stats lines are ignored. The parser will ignore anything on the line before
+the "CHI stats:" string, e.g. a timestamp.
 
 Each parameter to this method may be a filename or a reference to an open
 filehandle.
