@@ -1,9 +1,6 @@
-severity = 5
+only = 1
+severity = 1
+verbose = %m at %f line %l [%p]\n
 
-# Some methods (like $cache->get()) are only meant to be called in scalar context,
-# so really should always return undef rather than the empty list.
-[-Subroutines::ProhibitExplicitReturnUndef]
-
-# Necessary for generating named subroutines
-[TestingAndDebugging::ProhibitNoStrict]
-allow = refs
+[TestingAndDebugging::RequireUseStrict]
+[Moose::RequireMakeImmutable]
