@@ -1,5 +1,6 @@
 package CHI::Stats;
 use CHI::Util qw(json_encode json_decode);
+use List::Util qw(sum);
 use Log::Any qw($log);
 use Moose;
 use strict;
@@ -43,7 +44,8 @@ sub log_namespace_stats {
         %$namespace_stats
     );
     %data =
-      map { /_ms$/ ? ( $_, int( $data{$_} ) ) : ( $_, $data{$_} ) } keys(%data);
+      map { /_ms$/ ? ( $_, int( $data{$_} ) ) : ( $_, $data{$_} ) }
+      keys(%data);
     $log->infof( 'CHI stats: %s', json_encode( \%data ) );
 }
 
@@ -70,7 +72,7 @@ sub stats_for_driver {
 
 sub parse_stats_logs {
     my $self = shift;
-    my ( %results_hash, @results );
+    my ( %results_hash, @results, %numeric_fields_seen );
     foreach my $log (@_) {
         my $logfh;
         if ( ref($log) ) {
@@ -97,9 +99,44 @@ sub parse_stats_logs {
                 while ( my ( $key, $value ) = each(%hash) ) {
                     next if $key =~ /_time$/;
                     $results_set->{$key} += $value;
+                    $numeric_fields_seen{$key}++;
                 }
             }
         }
+    }
+    my @numeric_fields = sort( keys(%numeric_fields_seen) );
+
+    my $sum = sub {
+        my ( $rs, $name, @fields ) = @_;
+        if ( grep { $rs->{$_} } @fields ) {
+            $rs->{$name} = sum( map { $rs->{$_} || 0 } @fields );
+        }
+    };
+    foreach my $rs (@results) {
+        $sum->( $rs, 'misses', 'absent_misses', 'expired_misses' );
+        $sum->( $rs, 'gets',   'hits',          'misses' );
+    }
+
+    my %totals = map { ( $_, 'TOTALS' ) } qw(root_class namespace label);
+    foreach my $field (@numeric_fields) {
+        $totals{$field} = sum( map { $_->{$field} || 0 } @results );
+    }
+    push( @results, \%totals );
+
+    my $divide = sub {
+        my ( $rs, $name, $top, $bottom ) = @_;
+        if ( $rs->{$top} && $rs->{$bottom} ) {
+            $rs->{$name} = ( $rs->{$top} / $rs->{$bottom} );
+        }
+    };
+
+    foreach my $rs (@results) {
+        $divide->( $rs, 'avg_compute_time_ms', 'compute_time_ms', 'computes' );
+        $divide->( $rs, 'avg_get_time_ms',     'get_time_ms',     'gets' );
+        $divide->( $rs, 'avg_set_time_ms',     'set_time_ms',     'sets' );
+        $divide->( $rs, 'avg_set_key_size',    'set_key_size',    'sets' );
+        $divide->( $rs, 'avg_set_value_size',  'set_value_size',  'sets' );
+        $divide->( $rs, 'hit_rate',            'hits',            'gets' );
     }
     return \@results;
 }
@@ -151,69 +188,6 @@ statistics over any number of CHI::Driver objects.
 Statistics are reported when you call the L</flush> method. You can choose to
 do this once at process end, or on a periodic basis.
 
-=head1 STATISTICS
-
-The following statistics are tracked:
-
-=over
-
-=item *
-
-absent_misses - Number of gets that failed due to item not being in the cache
-
-=item *
-
-compute_time_ms - Total time spent computing missed results in
-L<compute|CHI/compute>, in ms (divide by number of computes to get average).
-i.e. the amount of time spent in the code reference passed as the third
-argument to compute().
-
-=item *
-
-computes - Number of L<compute|CHI/compute> calls
-
-=item *
-
-expired_misses - Number of gets that failed due to item expiring
-
-=item *
-
-get_errors - Number of caught runtime errors during gets
-
-=item *
-
-get_time_ms - Total time spent in get operation, in ms (divide by number of
-gets to get average)
-
-=item *
-
-hits - Number of gets that succeeded
-
-=item *
-
-set_key_size - Number of bytes in set keys (divide by number of sets to get
-average)
-
-=item *
-
-set_value_size - Number of bytes in set values (divide by number of sets to get
-average)
-
-=item *
-
-set_time_ms - Total time spent in set operation, in ms (divide by number of
-sets to get average)
-
-=item *
-
-sets - Number of sets
-
-=item *
-
-set_errors - Number of caught runtime errors during sets
-
-=back
-
 =head1 METHODS
 
 =over
@@ -240,14 +214,15 @@ distinct triplet of L<root class|CHI/chi_root_class>, L<cache label|CHI/label>,
 and L<namespace|CHI/namespace>. Each log message contains the string "CHI
 stats:" followed by a JSON encoded hash of statistics. e.g.
 
-    CHI stats: {"absent_misses":1,"label":"File","end_time":1338410398,"get_time_ms":5,
-       "namespace":"Foo","root_class":"CHI","set_key_size":6,"set_time_ms":23,
-       "set_value_size":20,"sets":1,"start_time":1338409391}
+    CHI stats: {"absent_misses":1,"label":"File","end_time":1338410398,
+       "get_time_ms":5,"namespace":"Foo","root_class":"CHI",
+       "set_key_size":6,"set_time_ms":23,"set_value_size":20,"sets":1,
+       "start_time":1338409391}
 
-=item parse_stats_logs (log1, log2, ...)
+=item parse_stats_logs
 
-Parses logs output by C<CHI::Stats> and returns a listref of stats totals by
-root class, cache label, and namespace. e.g.
+Accepts one or more stats log files as parameters. Parses the logs and returns
+a listref of stats hashes by root class, cache label, and namespace. e.g.
 
     [
         {
@@ -255,7 +230,7 @@ root class, cache label, and namespace. e.g.
             label          => 'File',
             namespace      => 'Foo',
             absent_misses  => 100,
-            expired_misses => 200,
+            avg_compute_time_ms => 23,
             ...
         },
         {
@@ -272,6 +247,109 @@ the "CHI stats:" string, e.g. a timestamp.
 
 Each parameter to this method may be a filename or a reference to an open
 filehandle.
+
+=back
+
+=head1 STATISTICS
+
+The following statistics are tracked in the logs:
+
+=over
+
+=item *
+
+C<absent_misses> - Number of gets that failed due to item not being in the
+cache
+
+=item *
+
+C<compute_time_ms> - Total time spent computing missed results in
+L<compute|CHI/compute>, in ms (divide by number of computes to get average).
+i.e. the amount of time spent in the code reference passed as the third
+argument to compute().
+
+=item *
+
+C<computes> - Number of L<compute|CHI/compute> calls
+
+=item *
+
+C<expired_misses> - Number of gets that failed due to item expiring
+
+=item *
+
+C<get_errors> - Number of caught runtime errors during gets
+
+=item *
+
+C<get_time_ms> - Total time spent in get operation, in ms (divide by number of
+gets to get average)
+
+=item *
+
+C<hits> - Number of gets that succeeded
+
+=item *
+
+C<set_key_size> - Number of bytes in set keys (divide by number of sets to get
+average)
+
+=item *
+
+C<set_value_size> - Number of bytes in set values (divide by number of sets to
+get average)
+
+=item *
+
+C<set_time_ms> - Total time spent in set operation, in ms (divide by number of
+sets to get average)
+
+=item *
+
+C<sets> - Number of sets
+
+=item *
+
+C<set_errors> - Number of caught runtime errors during sets
+
+=back
+
+The following additional derived/aggregate statistics are computed by
+L<parse_stats_logs|/parse_stats_logs>:
+
+=over
+
+=item *
+
+C<misses> - C<absent_misses> + C<expired_misses>
+
+=item *
+
+C<gets> - C<hits> + C<misses>
+
+=item *
+
+C<avg_compute_time_ms> - C<compute_time_ms> / C<computes>
+
+=item *
+
+C<avg_get_time_ms> - C<get_time_ms> / C<gets>
+
+=item *
+
+C<avg_set_time_ms> - C<set_time_ms> / C<sets>
+
+=item *
+
+C<avg_set_key_size> - C<set_key_size> / C<sets>
+
+=item *
+
+C<avg_set_value_size> - C<set_value_size> / C<sets>
+
+=item *
+
+C<hit_rate> - C<hits> / C<gets>
 
 =back
 

@@ -1,4 +1,4 @@
-package CHI;
+package CHI;    ## no critic (Moose::RequireMakeImmutable)
 use 5.006;
 use Carp;
 use CHI::Stats;
@@ -164,8 +164,6 @@ sub new {
 
     return $cache_object;
 }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
 
