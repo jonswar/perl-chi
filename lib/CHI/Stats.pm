@@ -73,13 +73,14 @@ sub stats_for_driver {
 sub parse_stats_logs {
     my $self = shift;
     my ( %results_hash, @results, %numeric_fields_seen );
-    foreach my $log (@_) {
+    foreach my $log_file (@_) {
         my $logfh;
-        if ( ref($log) ) {
-            $logfh = $log;
+        if ( ref($log_file) ) {
+            $logfh = $log_file;
         }
         else {
-            open( $logfh, '<', $log ) or die "cannot open $log: $!";
+            open( $logfh, '<', $log_file ) or die "cannot open $log_file: $!";
+            $log->infof( "processing '%s'", $log_file );
         }
         while ( my $line = <$logfh> ) {
             chomp($line);
