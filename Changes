@@ -4,6 +4,9 @@ Revision history for CHI
 
 0.55  May 30, 2012
 
+* Improvements
+  - Compute derived/aggregate stats in CHI::Stats::parse_stats_logs
+
 0.54  May 30, 2012
 
 ** Incompatibile Changes **
