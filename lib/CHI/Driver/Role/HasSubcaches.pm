@@ -145,7 +145,7 @@ around 'get_multi_arrayref' => sub {
                 defined( $l1_values->[$_] )
                   ? $l1_values->[$_]
                   : shift(@$primary_values)
-              } @indices
+            } @indices
         ];
         return $values;
     }

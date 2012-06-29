@@ -529,7 +529,7 @@ sub get_multi_hashref_objects {
             defined($data)
               ? ( $_, $self->unpack_from_data( $_, $data ) )
               : ( $_, undef )
-          } keys(%$key_data)
+        } keys(%$key_data)
     };
 }
 
@@ -545,7 +545,7 @@ sub get_multi_arrayref {
             my $key = $transformed_keys->[$_];
             my $obj = $keyobjs->{$key};
             $obj ? $self->get( $key, obj => $obj ) : undef
-          } ( 0 .. $key_count - 1 )
+        } ( 0 .. $key_count - 1 )
     ];
 }
 
