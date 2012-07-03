@@ -13,8 +13,6 @@
 ^lib/Test
 ^localcpan
 ^misc
-^perlcriticrc
-^perltidyrc
 ^release
 ^tmp
 ^weaver.ini
