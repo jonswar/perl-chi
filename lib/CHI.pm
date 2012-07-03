@@ -335,8 +335,6 @@ An object to use for serializing keys that are references. See L</serializer>
 above for the different ways this can be passed in. The default is to use JSON
 in canonical mode (sorted hash keys).
 
-=for html <a name="label">
-
 =item label [STRING]
 
 A label for the cache as a whole, independent of namespace - e.g.
@@ -357,8 +355,6 @@ due to file system limits. For most drivers there is no maximum.
 =item mirror_cache [HASHREF]
 
 Add an mirror cache as a subcache. See L</SUBCACHES>.
-
-=for html <a name="namespace">
 
 =item namespace [STRING]
 
@@ -519,8 +515,6 @@ or else a duration treated as an I<expires_in> value described below. If it is
 a hash reference, it may contain one or more of the following options. Most of
 these options can be provided with defaults in the cache constructor.
 
-=for html <a name="expires_in">
-
 =over
 
 =item expires_in [DURATION]
@@ -528,13 +522,9 @@ these options can be provided with defaults in the cache constructor.
 Amount of time from now until this data expires. I<DURATION> may be an integer
 number of seconds or a L<duration expression|/DURATION EXPRESSIONS>.
 
-=for html <a name="expires_at">
-
 =item expires_at [INT]
 
 The epoch time at which the data expires.
-
-=for html <a name="expires_variance">
 
 =item expires_variance [FLOAT]
 
@@ -576,8 +566,6 @@ Typical applications won't be affected by this, since the object is recomputed
 as soon as it is determined to be expired. But it's something to be aware of.
 
 =back
-
-=for html <a name="compute">
 
 =item compute( $key, $options, $code )
 
@@ -785,8 +773,6 @@ cache.
 =back
 
 =head2 Property accessors
-
-=for html <a name="chi_root_class">
 
 =over
 
