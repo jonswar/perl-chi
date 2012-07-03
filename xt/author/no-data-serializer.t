@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 #
 # Tests that things work ok (with warning) without Data::Serializer installed
 #
