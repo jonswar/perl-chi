@@ -686,15 +686,19 @@ Do a L<set>, but only if I<$key> is L<valid|is_valid> in the cache.
 
 =item append( $key, $new_data)
 
-Append I<$new_data> to whatever value is currently associated with I<$key>.
-Does not modify expiration or other metadata; if I<$key> exists but is expired,
-it will remain expired. Has no effect if I<$key> does not exist in the cache.
+Append I<$new_data> to whatever value is currently associated with I<$key>. Has
+no effect if I<$key> does not exist in the cache.
+
+Returns true if I<$key> was in the cache, false otherwise.
 
 This is intended for simple string values only. For efficiency's sake, CHI
 won't attempt to check for, or handle, the case where data is
 L<serialized|serializer> or L<compressed|compress_threshold>; the new data will
 simply be appended, and an error will most probably occur when you try to
 retrieve the value.
+
+Does not modify expiration or other metadata. If I<$key> exists but is expired,
+it will remain expired.
 
 If you use a driver with the non-atomic (default) implementation, some appends
 may be lost due to race conditions.

@@ -499,6 +499,7 @@ sub append {
 
     my $current = $self->fetch($key) or return undef;
     $self->store( $key, $current . $new );
+    return 1;
 }
 
 sub replace {
