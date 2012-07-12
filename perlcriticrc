@@ -4,5 +4,5 @@ verbose = %m at %f line %l [%p]\n
 
 [Moose::RequireMakeImmutable]
 [TestingAndDebugging::RequireUseStrict]
-equivalent_modules = Mason::Moose Test::Class::Most Mason::PluginRole
+equivalent_modules = Test::Class::Most
 [Variables::ProhibitConditionalDeclarations]
