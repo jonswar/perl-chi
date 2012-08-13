@@ -230,7 +230,7 @@ To use CHI's tests (replacing I<MyDriver> with the name of your driver):
 
 =item *
 
-Install Test::Class, and add Test::Class to the build dependencies for your
+Install L<Test::Class> and add it to the build dependencies for your
 distribution.
 
 =item *
@@ -244,14 +244,15 @@ distribution containing:
     use CHI::Test;
     use base qw(CHI::t::Driver);
 
+    sub testing_driver_class { 'CHI::Driver::MyDriver' }
+
     sub new_cache_options {
         my $self = shift;
 
         return (
             $self->SUPER::new_cache_options(),
-            driver => '+CHI::Driver::MyDriver',
 
-            # Any other CHI->new parameters for your test driver
+            # Any necessary CHI->new parameters for your test driver
         );
     }
 
