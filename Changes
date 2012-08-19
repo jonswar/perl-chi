@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.56  Jul 3, 2012
+0.56  Aug 19, 2012
 
 * Fixes
   - Mention testing_driver_class in CHI/Driver/Development.pm - RT #78921 (Nigel Horne)
