@@ -1916,4 +1916,85 @@ sub test_max_key_length : Tests {
     }
 }
 
+# Test that cache does not get corrupted with multiple concurrent processes writing
+#
+sub test_multiple_processes : Test(1) {
+    my $self = shift;
+    return "author test only" unless $ENV{AUTHOR_TESTING};
+
+    my ( @values, @pids, %valid_values );
+    my $shared_key = $self->{keys}->{medium};
+    my $num_procs  = 4;
+
+    local $SIG{CHLD} = 'IGNORE';
+
+    # Each child continuously writes a unique 10000 byte string to a single shared key
+    #
+    my $child_action = sub {
+        my $p           = shift;
+        my $value       = $values[$p];
+        my $child_cache = $self->new_cache();
+
+        sleep(1);    # Wait for parent to be ready
+        my $child_end_time = time() + 5;
+        while ( time < $child_end_time ) {
+            $child_cache->set( $shared_key, $value );
+        }
+        $child_cache->set( "done$p", 1 );
+    };
+
+    foreach my $p ( 0 .. $num_procs ) {
+        $values[$p] = random_string(10000);
+        $valid_values{ $values[$p] } = $p;
+        if ( my $pid = fork() ) {
+            $pids[$p] = $pid;
+        }
+        else {
+            $child_action->($p);
+            exit;
+        }
+    }
+
+    # Parent continuously gets shared key, makes sure it is one of the valid values.
+    # Loop until we see done flag for each child process, or until 10 secs pass.
+    # At end make sure we saw each process's value once.
+    #
+    my ( %seen, $error );
+    my $parent_end_time = time() + 10;
+    my $parent_cache    = $self->new_cache();
+    while ( !$error ) {
+        for ( my $i = 0 ; $i < 100 ; $i++ ) {
+            my $value = $parent_cache->get($shared_key);
+            if ( defined($value) ) {
+                if ( defined( my $p = $valid_values{$value} ) ) {
+                    $seen{$p} = 1;
+                }
+                else {
+                    $error = "got invalid value '$value' from shared key";
+                    last;
+                }
+            }
+        }
+        if ( !grep { !$parent_cache->get("done$_") } ( 0 .. $num_procs ) ) {
+            last;
+        }
+        if ( time() >= $parent_end_time ) {
+            $error = "did not see all done flags after 10 secs";
+        }
+    }
+
+    if ( !$error ) {
+        if ( my ($p) = grep { !$seen{$_} } ( 0 .. $num_procs ) ) {
+            $error = "never saw value from process $p";
+        }
+    }
+
+    if ($error) {
+        ok( 0, $error );
+    }
+    else {
+        ok( 1, "passed" );
+    }
+}
+
 1;
