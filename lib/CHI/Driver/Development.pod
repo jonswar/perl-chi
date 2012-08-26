@@ -278,23 +278,14 @@ this distribution for examples.
 
 =back
 
-=head1 AUTHOR
+=head2 Test cleanup
 
-Jonathan Swartz
+You are responsible for cleaning up your datastore after tests are done. The
+easiest way to do this is to place your datastore wholly inside a temporary
+directory, or use a L<guard|Guard> to remove it at process end.
 
-=head1 SEE ALSO
-
-L<CHI|CHI>, L<CHI::Driver|CHI::Driver>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright (C) 2007 Jonathan Swartz.
-
-CHI is provided "as is" and without any express or implied warranties,
-including, without limitation, the implied warranties of merchantibility and
-fitness for a particular purpose.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+For example, the L<File|CHI::Driver::File>, L<FastMmap|CHI::Driver::FastMmap>,
+and L<DBI|CHI::Driver::DBI> tests place all data inside a tempdir that is
+automatically cleaned up at process end.
 
 =cut
