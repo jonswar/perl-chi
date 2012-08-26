@@ -1,12 +1,15 @@
 Revision history for CHI
 
-
 ** denotes an incompatible change
 
-0.56  Aug 19, 2012
+0.56  Aug 25, 2012
 
 * Fixes
   - Mention testing_driver_class in CHI/Driver/Development.pm - RT #78921 (Nigel Horne)
+  - Use $self->file_extension in get_keys in CHI/Driver/File.pm - RT #76489 (Vitaliy Tokarev)
+
+* Tests
+  - Add test_multiple_processes for testing drivers under concurrent writes - RT #79132 (Nigel Horne)
 
 0.55  Jul 3, 2012
 
