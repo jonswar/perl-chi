@@ -1370,6 +1370,10 @@ L<CHI::Driver::BerkeleyDB|CHI::Driver::BerkeleyDB> - Cache in BerkeleyDB files
 
 L<CHI::Driver::Redis|CHI::Driver::Redis> - Cache in L<Redis|http://redis.io/>
 
+=item *
+
+L<CHI::Driver::SharedMem|CHI::Driver::SharedMem> - Cache in shared memory
+
 =back
 
 This list is likely incomplete. A complete set of drivers can be found on CPAN
