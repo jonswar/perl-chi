@@ -7,7 +7,7 @@ use Test::Warn;
 use base qw(CHI::t::Driver);
 
 # Skip multiple process test
-sub test_multiple_procs { }
+sub test_multiple_processes { }
 
 sub new_cache_options {
     my $self = shift;
