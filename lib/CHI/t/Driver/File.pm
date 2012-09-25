@@ -103,10 +103,10 @@ sub test_root_dir_does_not_exist : Tests {
 }
 
 sub test_ignore_bad_namespaces : Tests {
-    my $self  = shift;
-    my $cache = $self->new_cleared_cache(
-        root_dir => tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 )
-    );
+    my $self = shift;
+    my $cache =
+      $self->new_cleared_cache( root_dir =>
+          tempdir( "chi-driver-file-XXXX", TMPDIR => 1, CLEANUP => 1 ) );
 
     foreach my $dir ( ".etc", "+2eetd", 'a@b', 'a+40c', "plain" ) {
         mkpath( join( "/", $cache->root_dir, $dir ) );

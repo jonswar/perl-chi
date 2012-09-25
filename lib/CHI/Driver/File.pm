@@ -309,7 +309,7 @@ Defaults to 0666.
 
 =item file_extension
 
-Extension to append to filename. Default is ".dat".
+Extension to append to filename. Default is C<.dat>.
 
 =back
     

@@ -40,7 +40,7 @@ This is a subclass of L<CHI::Driver::Memory|CHI::Driver::Memory> that stores
 references to data structures directly instead of serializing / deserializing. 
 This makes the cache faster at getting and setting complex data structures, but
 unlike most drivers, modifications to the original data structure I<will>
-affect the data structure stored in the cache, and vica versa. e.g.
+affect the data structure stored in the cache, and vice versa. e.g.
 
     my $cache = CHI->new( driver => 'Memory', global => 1 );
     my $lst = ['foo'];
@@ -70,7 +70,7 @@ good way to determine their size.)
     #
     my $cache = CHI->new( driver => 'RawMemory', datastore => {}, max_size => 10 );
 
-=head1 ACKNOWLEDGEMENTS
+=head1 ACKNOWLEDGMENTS
 
 Thanks to Yuval Kogman whose L<Cache::Ref> inspired me to do this.
 

@@ -314,9 +314,9 @@ L<CHI::Driver::CacheCache|CacheCache>. This may allow the driver to better
 manage its space and evict items. Note that only simple expiration time will be
 passed along, e.g. not L</expires_variance>.
 
-If set to a number greater than 1 (e.g. 1.25), the time til expiration will be
-multiplied by that number before being passed to the backend driver. This gives
-you a customizable window of opportunity to retrieve expired items.
+If set to a number greater than 1 (e.g. 1.25), the time until expiration will
+be multiplied by that number before being passed to the backend driver. This
+gives you a customizable window of opportunity to retrieve expired items.
 
 =item key_digester [STRING|HASHREF|OBJECT]
 
@@ -533,9 +533,9 @@ earlier than the stated expiration time to help prevent cache miss stampedes.
 
 Value is between 0.0 and 1.0, with 0.0 meaning that items expire exactly when
 specified (feature is disabled), and 1.0 meaning that items might expire
-anytime from now til the stated expiration time. The default is 0.0. A setting
-of 0.10 to 0.25 would introduce a small amount of variation without interfering
-too much with intended expiration times.
+anytime from now until the stated expiration time. The default is 0.0. A
+setting of 0.10 to 0.25 would introduce a small amount of variation without
+interfering too much with intended expiration times.
 
 The probability of expiration increases as a function of how far along we are
 in the potential expiration window, with the probability being near 0 at the
@@ -670,7 +670,7 @@ will be documented thusly.  The default implementations are not atomic: the get
 and set occur discretely and another process could potentially modify the cache
 in between them.
 
-These operations are labelled ALPHA because we haven't yet figured out how they
+These operations are labeled ALPHA because we haven't yet figured out how they
 integrate with other CHI features, in particular L</SUBCACHES>. APIs and
 behavior may change.
 
@@ -1134,7 +1134,7 @@ that can cause the size to grow inaccurate over time.
 =head1 SUBCLASSING AND CONFIGURING CHI
 
 You can subclass CHI for your own application and configure it in a variety of
-ways, e.g. pre-defining storage types and defaults for new cache objects. Your
+ways, e.g. predefining storage types and defaults for new cache objects. Your
 configuration will be independent of the main CHI class and other CHI
 subclasses.
 
