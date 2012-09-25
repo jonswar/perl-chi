@@ -13,6 +13,7 @@ Revision history for CHI
 
 * Docs
   - Mention that driver tests are responsible for their own cleanup - RT #79100 (Nigel Horne)
+  - Various spelling fixes thanks to Pod::Spell
 
 0.55  Jul 3, 2012
 
