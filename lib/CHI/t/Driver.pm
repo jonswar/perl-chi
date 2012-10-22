@@ -1918,7 +1918,7 @@ sub test_max_key_length : Tests {
 
 # Test that cache does not get corrupted with multiple concurrent processes writing
 #
-sub test_multiple_processes : Test(1) {
+sub test_multiple_processes : Tests {
     my $self = shift;
     return "author test only" unless $ENV{AUTHOR_TESTING};
 
