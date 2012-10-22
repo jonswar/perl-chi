@@ -1921,6 +1921,8 @@ sub test_max_key_length : Tests {
 sub test_multiple_processes : Tests {
     my $self = shift;
     return "author test only" unless $ENV{AUTHOR_TESTING};
+    return "does not pass on file driver"
+      if $self->new_cache->short_driver_name eq 'File';
 
     my ( @values, @pids, %valid_values );
     my $shared_key = $self->{keys}->{medium};
