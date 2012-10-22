@@ -6,7 +6,6 @@ Revision history for CHI
 
 * Fixes
   - Mention testing_driver_class in CHI/Driver/Development.pm - RT #78921 (Nigel Horne)
-  - Use $self->file_extension in get_keys in CHI/Driver/File.pm - RT #76489 (Vitaliy Tokarev)
 
 * Tests
   - Add test_multiple_processes for testing drivers under concurrent writes - RT #79132 (Nigel Horne)
@@ -40,7 +39,7 @@ Revision history for CHI
 * Fixes
   - compute() no longer modifies passed-in options hashref
   - Fix get_multi_* with partially empty l1 cache - perl-chi/pull/12 (Mike Cartmell)
-  - Fix get_keys when file_extension set on CHI::Driver::File (Vitaliy Tokarev)
+  - Fix get_keys when file_extension set on CHI::Driver::File - RT #76489 (Vitaliy Tokarev)
   - Have set_multi call store_multi underneath as documented in Development.pod - RT
     #76621 (Oliver Paukstadt)
   - Minor POD fixes (Alessandro Ghedini)
