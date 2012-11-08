@@ -499,8 +499,8 @@ L</expires_variance> for another technique.
 
 =item obj_ref [SCALARREF]
 
-If the item exists in cache, place the <CHI::CacheObject|CHI::CacheObject>
-object in the provided SCALARREF.
+If the item exists in cache (even if expired), place the
+L<CHI::CacheObject|CHI::CacheObject> object in the provided SCALARREF.
 
 =back
 
