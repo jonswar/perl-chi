@@ -158,7 +158,7 @@ sub test_encode : Tests {
     my $binary_off = $self->{keys}->{binary};
     my $binary_on  = substr( $binary_off . $utf8, 0, length($binary_off) );
 
-    ok( $binary_off eq $binary_on, "binary_off eq binary_on" );
+    ok( $binary_off eq $binary_on,     "binary_off eq binary_on" );
     ok( !Encode::is_utf8($binary_off), "!is_utf8(binary_off)" );
     ok( Encode::is_utf8($binary_on),   "is_utf8(binary_on)" );
 
@@ -167,8 +167,8 @@ sub test_encode : Tests {
     my $value = time;
     $cache->set( $utf8, $value );
     is( $cache->get($utf8), $value, "get" );
-    is( $cache->get($encoded), $value,
-        "encoded and non-encoded map to same value" );
+    is( $cache->get($encoded),
+        $value, "encoded and non-encoded map to same value" );
 
     # Key maps to same thing whether utf8 flag is off or on
     #
@@ -629,7 +629,7 @@ sub test_serializers : Tests {
             my $serializer_param = (
                   $mode eq 'string' ? $variant
                 : $mode eq 'hash' ? { serializer => $variant }
-                : Data::Serializer->new( serializer => $variant )
+                :   Data::Serializer->new( serializer => $variant )
             );
             my $cache = $self->new_cache( serializer => $serializer_param );
             is( $cache->serializer->serializer,
@@ -718,8 +718,11 @@ sub test_persist : Tests {
         $hash = $cache1->dump_as_hash();
     }
     my $cache2 = $self->new_cache();
-    cmp_deeply( $hash, $cache2->dump_as_hash(),
-        'cache persisted between cache object creations' );
+    cmp_deeply(
+        $hash,
+        $cache2->dump_as_hash(),
+        'cache persisted between cache object creations'
+    );
 }
 
 sub test_multi : Tests {
@@ -1114,12 +1117,12 @@ sub _test_common_subcache_features {
         my ($desc) = @_;
         is( $cache->get($key), $value,
             "primary cache is populated with '$key' - $desc" );
-        is( $subcache->get($key), $value,
-            "subcache is populated with '$key' - $desc" );
+        is( $subcache->get($key),
+            $value, "subcache is populated with '$key' - $desc" );
         is( $cache->get($key2), $value2,
             "primary cache is populated with '$key2' - $desc" );
-        is( $subcache->get($key2), $value2,
-            "subcache is populated with '$key2' - $desc" );
+        is( $subcache->get($key2),
+            $value2, "subcache is populated with '$key2' - $desc" );
     };
 
     $test_remove_method->(

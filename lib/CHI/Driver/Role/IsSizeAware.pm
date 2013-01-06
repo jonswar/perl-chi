@@ -115,8 +115,7 @@ sub discard_to_size {
     local $self->{_no_set_size_on_remove} = 1;
     my $size = $self->get_size();
     eval {
-        while ( $size > $ceiling )
-        {
+        while ( $size > $ceiling ) {
             if ( defined( my $key = $discard_iterator->() ) ) {
                 if ( my $obj = $self->get_object($key) ) {
                     $self->remove($key);
