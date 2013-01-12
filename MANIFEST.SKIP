@@ -6,7 +6,6 @@
 ^docs
 ^etc/bench/data
 ^etc/bench/results.dat
-^git
 ^htdocs
 ^inc/
 ^lib/Test
