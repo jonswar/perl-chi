@@ -20,7 +20,6 @@ depends
 dist
 docs
 htdocs
-inc
 localcpan*
 pm_to_blib*
 /release
