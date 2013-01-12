@@ -1,13 +1,14 @@
 package CHI::Driver::Role::HasSubcaches;
-use Moose::Role;
+use Moo::Role;
+use CHI::Types qw(:all);
 use Hash::MoreUtils qw(slice_exists);
 use Log::Any qw($log);
 use Scalar::Util qw(weaken);
 use strict;
 use warnings;
 
-has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
-has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
+has 'l1_cache'     => ( is => 'ro', isa => UnblessedHashRef );
+has 'mirror_cache' => ( is => 'ro', isa => UnblessedHashRef );
 has 'subcaches'    => ( is => 'ro', default => sub { [] }, init_arg => undef );
 
 # List of parameter keys that initialize a subcache

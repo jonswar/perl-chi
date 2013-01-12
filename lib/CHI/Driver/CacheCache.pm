@@ -3,7 +3,7 @@ use Cache::Cache;
 use Carp;
 use Moo;
 use MooX::Types::MooseLike::Base qw(:all);
-use Module::Runtime;
+use Module::Runtime qw(require_module);
 use strict;
 use warnings;
 

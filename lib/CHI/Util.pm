@@ -1,6 +1,6 @@
 package CHI::Util;
 use Carp qw( croak longmess );
-use Module::Runtime;
+use Module::Runtime qw(require_module);
 use Data::Dumper;
 use Data::UUID;
 use Fcntl qw( :DEFAULT );

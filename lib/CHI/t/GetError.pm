@@ -55,7 +55,7 @@ sub test_get_errors : Tests {
 
     throws_ok(
         sub { writeonly_cache('bad') },
-        qr/Attribute .* does not pass the type constraint/,
+        qr/isa check for .* failed/,
         "bad - dies"
     );
 }

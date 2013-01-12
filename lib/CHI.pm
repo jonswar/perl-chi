@@ -3,7 +3,7 @@ use 5.006;
 use Carp;
 use CHI::Stats;
 use String::RewritePrefix;
-use Module::Runtime;
+use Module::Runtime qw(require_module);
 use Moo::Role ();
 use strict;
 use warnings;
@@ -31,7 +31,7 @@ sub _set_config {
     #XXX needs to be done better
     no strict 'refs';
     no warnings 'redefine';
-    *{"$config\::_get_config"} = sub { $config };
+    *{"$class\::_get_config"} = sub { $config };
 }
 
 CHI->config( {} );
@@ -78,10 +78,8 @@ sub new {
         }
     }
 
-    my ($chi_root_class, %params) = @_;
     # Gather defaults
     #
-    my $config = $chi_root_class->config;
     my $core_defaults = $config->{defaults} || {};
     my $namespace_defaults =
       $config->{namespace}->{ $params{namespace} || 'Default' } || {};

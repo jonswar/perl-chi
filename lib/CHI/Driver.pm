@@ -9,14 +9,14 @@ use CHI::Driver::Role::IsSubcache;
 use CHI::Driver::Role::Universal;
 use CHI::Serializer::Storable;
 use CHI::Serializer::JSON;
-use CHI::Util qw(has_moose_class parse_duration);
-use CHI::Types;
+use CHI::Util qw(parse_duration);
+use CHI::Types qw(:all);
 use Digest::MD5;
 use Encode;
 use Hash::MoreUtils qw(slice_grep);
 use Log::Any qw($log);
-use Moose;
-use Moose::Util::TypeConstraints;
+use Moo;
+use MooX::Types::MooseLike::Base qw(:all);
 use Scalar::Util qw(blessed);
 use Time::Duration;
 use Time::HiRes qw(gettimeofday);
@@ -27,43 +27,60 @@ my $default_serializer     = CHI::Serializer::Storable->new();
 my $default_key_serializer = CHI::Serializer::JSON->new();
 my $default_key_digester   = Digest::MD5->new();
 
+my @common_params;
+BEGIN {
+    #XXX this is horrid but a quick fix
+    no warnings 'redefine';
+    my $has = \&has;
+    *has = sub {
+        push @common_params, $_[0];
+        goto &$has;
+    };
+}
 has 'chi_root_class'     => ( is => 'ro' );
-has 'compress_threshold' => ( is => 'ro', isa => 'Int' );
+has 'compress_threshold' => ( is => 'ro', isa => Int );
 has 'constructor_params' => ( is => 'ro', init_arg => undef );
 has 'driver_class'       => ( is => 'ro' );
-has 'expires_at'         => ( is => 'rw', default => CHI_Max_Time );
-has 'expires_in'         => ( is => 'rw', isa => 'CHI::Types::Duration', coerce => 1 );
-has 'expires_on_backend' => ( is => 'ro', isa => 'Num', default => 0 );
-has 'expires_variance'   => ( is => 'rw', isa => 'Num', default => 0 );
-has 'has_subcaches'      => ( is => 'ro', isa => 'Bool', default => undef, init_arg => undef );
-has 'is_size_aware'      => ( is => 'ro', isa => 'Bool', default => undef );
-has 'is_subcache'        => ( is => 'ro', isa => 'Bool', default => undef );
-has 'key_digester'       => ( is => 'ro', isa => 'CHI::Types::Digester', coerce => 1, default => sub { $default_key_digester } );
-has 'key_serializer'     => ( is => 'ro', isa => 'CHI::Types::Serializer', coerce => 1, default => sub { $default_key_serializer } );
-has 'label'              => ( is => 'rw', lazy_build => 1 );
-has 'max_build_depth'    => ( is => 'ro', default => 8 );
-has 'max_key_length'     => ( is => 'ro', isa => 'Int', default => 1 << 31 );
-has 'metacache'          => ( is => 'ro', lazy_build => 1 );
-has 'namespace'          => ( is => 'ro', isa => 'Str', default => 'Default' );
-has 'on_get_error'       => ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
-has 'on_set_error'       => ( is => 'rw', isa => 'CHI::Types::OnError', default => 'log' );
-has 'serializer'         => ( is => 'ro', isa => 'CHI::Types::Serializer', coerce => 1, default => sub { $default_serializer } );
-has 'short_driver_name'  => ( is => 'ro', lazy_build => 1 );
+has 'expires_at'         => ( is => 'rw', default => sub { CHI_Max_Time } );
+has 'expires_in'         => ( is => 'rw', isa => Duration, coerce => \&to_Duration );
+has 'expires_on_backend' => ( is => 'ro', isa => Num, default => sub { 0 } );
+has 'expires_variance'   => ( is => 'rw', isa => Num, default => sub { 0 } );
+has 'has_subcaches'      => ( is => 'ro', isa => Bool, default => sub { undef }, init_arg => undef );
+has 'is_size_aware'      => ( is => 'ro', isa => Bool, default => sub { undef } );
+has 'is_subcache'        => ( is => 'ro', isa => Bool, default => sub { undef } );
+has 'key_digester'       => ( is => 'ro', isa => Digester, coerce => \&to_Digester, default => sub { $default_key_digester } ); 
+has 'key_serializer'     => ( is => 'ro', isa => Serializer, coerce => \&to_Serializer, default => sub { $default_key_serializer } );
+has 'label'              => ( is => 'rw', lazy => 1, builder => '_build_label', clearer => 'clear_label', predicate => 'has_label' );
+has 'max_build_depth'    => ( is => 'ro', default => sub { 8 }  );
+has 'max_key_length'     => ( is => 'ro', isa => Int, default => sub { 1 << 31 } );
+has 'metacache'          => ( is => 'ro', lazy => 1, builder => '_build_metacache', clearer => 'clear_metacache', predicate => 'has_metacache' );
+has 'namespace'          => ( is => 'ro', isa => Str, default => sub { 'Default' } );
+has 'on_get_error'       => ( is => 'rw', isa => OnError, default => sub { 'log' } );
+has 'on_set_error'       => ( is => 'rw', isa => OnError, default => sub { 'log' } );
+has 'serializer'         => ( is => 'ro', isa => Serializer, coerce => \&to_Serializer, default => sub { $default_serializer } );
+has 'short_driver_name'  => ( is => 'ro', lazy => 1, builder => '_build_short_driver_name', clearer => 'clear_short_driver_name', predicate => 'has_short_driver_name' );
 has 'storage'            => ( is => 'ro' );
 
 # These methods must be implemented by subclass
-foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
-    __PACKAGE__->meta->add_method( $method =>
-          sub { die "method '$method' must be implemented by subclass" } );
-}
 
-__PACKAGE__->meta->make_immutable();
+
+foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
+    no strict 'refs'; #XXX could be better?
+    *{$method} = sub { die "method '$method' must be implemented by subclass" };
+}
 
 # Given a hash of params, return the subset that are not in CHI's common parameters.
 #
-my @common_params = map { $_->meta->get_attribute_list() } (
-    'CHI::Driver',                    'CHI::Driver::Role::HasSubcaches',
-    'CHI::Driver::Role::IsSizeAware', 'CHI::Driver::Role::IsSubcache'
+push @common_params, qw(
+    discard_policy
+    discard_timeout
+    l1_cache
+    max_size
+    max_size_reduction_factor
+    mirror_cache
+    parent_cache
+    subcache_type
+    subcaches
 );
 my %common_params = map { ( $_, 1 ) } @common_params;
 
@@ -80,8 +97,8 @@ sub declare_unsupported_methods {
     my ( $class, @methods ) = @_;
 
     foreach my $method (@methods) {
-        $class->meta->add_method( $method =>
-              sub { croak "method '$method' not supported by '$class'" } );
+        no strict 'refs';
+        *{"$class\::$method"} = sub { croak "method '$method' not supported by '$class'" };
     }
 }
 
