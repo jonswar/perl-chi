@@ -1,5 +1,5 @@
 package CHI::Driver::Role::IsSubcache;
-use Moose::Role;
+use Moo::Role;
 use strict;
 use warnings;
 

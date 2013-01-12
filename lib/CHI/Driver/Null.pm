@@ -1,10 +1,9 @@
 package CHI::Driver::Null;
-use Moose;
+use Moo;
 use strict;
 use warnings;
 
 extends 'CHI::Driver';
-__PACKAGE__->meta->make_immutable();
 
 sub fetch          { undef }
 sub store          { undef }

@@ -1,6 +1,6 @@
 package CHI::Util;
 use Carp qw( croak longmess );
-use Class::MOP;
+use Module::Runtime;
 use Data::Dumper;
 use Data::UUID;
 use Fcntl qw( :DEFAULT );
@@ -45,7 +45,7 @@ sub can_load {
 
     my $result;
     try {
-        Class::MOP::load_class($class_name);
+        require_module($class_name);
         $result = 1;
     }
     catch {
@@ -145,15 +145,22 @@ sub write_file {
     }
 }
 
-{
-    my $File_Spec_Using_Unix = $File::Spec::ISA[0] eq 'File::Spec::Unix';
+use constant _FILE_SPEC_USING_UNIX => ($File::Spec::ISA[0] eq 'File::Spec::Unix');
 
-    sub fast_catdir {
-        return $File_Spec_Using_Unix ? join( "/", @_ ) : catdir(@_);
+sub fast_catdir {
+    if (_FILE_SPEC_USING_UNIX) {
+        return join '/', @_;
     }
-
-    sub fast_catfile {
-        return $File_Spec_Using_Unix ? join( "/", @_ ) : catfile(@_);
+    else {
+        return catdir(@_);
+    }
+}
+sub fast_catfile {
+    if (_FILE_SPEC_USING_UNIX) {
+        return join '/', @_;
+    }
+    else {
+        return catfile(@_);
     }
 }
 
@@ -172,26 +179,19 @@ sub parse_memory_size {
     }
 }
 
-sub has_moose_class {
-    my ($obj) = @_;
-
-    my $meta = Class::MOP::class_of($obj);
-    return ( defined $meta && $meta->isa("Moose::Meta::Class") );
-}
-
 # Maintain compatibility with both JSON 1 and 2. Borrowed from Data::Serializer::JSON.
 #
-my $json_version = JSON->VERSION;
-my $json = $json_version < 2 ? JSON->new : JSON->new->utf8->canonical;
+use constant _OLD_JSON => JSON->VERSION < 2;
+my $json = _OLD_JSON ? JSON->new : JSON->new->utf8->canonical;
 
 sub json_decode {
-    return $json_version < 2
+    return _OLD_JSON
       ? $json->jsonToObj( $_[0] )
       : $json->decode( $_[0] );
 }
 
 sub json_encode {
-    return $json_version < 2
+    return _OLD_JSON
       ? $json->objToJson( $_[0] )
       : $json->encode( $_[0] );
 }
