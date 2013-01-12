@@ -1,4 +1,4 @@
-package CHI;    ## no critic (Moose::RequireMakeImmutable)
+package CHI;
 use 5.006;
 use Carp;
 use CHI::Stats;
