@@ -54,7 +54,7 @@ sub test_set_errors : Tests {
 
     throws_ok(
         sub { readonly_cache('bad') },
-        qr/isa check for ".*" failed/,
+        qr/Validation failed for|isa check for ".*" failed/,
         "bad - dies"
     );
 }

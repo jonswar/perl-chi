@@ -45,7 +45,8 @@ has 'expires_at'         => ( is => 'rw', default => sub { CHI_Max_Time } );
 has 'expires_in'         => ( is => 'rw', isa => Duration, coerce => \&to_Duration );
 has 'expires_on_backend' => ( is => 'ro', isa => Num, default => sub { 0 } );
 has 'expires_variance'   => ( is => 'rw', isa => Num, default => sub { 0 } );
-has 'has_subcaches'      => ( is => 'ro', isa => Bool, default => sub { undef }, init_arg => undef );
+has 'has_subcaches'      => ( is => 'lazy', isa => Bool, init_arg => undef );
+sub _build_has_subcaches { undef }
 has 'is_size_aware'      => ( is => 'ro', isa => Bool, default => sub { undef } );
 has 'is_subcache'        => ( is => 'ro', isa => Bool, default => sub { undef } );
 has 'key_digester'       => ( is => 'ro', isa => Digester, coerce => \&to_Digester, default => sub { $default_key_digester } ); 
