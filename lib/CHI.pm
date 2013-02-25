@@ -28,13 +28,13 @@ sub _set_config {
     if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
         croak "unknown keys in config hash: " . join( ", ", @bad_keys );
     }
-    #XXX needs to be done better
+    # set class specific configuration
     no strict 'refs';
     no warnings 'redefine';
     *{"$class\::_get_config"} = sub { $config };
 }
 
-CHI->config( {} );
+BEGIN { __PACKAGE__->config( {} ) }
 
 sub memoized_cache_objects {
     my ($class) = @_;
