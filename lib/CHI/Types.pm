@@ -4,7 +4,6 @@ use CHI::Util qw(can_load parse_duration parse_memory_size);
 use MooX::Types::MooseLike qw(exception_message);
 use MooX::Types::MooseLike::Base qw(:all);
 use MooX::Types::MooseLike::Numeric qw(:all);
-use Scalar::Util qw(blessed);
 use base qw(Exporter);
 use strict;
 use warnings;
@@ -55,7 +54,10 @@ MooX::Types::MooseLike::register_types([
 
 sub to_MemorySize {
     my $from = shift;
-    if (is_Str($from)) {
+    if (is_Num($from)) {
+        $from;
+    }
+    elsif (is_Str($from)) {
         parse_memory_size($from);
     }
     else {
@@ -104,9 +106,6 @@ sub to_Digester {
 push @EXPORT_OK, 'to_Digester';
 
 my $data_serializer_loaded = can_load('Data::Serializer');
-
-my $digest_loaded = can_load('Digest');
-
 sub _build_data_serializer {
     my ($params) = @_;
 
@@ -119,6 +118,7 @@ sub _build_data_serializer {
     }
 }
 
+my $digest_loaded = can_load('Digest');
 sub _build_digester {
     if ($digest_loaded) {
         return Digest->new(@_);
