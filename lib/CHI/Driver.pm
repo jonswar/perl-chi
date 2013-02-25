@@ -28,45 +28,127 @@ my $default_key_serializer = CHI::Serializer::JSON->new();
 my $default_key_digester   = Digest::MD5->new();
 
 my @common_params;
-BEGIN {
-    #XXX this is horrid but a quick fix
-    no warnings 'redefine';
-    my $has = \&has;
-    *has = sub {
-        push @common_params, $_[0];
-        goto &$has;
-    };
+{
+    my %attr = (
+        chi_root_class => {
+            is => 'ro',
+        },
+        compress_threshold => {
+            is => 'ro',
+            isa => Int,
+        },
+        constructor_params => {
+            is => 'ro',
+            init_arg => undef,
+        },
+        driver_class => {
+            is => 'ro',
+        },
+        expires_at => {
+            is => 'rw',
+            default => sub { CHI_Max_Time },
+        },
+        expires_in => { is => 'rw',
+            isa => Duration,
+            coerce => \&to_Duration,
+        },
+        expires_on_backend => {
+            is => 'ro',
+            isa => Num,
+            default => sub { 0 },
+        },
+        expires_variance => {
+            is => 'rw',
+            isa => Num,
+            default => sub { 0 },
+        },
+        has_subcaches => {
+            is => 'lazy',
+            isa => Bool,
+            init_arg => undef,
+        },
+        is_size_aware => {
+            is => 'ro',
+            isa => Bool,
+        },
+        is_subcache => {
+            is => 'ro',
+            isa => Bool,
+        },
+        key_digester => {
+            is => 'ro',
+            isa => Digester,
+            coerce => \&to_Digester,
+            default => sub { $default_key_digester },
+        },
+        key_serializer => {
+            is => 'ro',
+            isa => Serializer,
+            coerce => \&to_Serializer,
+            default => sub { $default_key_serializer },
+        },
+        label => {
+            is => 'rw',
+            lazy => 1,
+            builder => 1,
+            clearer => 1,
+            predicate => 1,
+        },
+        max_build_depth => {
+            is => 'ro',
+            default => sub { 8 },
+        },
+        max_key_length => {
+            is => 'ro',
+            isa => Int,
+            default => sub { 1 << 31 },
+        },
+        metacache => {
+            is => 'lazy',
+            clearer => 1,
+            predicate => 1,
+        },
+        namespace => {
+            is => 'ro',
+            isa => Str,
+            default => sub { 'Default' },
+        },
+        on_get_error => {
+            is => 'rw',
+            isa => OnError,
+            default => sub { 'log' },
+        },
+        on_set_error => {
+            is => 'rw',
+            isa => OnError,
+            default => sub { 'log' },
+        },
+        serializer => {
+            is => 'ro',
+            isa => Serializer,
+            coerce => \&to_Serializer,
+            default => sub { $default_serializer },
+        },
+        short_driver_name => {
+            is => 'lazy',
+            clearer => 1,
+            predicate => 1,
+        },
+        storage => {
+            is => 'ro',
+        },
+    );
+    push @common_params, keys %attr;
+    for my $attr ( keys %attr ) {
+        has $attr => %{$attr{$attr}};
+    }
 }
-has 'chi_root_class'     => ( is => 'ro' );
-has 'compress_threshold' => ( is => 'ro', isa => Int );
-has 'constructor_params' => ( is => 'ro', init_arg => undef );
-has 'driver_class'       => ( is => 'ro' );
-has 'expires_at'         => ( is => 'rw', default => sub { CHI_Max_Time } );
-has 'expires_in'         => ( is => 'rw', isa => Duration, coerce => \&to_Duration );
-has 'expires_on_backend' => ( is => 'ro', isa => Num, default => sub { 0 } );
-has 'expires_variance'   => ( is => 'rw', isa => Num, default => sub { 0 } );
-has 'has_subcaches'      => ( is => 'lazy', isa => Bool, init_arg => undef );
+
 sub _build_has_subcaches { undef }
-has 'is_size_aware'      => ( is => 'ro', isa => Bool, default => sub { undef } );
-has 'is_subcache'        => ( is => 'ro', isa => Bool, default => sub { undef } );
-has 'key_digester'       => ( is => 'ro', isa => Digester, coerce => \&to_Digester, default => sub { $default_key_digester } ); 
-has 'key_serializer'     => ( is => 'ro', isa => Serializer, coerce => \&to_Serializer, default => sub { $default_key_serializer } );
-has 'label'              => ( is => 'rw', lazy => 1, builder => '_build_label', clearer => 'clear_label', predicate => 'has_label' );
-has 'max_build_depth'    => ( is => 'ro', default => sub { 8 }  );
-has 'max_key_length'     => ( is => 'ro', isa => Int, default => sub { 1 << 31 } );
-has 'metacache'          => ( is => 'ro', lazy => 1, builder => '_build_metacache', clearer => 'clear_metacache', predicate => 'has_metacache' );
-has 'namespace'          => ( is => 'ro', isa => Str, default => sub { 'Default' } );
-has 'on_get_error'       => ( is => 'rw', isa => OnError, default => sub { 'log' } );
-has 'on_set_error'       => ( is => 'rw', isa => OnError, default => sub { 'log' } );
-has 'serializer'         => ( is => 'ro', isa => Serializer, coerce => \&to_Serializer, default => sub { $default_serializer } );
-has 'short_driver_name'  => ( is => 'ro', lazy => 1, builder => '_build_short_driver_name', clearer => 'clear_short_driver_name', predicate => 'has_short_driver_name' );
-has 'storage'            => ( is => 'ro' );
 
 # These methods must be implemented by subclass
-
-
 foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
-    no strict 'refs'; #XXX could be better?
+    no strict 'refs';
     *{$method} = sub { die "method '$method' must be implemented by subclass" };
 }
 
