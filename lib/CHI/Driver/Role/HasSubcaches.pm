@@ -11,7 +11,7 @@ use warnings;
 my @subcache_nonoverride_params = qw(expires_at expires_in expires_variance serializer);
 sub _non_overridable {
     my $params = shift;
-    if (is_UnblessedHashRef($params)) {
+    if (is_HashRef($params)) {
         if ( my @nonoverride = grep { exists $params->{$_} } @subcache_nonoverride_params) {
             warn sprintf( "cannot override these keys in a subcache: %s",
                 join( ", ", @nonoverride ) );
@@ -29,7 +29,7 @@ for my $type (qw(l1_cache mirror_cache)) {
     has $config_acc => (
         is       => 'ro',
         init_arg => $type,
-        isa      => UnblessedHashRef,
+        isa      => HashRef,
         coerce   => \&_non_overridable,
     );
 

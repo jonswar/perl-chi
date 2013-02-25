@@ -33,13 +33,6 @@ MooX::Types::MooseLike::register_types([
     message => sub { return exception_message($_[0], 'a positive integer') },
 },
 {
-    name => 'UnblessedHashRef',
-    subtype_of => 'HashRef',
-    from => 'MooX::Types::MooseLike::Base',
-    test => sub { !blessed($_[0]) },
-    message => sub { return exception_message($_[0], 'an unblessed hash reference') },
-},
-{
     name => 'DiscardPolicy',
     test => sub { !ref($_) || ref($_) eq 'CODE' },
     message => sub { return exception_message($_[0], 'a coderef or policy name') },
