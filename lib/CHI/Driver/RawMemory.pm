@@ -5,7 +5,7 @@ use warnings;
 
 extends 'CHI::Driver::Memory';
 
-has 'serializer' => ( is => 'ro', default => sub { undef }, init_arg => undef );
+has 'serializer' => ( is => 'ro', init_arg => undef );
 
 sub append {
     my ( $self, $key, $new ) = @_;
