@@ -20,8 +20,10 @@ test_modules(qw(
   Dancer::Session::CHI
   Dezi::Bot
   Dist::Zilla::Role::MetaCPANInterfacer
+  Elastic::Model
   File::DataClass
   Mason::Plugin::Cache
+  Metabase
   Mojito
   Mojolicious::Plugin::CHI
   Parallel::ForkControl
@@ -45,8 +47,6 @@ test_modules(qw(
 #Poet # broken dep
 #Plack::Middleware::ActiveMirror # no tests
 #Apache2::AutoTicketLDAP # apache
-#Metabase # tests broken
-#Elastic::Model # tests broken
 #Net::FullAuto # wtf
 #CHI::Driver::TokyoTyrant # darkpan
 #Tapper::Testplan # tests broken
