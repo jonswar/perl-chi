@@ -8,7 +8,7 @@ use strict;
 use warnings;
 
 sub serialize {
-    return Storable::freeze( $_[1] );
+    return Storable::nfreeze( $_[1] );
 }
 
 sub deserialize {
