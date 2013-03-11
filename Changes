@@ -24,6 +24,9 @@ NEXT VERSION
 * Fixes
   - Fix the loading of additional roles or traits (jrouzierinverse)
 
+* Improvements
+  - Use nfreeze instead of freeze for network portability - RT #74188 (Jeffrey Fuller)
+
 0.56  Oct 22, 2012
 
 * Fixes
