@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-use Test::DependentModules qw(test_all_dependents test_modules);
+use Test::DependentModules qw(test_modules);
 
 #$ENV{CHI_REDIS_SERVER} = 1;       # CHI::Driver::Redis
 #$ENV{FORCE_MEMCACHED_TESTS} = 1;  # CHI::Cascade
