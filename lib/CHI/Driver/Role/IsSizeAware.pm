@@ -6,7 +6,7 @@ use CHI::Types qw(:all);
 use strict;
 use warnings;
 
-has 'discard_policy'            => ( is => 'lazy', isa => Maybe[DiscardPolicy]);
+has 'discard_policy'            => ( is => 'lazy', isa => Maybe[DiscardPolicy] );
 has 'discard_timeout'           => ( is => 'rw', isa => Num, default => sub { 10 } );
 has 'max_size'                  => ( is => 'rw', isa => MemorySize, coerce => \&to_MemorySize );
 has 'max_size_reduction_factor' => ( is => 'rw', isa => Num, default => sub { 0.8 } );

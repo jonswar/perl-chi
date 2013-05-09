@@ -143,7 +143,8 @@ sub new {
     # Select a final class based on the driver class and roles, creating it
     # if necessary - adapted from MooseX::Traits
     #
-    my $final_class = Moo::Role->create_class_with_roles($driver_class, @roles);
+    my $final_class =
+      Moo::Role->create_class_with_roles( $driver_class, @roles );
 
     my $cache_object = $final_class->new(
         chi_root_class => $chi_root_class,

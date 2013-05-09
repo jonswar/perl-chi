@@ -8,11 +8,17 @@ use Scalar::Util qw(weaken);
 use strict;
 use warnings;
 
-my @subcache_nonoverride_params = qw(expires_at expires_in expires_variance serializer);
+my @subcache_nonoverride_params =
+  qw(expires_at expires_in expires_variance serializer);
+
 sub _non_overridable {
     my $params = shift;
-    if (is_HashRef($params)) {
-        if ( my @nonoverride = grep { exists $params->{$_} } @subcache_nonoverride_params) {
+    if ( is_HashRef($params) ) {
+        if (
+            my @nonoverride =
+            grep { exists $params->{$_} } @subcache_nonoverride_params
+          )
+        {
             warn sprintf( "cannot override these keys in a subcache: %s",
                 join( ", ", @nonoverride ) );
             delete( @$params{@nonoverride} );
@@ -37,10 +43,11 @@ for my $type (qw(l1_cache mirror_cache)) {
         my $self = shift;
         my $config = $self->$config_acc or return undef;
 
-        my %inherit = map { ( defined $self->$_ ) ? ( $_ => $self->$_ ) : () } @subcache_inherited_params;
+        my %inherit = map { ( defined $self->$_ ) ? ( $_ => $self->$_ ) : () }
+          @subcache_inherited_params;
         my $build_config = {
             %inherit,
-            label         => $self->label . ":$type",
+            label => $self->label . ":$type",
             %$config,
             is_subcache   => 1,
             parent_cache  => $self,
@@ -55,16 +62,17 @@ for my $type (qw(l1_cache mirror_cache)) {
         lazy     => 1,
         init_arg => undef,
         default  => $default,
-        isa      => Maybe[InstanceOf['CHI::Driver']],
+        isa      => Maybe [ InstanceOf ['CHI::Driver'] ],
     );
 }
 
 has subcaches => (
-    is => 'lazy',
+    is       => 'lazy',
     init_arg => undef,
 );
+
 sub _build_subcaches {
-    [ grep { defined $_ } $_[0]->l1_cache, $_[0]->mirror_cache ]
+    [ grep { defined $_ } $_[0]->l1_cache, $_[0]->mirror_cache ];
 }
 
 sub _build_has_subcaches { 1 }

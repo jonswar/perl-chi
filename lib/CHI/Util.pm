@@ -155,6 +155,7 @@ sub fast_catdir {
         return catdir(@_);
     }
 }
+
 sub fast_catfile {
     if (_FILE_SPEC_USING_UNIX) {
         return join '/', @_;

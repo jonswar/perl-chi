@@ -45,93 +45,94 @@ my @common_params;
             is => 'ro',
         },
         expires_at => {
-            is => 'rw',
+            is      => 'rw',
             default => sub { CHI_Max_Time },
         },
-        expires_in => { is => 'rw',
-            isa => Duration,
+        expires_in => {
+            is     => 'rw',
+            isa    => Duration,
             coerce => \&to_Duration,
         },
         expires_on_backend => {
-            is => 'ro',
-            isa => Num,
+            is      => 'ro',
+            isa     => Num,
             default => sub { 0 },
         },
         expires_variance => {
-            is => 'rw',
-            isa => Num,
+            is      => 'rw',
+            isa     => Num,
             default => sub { 0 },
         },
         has_subcaches => {
-            is => 'lazy',
-            isa => Bool,
+            is       => 'lazy',
+            isa      => Bool,
             init_arg => undef,
         },
         is_size_aware => {
-            is => 'ro',
+            is  => 'ro',
             isa => Bool,
         },
         is_subcache => {
-            is => 'ro',
+            is  => 'ro',
             isa => Bool,
         },
         key_digester => {
-            is => 'ro',
-            isa => Digester,
-            coerce => \&to_Digester,
+            is      => 'ro',
+            isa     => Digester,
+            coerce  => \&to_Digester,
             default => sub { $default_key_digester },
         },
         key_serializer => {
-            is => 'ro',
-            isa => Serializer,
-            coerce => \&to_Serializer,
+            is      => 'ro',
+            isa     => Serializer,
+            coerce  => \&to_Serializer,
             default => sub { $default_key_serializer },
         },
         label => {
-            is => 'rw',
-            lazy => 1,
-            builder => 1,
-            clearer => 1,
+            is        => 'rw',
+            lazy      => 1,
+            builder   => 1,
+            clearer   => 1,
             predicate => 1,
         },
         max_build_depth => {
-            is => 'ro',
+            is      => 'ro',
             default => sub { 8 },
         },
         max_key_length => {
-            is => 'ro',
-            isa => Int,
+            is      => 'ro',
+            isa     => Int,
             default => sub { 1 << 31 },
         },
         metacache => {
-            is => 'lazy',
-            clearer => 1,
+            is        => 'lazy',
+            clearer   => 1,
             predicate => 1,
         },
         namespace => {
-            is => 'ro',
-            isa => Str,
+            is      => 'ro',
+            isa     => Str,
             default => sub { 'Default' },
         },
         on_get_error => {
-            is => 'rw',
-            isa => OnError,
+            is      => 'rw',
+            isa     => OnError,
             default => sub { 'log' },
         },
         on_set_error => {
-            is => 'rw',
-            isa => OnError,
+            is      => 'rw',
+            isa     => OnError,
             default => sub { 'log' },
         },
         serializer => {
-            is => 'ro',
-            isa => Serializer,
-            coerce => \&to_Serializer,
+            is      => 'ro',
+            isa     => Serializer,
+            coerce  => \&to_Serializer,
             default => sub { $default_serializer },
         },
         short_driver_name => {
-            is => 'lazy',
-            clearer => 1,
+            is        => 'lazy',
+            clearer   => 1,
             predicate => 1,
         },
         storage => {
@@ -140,7 +141,7 @@ my @common_params;
     );
     push @common_params, keys %attr;
     for my $attr ( keys %attr ) {
-        has $attr => %{$attr{$attr}};
+        has $attr => %{ $attr{$attr} };
     }
 }
 
@@ -155,15 +156,15 @@ foreach my $method (qw(fetch store remove get_keys get_namespaces)) {
 # Given a hash of params, return the subset that are not in CHI's common parameters.
 #
 push @common_params, qw(
-    discard_policy
-    discard_timeout
-    l1_cache
-    max_size
-    max_size_reduction_factor
-    mirror_cache
-    parent_cache
-    subcache_type
-    subcaches
+  discard_policy
+  discard_timeout
+  l1_cache
+  max_size
+  max_size_reduction_factor
+  mirror_cache
+  parent_cache
+  subcache_type
+  subcaches
 );
 my %common_params = map { ( $_, 1 ) } @common_params;
 
@@ -181,7 +182,8 @@ sub declare_unsupported_methods {
 
     foreach my $method (@methods) {
         no strict 'refs';
-        *{"$class\::$method"} = sub { croak "method '$method' not supported by '$class'" };
+        *{"$class\::$method"} =
+          sub { croak "method '$method' not supported by '$class'" };
     }
 }
 
