@@ -1,20 +1,18 @@
 
 =head1 NAME
 
-CHI::Driver::Development -- Manual for developing new CHI drivers
+CHI::Driver::Development - Manual for developing new CHI drivers
 
 =head1 SYNOPSIS
 
     package CHI::Driver::MyDriver;
-    use Moose;
+    use Moo;
     use strict;
     use warnings;
 
     extends 'CHI::Driver';
 
     has ...;
-
-    __PACKAGE__->meta->make_immutable();
 
     sub fetch {
         my ( $self, $key ) = @_;
@@ -66,12 +64,12 @@ like
 
     CHI->new(driver => '+My::Internal::CHI::Driver');
 
-=head1 MOOSE
+=head1 MOO / MOOSE
 
-CHI driver classes must be L<Moose|Moose> based to be fully functional, since
-we use Moose roles to implement various features. For backward compatibility,
-non-Moose drivers will still work at a basic level, but you will see an error
-if using any feature requiring a role.
+CHI driver classes must be L<Moo|Moo> or L<Moose|Moose> based to be fully
+functional, since we use Moose roles to implement various features. For
+backward compatibility, non-Moo/Moose drivers will still work at a basic
+level, but you will see an error if using any feature requiring a role.
 
 All drivers must directly or indirectly extend L<CHI::Driver|CHI::Driver>.
 
@@ -148,8 +146,8 @@ your subclass:
 
 =item BUILD ( $self, $options )
 
-Define the Moose BUILD method if you want to process any options specific to
-your driver.
+Define the BUILD method if you want to process any options specific to
+your driver.  This is a standard Moo/Moose feature.
 
 =item fetch_multi_hashref ( $keys )
 
