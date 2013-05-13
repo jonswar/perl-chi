@@ -1,6 +1,6 @@
 package CHI::Test::Driver::Role::CheckKeyValidity;
 use Carp;
-use Moose::Role;
+use Moo::Role;
 use strict;
 use warnings;
 

@@ -8,10 +8,9 @@ use base qw(CHI::Test::Class);
 #
 {
     package CHI::t::Subclass::Driver::HasUnsupported;
-    use Moose;
+    use Moo;
     extends 'CHI::Driver::Memory';
     __PACKAGE__->declare_unsupported_methods(qw(get_namespaces));
-    __PACKAGE__->meta->make_immutable;
 }
 
 sub test_unsupported : Tests {

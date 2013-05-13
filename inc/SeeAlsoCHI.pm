@@ -1,4 +1,4 @@
-package Pod::Weaver::Section::SeeAlsoCHI;
+package inc::SeeAlsoCHI;
 use Moose;
 with 'Pod::Weaver::Role::Section';
 

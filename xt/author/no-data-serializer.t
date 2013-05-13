@@ -6,10 +6,20 @@ use strict;
 use warnings;
 use Test::More tests => 3;
 use Test::Exception;
-use Module::Mask;
 use Module::Load::Conditional qw(can_load);
-our $mask;
-BEGIN { $mask = new Module::Mask('Data::Serializer') }
+BEGIN {
+    package
+        MaskNativeMessage;
+    use base qw(Module::Mask);
+    my $test_module = "NonExistantModule" . time;
+    my $native_message = do { eval "require $test_module"; $@ };
+    sub message {
+        my ($class, $filename) = @_;
+        (my $message = $native_message) =~ s/\Q$test_module.pm/$filename/;
+        return $message;
+    }
+    $::mask = $::mask = MaskNativeMessage->new('Data::Serializer');
+}
 use CHI;
 
 require CHI::Driver;

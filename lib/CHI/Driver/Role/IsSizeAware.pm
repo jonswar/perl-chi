@@ -1,13 +1,15 @@
 package CHI::Driver::Role::IsSizeAware;
 use Carp::Assert;
-use Moose::Role;
+use Moo::Role;
+use MooX::Types::MooseLike::Base qw(:all);
+use CHI::Types qw(:all);
 use strict;
 use warnings;
 
-has 'discard_policy'            => ( is => 'ro', isa => 'Maybe[CHI::Types::DiscardPolicy]', builder => '_build_discard_policy' );
-has 'discard_timeout'           => ( is => 'rw', isa => 'Num', default => 10 );
-has 'max_size'                  => ( is => 'rw', isa => 'CHI::Types::MemorySize', coerce => 1 );
-has 'max_size_reduction_factor' => ( is => 'rw', isa => 'Num', default => 0.8 );
+has 'discard_policy'            => ( is => 'lazy', isa => Maybe[DiscardPolicy]);
+has 'discard_timeout'           => ( is => 'rw', isa => Num, default => sub { 10 } );
+has 'max_size'                  => ( is => 'rw', isa => MemorySize, coerce => \&to_MemorySize );
+has 'max_size_reduction_factor' => ( is => 'rw', isa => Num, default => sub { 0.8 } );
 
 use constant Size_Key => 'CHI_IsSizeAware_size';
 

@@ -1,16 +1,16 @@
 package CHI::Driver::CacheCache;
 use Cache::Cache;
 use Carp;
-use Moose;
+use Moo;
+use MooX::Types::MooseLike::Base qw(:all);
+use Module::Runtime qw(require_module);
 use strict;
 use warnings;
 
 extends 'CHI::Driver::Base::CacheContainer';
 
-has 'cc_class'   => ( is => 'ro', isa => 'Str', required => 1 );
-has 'cc_options' => ( is => 'ro', isa => 'HashRef', required => 1 );
-
-__PACKAGE__->meta->make_immutable();
+has 'cc_class'   => ( is => 'ro', isa => Str, required => 1 );
+has 'cc_options' => ( is => 'ro', isa => HashRef, required => 1 );
 
 sub BUILD {
     my ( $self, $params ) = @_;
@@ -25,7 +25,7 @@ sub _build_contained_cache {
     my $cc_options = $self->{cc_options};
     my %subparams  = ( namespace => $self->namespace );
 
-    Class::MOP::load_class($cc_class);
+    require_module($cc_class);
 
     my %final_cc_params = ( %subparams, %{$cc_options} );
 
