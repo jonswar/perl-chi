@@ -120,8 +120,8 @@ sub new {
     #
     my @roles = ('Universal');
     foreach my $param_name (qw(roles traits)) {
-        if ( exists( $params{param_name} ) ) {
-            push( @roles, @{ delete( $params{param_name} ) } );
+        if ( exists( $params{$param_name} ) ) {
+            push( @roles, @{ delete( $params{$param_name} ) } );
         }
     }
     if ( exists( $params{max_size} ) || exists( $params{is_size_aware} ) ) {
