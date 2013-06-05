@@ -3,11 +3,9 @@
 #
 package CHI::Serializer::JSON;
 use CHI::Util qw(json_encode json_decode);
-use Moose;
+use Moo;
 use strict;
 use warnings;
-
-__PACKAGE__->meta->make_immutable;
 
 sub serialize {
     return json_encode( $_[1] );

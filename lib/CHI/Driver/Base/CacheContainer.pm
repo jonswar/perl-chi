@@ -1,6 +1,5 @@
 package CHI::Driver::Base::CacheContainer;
-use Moose;
-use Moose::Util::TypeConstraints;
+use Moo;
 use List::MoreUtils qw( all );
 use strict;
 use warnings;
@@ -8,8 +7,6 @@ use warnings;
 extends 'CHI::Driver';
 
 has '_contained_cache' => ( is => 'ro' );
-
-__PACKAGE__->meta->make_immutable();
 
 sub fetch {
     my ( $self, $key ) = @_;

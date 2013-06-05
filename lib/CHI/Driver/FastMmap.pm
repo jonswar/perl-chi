@@ -4,16 +4,15 @@ use Cache::FastMmap;
 use CHI::Util qw(read_dir);
 use File::Path qw(mkpath);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
-use Moose;
+use Moo;
+use MooX::Types::MooseLike::Base qw(:all);
 use strict;
 use warnings;
 
 extends 'CHI::Driver::Base::CacheContainer';
 
-has 'dir_create_mode' => ( is => 'ro', isa => 'Int', default => oct(775) );
-has 'root_dir'        => ( is => 'ro', isa => 'Str', default => catdir( tmpdir(), "chi-driver-fastmmap" ) );
-
-__PACKAGE__->meta->make_immutable();
+has 'dir_create_mode' => ( is => 'ro', isa => Int, default => sub { oct(775) } );
+has 'root_dir'        => ( is => 'ro', isa => Str, default => sub { catdir( tmpdir(), "chi-driver-fastmmap" ) } );
 
 sub BUILD {
     my ( $self, $params ) = @_;

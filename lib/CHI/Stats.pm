@@ -2,19 +2,17 @@ package CHI::Stats;
 use CHI::Util qw(json_encode json_decode);
 use List::Util qw(sum);
 use Log::Any qw($log);
-use Moose;
+use Moo;
 use strict;
 use warnings;
 
 has 'chi_root_class' => ( is => 'ro' );
 has 'data'           => ( is => 'ro', default => sub { {} } );
-has 'enabled'        => ( is => 'ro', default => 0 );
+has 'enabled'        => ( is => 'rwp', default => sub { 0 } );
 has 'start_time'     => ( is => 'ro', default => sub { time } );
 
-__PACKAGE__->meta->make_immutable();
-
-sub enable  { $_[0]->{enabled} = 1 }
-sub disable { $_[0]->{enabled} = 0 }
+sub enable  { $_[0]->_set_enabled(1) }
+sub disable { $_[0]->_set_enabled(0) }
 
 sub flush {
     my ($self) = @_;

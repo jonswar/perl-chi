@@ -6,10 +6,8 @@
 ^docs
 ^etc/bench/data
 ^etc/bench/results.dat
-^git
 ^htdocs
-^inc/\.author
-^lib/Pod
+^inc/
 ^lib/Test
 ^localcpan
 ^misc

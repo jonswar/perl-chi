@@ -1,47 +1,113 @@
 package CHI::Types;
 use Carp;
 use CHI::Util qw(can_load parse_duration parse_memory_size);
-use Moose;
-use Moose::Util::TypeConstraints;
+use MooX::Types::MooseLike qw(exception_message);
+use MooX::Types::MooseLike::Base qw(:all);
+use MooX::Types::MooseLike::Numeric qw(:all);
+use base qw(Exporter);
 use strict;
 use warnings;
 
-type 'CHI::Types::OnError' =>
-  where { ref($_) eq 'CODE' || /^(?:ignore|warn|die|log)$/ };
+our @EXPORT_OK = ();
+our %EXPORT_TAGS = ('all' => \@EXPORT_OK);
 
-subtype 'CHI::Types::Duration' => as 'Int' => where { $_ > 0 };
-coerce 'CHI::Types::Duration' => from 'Str' => via { parse_duration($_) };
+MooX::Types::MooseLike::register_types([
+{
+    name => 'OnError',
+    test => sub { ref($_[0]) eq 'CODE' || $_[0] =~ /^(?:ignore|warn|die|log)$/ },
+    message => sub { return exception_message($_[0], 'a coderef or error level') },
+    inflate => 0,
+},
+{
+    name => 'Duration',
+    subtype_of => PositiveInt,
+    test =>  sub { 1 },
+    message => sub { return exception_message($_[0], 'a positive integer') },
+    inflate => 0,
+},
+{
+    name => 'MemorySize',
+    subtype_of => PositiveInt,
+    test => sub { 1 },
+    message => sub { return exception_message($_[0], 'a positive integer') },
+    inflate => 0,
+},
+{
+    name => 'DiscardPolicy',
+    test => sub { !ref($_) || ref($_) eq 'CODE' },
+    message => sub { return exception_message($_[0], 'a coderef or policy name') },
+    inflate => 0,
+},
+{
+    name => 'Serializer',
+    subtype_of => Object,
+    test => sub { 1 },
+    message => sub { return exception_message($_[0], 'a serializer, hashref, or string') },
+    inflate => 0,
+},
+{
+    name => 'Digester',
+    subtype_of => Object,
+    test => sub { 1 },
+    message => sub { return exception_message($_[0], 'a digester, hashref, or string') },
+    inflate => 0,
+}
+], __PACKAGE__);
 
-subtype 'CHI::Types::MemorySize' => as 'Int' => where { $_ > 0 };
-coerce 'CHI::Types::MemorySize' => from 'Str' => via { parse_memory_size($_) };
+sub to_MemorySize {
+    my $from = shift;
+    if (is_Num($from)) {
+        $from;
+    }
+    elsif (is_Str($from)) {
+        parse_memory_size($from);
+    }
+    else {
+        $from;
+    }
+}
+push @EXPORT_OK, 'to_MemorySize';
 
-subtype 'CHI::Types::UnblessedHashRef' => as 'HashRef' =>
-  where { !blessed($_) };
+sub to_Duration {
+    my $from = shift;
+    if (is_Str($from)) {
+        parse_duration($from);
+    }
+    else {
+        $from;
+    }
+}
+push @EXPORT_OK, 'to_Duration';
 
-type 'CHI::Types::DiscardPolicy' => where { !ref($_) || ref($_) eq 'CODE' };
+sub to_Serializer {
+    my $from = shift;
+    if (is_HashRef($from)) {
+        _build_data_serializer($from);
+    }
+    elsif (is_Str($from)) {
+        _build_data_serializer( { serializer => $from, raw => 1 } );
+    }
+    else {
+        $from;
+    }
+}
+push @EXPORT_OK, 'to_Serializer';
 
-subtype 'CHI::Types::Serializer' => as 'Object';
-coerce 'CHI::Types::Serializer' => from 'HashRef' => via {
-    _build_data_serializer($_);
-};
-coerce 'CHI::Types::Serializer' => from 'Str' => via {
-    _build_data_serializer( { serializer => $_, raw => 1 } );
-};
-
-subtype 'CHI::Types::Digester' => as 'Object';
-coerce 'CHI::Types::Digester' => from 'HashRef' => via {
-    _build_digester(%$_);
-};
-coerce 'CHI::Types::Digester' => from 'Str' => via {
-    _build_digester($_);
-};
-
-__PACKAGE__->meta->make_immutable;
+sub to_Digester {
+    my $from = shift;
+    if (is_HashRef($from)) {
+        _build_digester(%$from);
+    }
+    elsif (is_Str($from)) {
+        _build_digester($from);
+    }
+    else {
+        $from;
+    }
+}
+push @EXPORT_OK, 'to_Digester';
 
 my $data_serializer_loaded = can_load('Data::Serializer');
-
-my $digest_loaded = can_load('Digest');
-
 sub _build_data_serializer {
     my ($params) = @_;
 
@@ -54,6 +120,7 @@ sub _build_data_serializer {
     }
 }
 
+my $digest_loaded = can_load('Digest');
 sub _build_digester {
     if ($digest_loaded) {
         return Digest->new(@_);

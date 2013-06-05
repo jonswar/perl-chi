@@ -2,9 +2,8 @@ package CHI::Test::Driver::Writeonly;
 use Carp;
 use strict;
 use warnings;
-use Moose;
+use Moo;
 extends 'CHI::Driver::Memory';
-__PACKAGE__->meta->make_immutable();
 
 sub fetch {
     my ( $self, $key ) = @_;

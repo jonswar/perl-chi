@@ -615,7 +615,7 @@ sub test_serializers : Tests {
         sub {
             $self->new_cache( serializer => [1] );
         },
-        qr/Validation failed for/,
+        qr/Validation failed for|isa check for ".*?" failed/,
         "invalid serializer"
     );
     lives_ok(

@@ -1,7 +1,8 @@
 package CHI::Driver::Memory;
 use Carp qw(cluck croak);
 use CHI::Constants qw(CHI_Meta_Namespace);
-use Moose;
+use Moo;
+use MooX::Types::MooseLike::Base qw(:all);
 use strict;
 use warnings;
 
@@ -9,10 +10,8 @@ extends 'CHI::Driver';
 
 our %Global_Datastore = ();    ## no critic (ProhibitPackageVars)
 
-has 'datastore' => ( is => 'ro', isa => 'HashRef' );
-has 'global'    => ( is => 'ro', isa => 'Bool' );
-
-__PACKAGE__->meta->make_immutable();
+has 'datastore' => ( is => 'ro', isa => HashRef );
+has 'global'    => ( is => 'ro', isa => Bool );
 
 sub default_discard_policy { 'lru' }
 
