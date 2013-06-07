@@ -20,9 +20,8 @@ sub new_cache_options {
 
 {
     package CHI::t::Driver::File::NoTempDriver;
-    use Moose;
+    use Moo;
     extends 'CHI::Driver::File';
-    __PACKAGE__->meta->make_immutable;
 
     sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;
@@ -32,9 +31,8 @@ sub new_cache_options {
 
 {
     package CHI::t::Driver::File::BadTempDriver;
-    use Moose;
+    use Moo;
     extends 'CHI::Driver::File';
-    __PACKAGE__->meta->make_immutable;
 
     sub generate_temporary_filename {
         my ( $self, $dir, $file ) = @_;

@@ -1,74 +1,73 @@
 package CHI::Driver::Role::HasSubcaches;
-use Moose::Role;
+use Moo::Role;
+use CHI::Types qw(:all);
+use MooX::Types::MooseLike::Base qw(:all);
 use Hash::MoreUtils qw(slice_exists);
 use Log::Any qw($log);
 use Scalar::Util qw(weaken);
 use strict;
 use warnings;
 
-has 'l1_cache'     => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
-has 'mirror_cache' => ( is => 'ro', isa => 'CHI::Types::UnblessedHashRef' );
-has 'subcaches'    => ( is => 'ro', default => sub { [] }, init_arg => undef );
-
-# List of parameter keys that initialize a subcache
-#
-my @subcache_types = qw(l1_cache mirror_cache);
-
-after 'BUILD_roles' => sub {
-    my ( $self, $params ) = @_;
-
-    $self->{has_subcaches} = 1;
-
-    # Create subcaches as necessary (l1_cache, mirror_cache)
-    # Eventually might allow existing caches to be passed
-    #
-    foreach my $subcache_type (@subcache_types) {
-        if ( my $subcache_params = $params->{$subcache_type} ) {
-            $self->add_subcache( $params, $subcache_type, $subcache_params );
+my @subcache_nonoverride_params = qw(expires_at expires_in expires_variance serializer);
+sub _non_overridable {
+    my $params = shift;
+    if (is_HashRef($params)) {
+        if ( my @nonoverride = grep { exists $params->{$_} } @subcache_nonoverride_params) {
+            warn sprintf( "cannot override these keys in a subcache: %s",
+                join( ", ", @nonoverride ) );
+            delete( @$params{@nonoverride} );
         }
     }
-};
+    return $params;
+}
 
-# List of parameters that are automatically inherited by a subcache
-#
-my @subcache_inherited_param_keys = (
+my @subcache_inherited_params = (
     qw(expires_at expires_in expires_variance namespace on_get_error on_set_error serializer)
 );
-
-# List of parameters that cannot be overridden in a subcache
-#
-my @subcache_nonoverride_param_keys =
-  (qw(expires_at expires_in expires_variance serializer));
-
-# Add a subcache with the specified type and params - called from BUILD
-#
-sub add_subcache {
-    my ( $self, $params, $subcache_type, $subcache_params ) = @_;
-
-    if ( my %nonoverride_params =
-        slice_exists( $subcache_params, @subcache_nonoverride_param_keys ) )
-    {
-        my @nonoverride_keys = sort keys(%nonoverride_params);
-        warn sprintf( "cannot override these keys in a subcache: %s",
-            join( ", ", @nonoverride_keys ) );
-        delete( @$subcache_params{@nonoverride_keys} );
-    }
-
-    my $chi_root_class = $self->chi_root_class;
-    my %inherited_params =
-      slice_exists( $params, @subcache_inherited_param_keys );
-    my $default_label = $self->label . ":$subcache_type";
-
-    my $subcache = $chi_root_class->new(
-        label => $default_label,
-        %inherited_params, %$subcache_params,
-        is_subcache   => 1,
-        parent_cache  => $self,
-        subcache_type => $subcache_type,
+for my $type (qw(l1_cache mirror_cache)) {
+    my $config_acc = "_${type}_config";
+    has $config_acc => (
+        is       => 'ro',
+        init_arg => $type,
+        isa      => HashRef,
+        coerce   => \&_non_overridable,
     );
-    $self->{$subcache_type} = $subcache;
-    push( @{ $self->{subcaches} }, $subcache );
+
+    my $default = sub {
+        my $self = shift;
+        my $config = $self->$config_acc or return undef;
+
+        my %inherit = map { ( defined $self->$_ ) ? ( $_ => $self->$_ ) : () } @subcache_inherited_params;
+        my $build_config = {
+            %inherit,
+            label         => $self->label . ":$type",
+            %$config,
+            is_subcache   => 1,
+            parent_cache  => $self,
+            subcache_type => $type,
+        };
+
+        return $self->chi_root_class->new(%$build_config);
+    };
+
+    has $type => (
+        is       => 'ro',
+        lazy     => 1,
+        init_arg => undef,
+        default  => $default,
+        isa      => Maybe[InstanceOf['CHI::Driver']],
+    );
 }
+
+has subcaches => (
+    is => 'lazy',
+    init_arg => undef,
+);
+sub _build_subcaches {
+    [ grep { defined $_ } $_[0]->l1_cache, $_[0]->mirror_cache ]
+}
+
+sub _build_has_subcaches { 1 }
 
 # Call these methods first on the main cache, then on any subcaches.
 #

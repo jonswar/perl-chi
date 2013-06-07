@@ -1,9 +1,10 @@
-package CHI;    ## no critic (Moose::RequireMakeImmutable)
+package CHI;
 use 5.006;
 use Carp;
 use CHI::Stats;
-use Moose;
 use String::RewritePrefix;
+use Module::Runtime qw(require_module);
+use Moo::Role ();
 use strict;
 use warnings;
 
@@ -27,10 +28,13 @@ sub _set_config {
     if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
         croak "unknown keys in config hash: " . join( ", ", @bad_keys );
     }
-    $class->meta->add_method( '_get_config' => sub { $config } );
+    # set class specific configuration
+    no strict 'refs';
+    no warnings 'redefine';
+    *{"$class\::_get_config"} = sub { $config };
 }
 
-CHI->config( {} );
+BEGIN { __PACKAGE__->config( {} ) }
 
 sub memoized_cache_objects {
     my ($class) = @_;
@@ -111,7 +115,7 @@ sub new {
     # Load driver class if it hasn't been loaded or defined in-line already
     #
     unless ( $driver_class->can('fetch') ) {
-        Class::MOP::load_class($driver_class);
+        require_module($driver_class);
     }
 
     # Select roles depending on presence of certain arguments. Everyone gets
@@ -139,17 +143,8 @@ sub new {
     # Select a final class based on the driver class and roles, creating it
     # if necessary - adapted from MooseX::Traits
     #
-    my $meta = Moose::Meta::Class->create_anon_class(
-        superclasses => [$driver_class],
-        roles        => \@roles,
-        cache        => 1
-    );
-    my $final_class = $meta->name;
-    $meta->add_method( 'meta' => sub { $meta } )
-      if !$final_class_seen{$final_class}++;
+    my $final_class = Moo::Role->create_class_with_roles($driver_class, @roles);
 
-    # Finally create the object
-    #
     my $cache_object = $final_class->new(
         chi_root_class => $chi_root_class,
         driver_class   => $driver_class,

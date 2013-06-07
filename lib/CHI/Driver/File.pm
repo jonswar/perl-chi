@@ -1,7 +1,6 @@
 package CHI::Driver::File;
 use Carp;
 use Cwd qw(realpath cwd);
-use CHI::Types;
 use CHI::Util
   qw(fast_catdir fast_catfile unique_id read_dir read_file write_file);
 use Digest::JHash qw(jhash);
@@ -10,21 +9,20 @@ use File::Find qw(find);
 use File::Path qw(mkpath rmtree);
 use File::Spec::Functions qw(catdir catfile splitdir tmpdir);
 use Log::Any qw($log);
-use Moose;
+use Moo;
+use MooX::Types::MooseLike::Base qw(:all);
 use strict;
 use warnings;
 
 extends 'CHI::Driver';
 
-has '+max_key_length'   => ( default => 248 );
-has 'depth'             => ( is => 'ro', isa => 'Int', default => 2 );
-has 'dir_create_mode'   => ( is => 'ro', isa => 'Int', default => oct(775) );
-has 'file_create_mode'  => ( is => 'ro', isa => 'Int', default => oct(666) );
-has 'file_extension'    => ( is => 'ro', isa => 'Str', default => '.dat' );
-has 'path_to_namespace' => ( is => 'ro', lazy => 1, builder => '_build_path_to_namespace' );
-has 'root_dir'          => ( is => 'ro', isa => 'Str', default => catdir( tmpdir(), 'chi-driver-file' ) );
-
-__PACKAGE__->meta->make_immutable();
+has '+max_key_length'   => ( default => sub { 248 } );
+has 'depth'             => ( is => 'ro', isa => Int, default => sub { 2 } );
+has 'dir_create_mode'   => ( is => 'ro', isa => Int, default => sub { oct(775) } );
+has 'file_create_mode'  => ( is => 'ro', isa => Int, default => sub { oct(666) } );
+has 'file_extension'    => ( is => 'ro', isa => Str, default => sub { '.dat' } );
+has 'path_to_namespace' => ( is => 'lazy' );
+has 'root_dir'          => ( is => 'ro', isa => Str, default => sub { catdir( tmpdir(), 'chi-driver-file' ) } );
 
 sub BUILDARGS {
     my ( $class, %params ) = @_;

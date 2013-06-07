@@ -1,6 +1,6 @@
 package CHI::Driver::Role::Universal;
 use CHI::Constants qw(CHI_Meta_Namespace);
-use Moose::Role;
+use Moo::Role;
 use strict;
 use warnings;
 
