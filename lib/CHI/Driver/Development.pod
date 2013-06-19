@@ -189,7 +189,7 @@ or omit namespaces with no valid keys.
 
 =head1 DISCARD POLICIES
 
-You can create new discard policies for L<CHI/SIZE AWARENESS|size aware>
+You can create new discard policies for L<size aware|CHI/SIZE AWARENESS>
 caches, to choose items to discard when the cache gets full. For example, the
 Memory driver implements an LRU policy.
 
