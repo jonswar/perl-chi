@@ -1701,7 +1701,10 @@ sub test_no_leak : Tests {
     ok( !defined($weakref), "weakref is no longer defined - cache was freed" );
 }
 
-Class::MOP::Class->create( 'My::CHI' => ( superclasses => ['CHI'] ) );
+{
+  package My::CHI;
+  our @ISA = qw(CHI);
+}
 
 sub test_driver_properties : Tests {
     my $self  = shift;

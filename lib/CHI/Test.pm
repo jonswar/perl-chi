@@ -3,7 +3,7 @@
 package CHI::Test;
 use Log::Any::Test;    # as early as possible
 use List::MoreUtils qw(uniq);
-use Class::MOP;
+use Module::Runtime qw(require_module);
 use CHI;
 use CHI::Driver::Memory;
 use strict;
@@ -29,7 +29,7 @@ sub export_to_level {
     my ( $class, $level, $ignore ) = @_;
 
     foreach my $package ( $class->packages_to_import() ) {
-        Class::MOP::load_class($package);
+        require_module($package);
         my @export;
         if ( $package eq 'Test::Deep' ) {
 

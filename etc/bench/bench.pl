@@ -18,6 +18,7 @@ use Pod::Usage;
 use Text::Table;
 use Try::Tiny;
 use YAML::Any qw(DumpFile);
+use Module::Runtime qw(require_module);
 use warnings;
 use strict;
 
@@ -66,7 +67,7 @@ my %caches;
 foreach my $name ( grep { /$drivers_pattern/ } keys(%cache_generators) ) {
     try {
         if ( my $req = $cache_generators{$name}->{req} ) {
-            Class::MOP::load_class($_) foreach @$req;
+            require_module($_) foreach @$req;
         }
         $caches{$name} = $cache_generators{$name}->{code}->();
     }
