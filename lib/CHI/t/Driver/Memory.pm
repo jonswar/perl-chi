@@ -27,7 +27,7 @@ sub new_cache {
 
     # Check test key validity on every get and set - only necessary to do for one driver
     #
-    $params{roles}       = ['CHI::Test::Driver::Role::CheckKeyValidity'];
+    $params{roles}       = ['+CHI::Test::Driver::Role::CheckKeyValidity'];
     $params{test_object} = $self;
 
     my $cache = CHI->new( $self->new_cache_options(), %params );
