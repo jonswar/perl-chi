@@ -1,6 +1,12 @@
 use strict;
 use warnings;
 use Test::More;
+BEGIN {
+  plan skip_all => <<'END_HELP' unless $ENV{CHI_TEST_MD};
+This test will not run unless you set CHI_TEST_MD to a true value.
+END_HELP
+}
+
 use Test::DependentModules qw(test_modules);
 
 #$ENV{CHI_REDIS_SERVER} = 1;       # CHI::Driver::Redis
