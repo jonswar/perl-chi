@@ -2,7 +2,12 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.57  Oct 22, 2012
+0.58  July 21, 2013
+
+* Fixes
+   - Fix busted packaging
+
+0.57  July 21, 2013
 
 * Implementation
   - Use Moo instead of Moose for object system.  This should be fully compatible
