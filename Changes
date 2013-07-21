@@ -4,6 +4,14 @@ Revision history for CHI
 
 0.57  Oct 22, 2012
 
+* Implementation
+  - Use Moo instead of Moose for object system.  This should be fully compatible
+    with existing code, including Moose drivers or other extensions.  This
+    reduces the startup time and memory overhead.
+
+* Fixes
+  - Fix the loading of additional roles or traits (jrouzierinverse)
+
 0.56  Oct 22, 2012
 
 * Fixes
