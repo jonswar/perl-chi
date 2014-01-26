@@ -21,6 +21,7 @@ dist
 docs
 htdocs
 localcpan*
+perltidy.LOG
 pm_to_blib*
 /release
 tmp
