@@ -4,12 +4,12 @@ Revision history for CHI
 
 NEXT VERSION
 
-* Improvements
-  - The Memory driver (and RawMemory for that matter) now support zero as a
-    valid value for the global argument causing a new hashref datastore to
-    be created. (Aran Deltac)
-
 0.58  July 21, 2013
+
+* Improvements
+  - The Memory and RawMemory drivers now support zero as a valid value for
+    the global argument causing a new hashref datastore to be created. (Aran
+    Deltac)
 
 * Fixes
    - Fix busted packaging
