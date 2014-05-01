@@ -32,6 +32,8 @@ CHI::Driver::RawMemory - In-process memory cache that stores direct references
 
     my $cache = CHI->new( driver => 'RawMemory', global => 1 );
 
+    my $cache = CHI->new( driver => 'RawMemory', global => 0 );
+
 =head1 DESCRIPTION
 
 This is a subclass of L<CHI::Driver::Memory|CHI::Driver::Memory> that stores

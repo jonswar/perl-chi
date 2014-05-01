@@ -24,10 +24,10 @@ sub default_discard_policy { 'lru' }
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    if ( $self->{global} ) {
+    if (defined $self->{global}) {
         croak "cannot specify both 'datastore' and 'global'"
           if ( defined( $self->{datastore} ) );
-        $self->{datastore} = \%Global_Datastore;
+        $self->{datastore} = $self->{global} ? \%Global_Datastore : {};
     }
     if ( !defined( $self->{datastore} ) ) {
         cluck "must specify either 'datastore' hashref or 'global' flag";
@@ -108,6 +108,8 @@ CHI::Driver::Memory - In-process memory based cache
 
     my $cache = CHI->new( driver => 'Memory', global => 1 );
 
+    my $cache = CHI->new( driver => 'Memory', global => 0 );
+
 =head1 DESCRIPTION
 
 This cache driver stores data on a per-process basis.  This is the fastest of
@@ -137,10 +139,13 @@ CHI::Driver::Memory constructors.
 
 =item global [BOOL]
 
-Use a standard global datastore. Multiple caches created with this flag will
-see the same data. Before 0.21, this was the default behavior; now it must be
-specified explicitly (to avoid accidentally sharing the same datastore in
-unrelated code).
+Use a standard global datastore. Multiple caches created with this set to true
+will see the same data. Before 0.21, this was the default behavior; now it
+must be specified explicitly (to avoid accidentally sharing the same datastore
+in unrelated code).
+
+If this is set to false then datastore will be set to a new reference to a
+hash.
 
 =back
 
