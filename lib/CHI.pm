@@ -29,6 +29,7 @@ sub _set_config {
     if ( my @bad_keys = grep { !$valid_config_keys{$_} } keys(%$config) ) {
         croak "unknown keys in config hash: " . join( ", ", @bad_keys );
     }
+
     # set class specific configuration
     no strict 'refs';
     no warnings 'redefine';

@@ -1707,8 +1707,8 @@ sub test_no_leak : Tests {
 }
 
 {
-  package My::CHI;
-  our @ISA = qw(CHI);
+    package My::CHI;
+    our @ISA = qw(CHI);
 }
 
 sub test_driver_properties : Tests {

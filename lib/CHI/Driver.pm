@@ -35,11 +35,11 @@ my @common_params;
             is => 'ro',
         },
         compress_threshold => {
-            is => 'ro',
+            is  => 'ro',
             isa => Int,
         },
         constructor_params => {
-            is => 'ro',
+            is       => 'ro',
             init_arg => undef,
         },
         driver_class => {

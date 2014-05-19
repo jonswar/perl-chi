@@ -99,10 +99,10 @@ push @EXPORT_OK, 'to_Duration';
 
 sub to_Serializer {
     my $from = shift;
-    if (is_HashRef($from)) {
+    if ( is_HashRef($from) ) {
         _build_data_serializer($from);
     }
-    elsif (is_Str($from)) {
+    elsif ( is_Str($from) ) {
         _build_data_serializer( { serializer => $from, raw => 1 } );
     }
     else {
@@ -113,10 +113,10 @@ push @EXPORT_OK, 'to_Serializer';
 
 sub to_Digester {
     my $from = shift;
-    if (is_HashRef($from)) {
+    if ( is_HashRef($from) ) {
         _build_digester(%$from);
     }
-    elsif (is_Str($from)) {
+    elsif ( is_Str($from) ) {
         _build_digester($from);
     }
     else {
@@ -126,6 +126,7 @@ sub to_Digester {
 push @EXPORT_OK, 'to_Digester';
 
 my $data_serializer_loaded = can_load('Data::Serializer');
+
 sub _build_data_serializer {
     my ($params) = @_;
 
@@ -139,6 +140,7 @@ sub _build_data_serializer {
 }
 
 my $digest_loaded = can_load('Digest');
+
 sub _build_digester {
     if ($digest_loaded) {
         return Digest->new(@_);

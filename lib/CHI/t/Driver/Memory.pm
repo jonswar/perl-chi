@@ -17,12 +17,9 @@ sub new_cache_options {
 }
 
 sub new_cache {
-    my $self   = shift;
+    my $self = shift;
 
-    my %params = (
-        $self->new_cache_options(),
-        @_
-    );
+    my %params = ( $self->new_cache_options(), @_ );
 
     # If new_cache called with datastore, ignore global flag (otherwise would be an error)
     #
@@ -35,7 +32,7 @@ sub new_cache {
     $params{roles}       = ['+CHI::Test::Driver::Role::CheckKeyValidity'];
     $params{test_object} = $self;
 
-    my $cache = CHI->new( %params );
+    my $cache = CHI->new(%params);
     return $cache;
 }
 

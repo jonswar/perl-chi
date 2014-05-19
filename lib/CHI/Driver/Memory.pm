@@ -25,7 +25,7 @@ sub default_discard_policy { 'lru' }
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    if (defined $self->{global}) {
+    if ( defined $self->{global} ) {
         croak "cannot specify both 'datastore' and 'global'"
           if ( defined( $self->{datastore} ) );
         $self->{datastore} = $self->{global} ? \%Global_Datastore : {};
@@ -141,9 +141,9 @@ CHI::Driver::Memory constructors.
 =item global [BOOL]
 
 Use a standard global datastore. Multiple caches created with this set to true
-will see the same data. Before 0.21, this was the default behavior; now it
-must be specified explicitly (to avoid accidentally sharing the same datastore
-in unrelated code).
+will see the same data. Before 0.21, this was the default behavior; now it must
+be specified explicitly (to avoid accidentally sharing the same datastore in
+unrelated code).
 
 If this is set to false then datastore will be set to a new reference to a
 hash.

@@ -146,7 +146,8 @@ sub write_file {
     }
 }
 
-use constant _FILE_SPEC_USING_UNIX => ($File::Spec::ISA[0] eq 'File::Spec::Unix');
+use constant _FILE_SPEC_USING_UNIX =>
+  ( $File::Spec::ISA[0] eq 'File::Spec::Unix' );
 
 sub fast_catdir {
     if (_FILE_SPEC_USING_UNIX) {
