@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.58  July 21, 2013
+0.58  May 18, 2014
 
 * Improvements
   - The Memory and RawMemory drivers now support zero as a valid value for
