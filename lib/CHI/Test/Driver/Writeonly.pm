@@ -1,4 +1,5 @@
 package CHI::Test::Driver::Writeonly;
+
 use Carp;
 use strict;
 use warnings;

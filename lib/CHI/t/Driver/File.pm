@@ -1,4 +1,5 @@
 package CHI::t::Driver::File;
+
 use strict;
 use warnings;
 use CHI::Test;
@@ -20,6 +21,7 @@ sub new_cache_options {
 
 {
     package CHI::t::Driver::File::NoTempDriver;
+
     use Moo;
     extends 'CHI::Driver::File';
 
@@ -31,6 +33,7 @@ sub new_cache_options {
 
 {
     package CHI::t::Driver::File::BadTempDriver;
+
     use Moo;
     extends 'CHI::Driver::File';
 

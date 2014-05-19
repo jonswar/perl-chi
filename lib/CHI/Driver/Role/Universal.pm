@@ -1,4 +1,5 @@
 package CHI::Driver::Role::Universal;
+
 use CHI::Constants qw(CHI_Meta_Namespace);
 use Moo::Role;
 use strict;

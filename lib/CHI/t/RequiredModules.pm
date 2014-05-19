@@ -1,4 +1,5 @@
 package CHI::t::RequiredModules;
+
 use strict;
 use warnings;
 use CHI::Test;

@@ -1,4 +1,5 @@
 package CHI::Driver::Null;
+
 use Moo;
 use strict;
 use warnings;

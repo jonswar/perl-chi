@@ -1,4 +1,5 @@
 package CHI::t::Bugs;
+
 use strict;
 use warnings;
 use CHI::Test;

@@ -1,4 +1,5 @@
 package CHI::t::Driver::Memory;
+
 use strict;
 use warnings;
 use CHI::Test;

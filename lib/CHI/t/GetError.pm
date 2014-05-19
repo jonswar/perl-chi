@@ -1,4 +1,5 @@
 package CHI::t::GetError;
+
 use strict;
 use warnings;
 use CHI::Test;

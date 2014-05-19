@@ -1,4 +1,5 @@
 package CHI::Test::Class;
+
 use Getopt::Long;
 use CHI::Util qw(can_load);
 use strict;

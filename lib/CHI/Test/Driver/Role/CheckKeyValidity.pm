@@ -1,4 +1,5 @@
 package CHI::Test::Driver::Role::CheckKeyValidity;
+
 use Carp;
 use Moo::Role;
 use strict;

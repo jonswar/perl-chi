@@ -1,4 +1,5 @@
 package CHI::Driver::Role::IsSizeAware;
+
 use Carp::Assert;
 use Moo::Role;
 use MooX::Types::MooseLike::Base qw(:all);

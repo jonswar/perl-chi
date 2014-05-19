@@ -2,6 +2,7 @@
 # Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::JSON;
+
 use CHI::Util qw(json_encode json_decode);
 use Moo;
 use strict;

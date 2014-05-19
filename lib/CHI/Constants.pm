@@ -1,4 +1,5 @@
 package CHI::Constants;
+
 use strict;
 use warnings;
 use base qw(Exporter);

@@ -1,4 +1,5 @@
 package CHI::Stats;
+
 use CHI::Util qw(json_encode json_decode);
 use List::Util qw(sum);
 use Log::Any qw($log);

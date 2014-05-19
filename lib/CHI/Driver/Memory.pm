@@ -1,4 +1,5 @@
 package CHI::Driver::Memory;
+
 use Carp qw(cluck croak);
 use CHI::Constants qw(CHI_Meta_Namespace);
 use Moo;

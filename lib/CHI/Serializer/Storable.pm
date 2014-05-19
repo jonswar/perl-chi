@@ -2,6 +2,7 @@
 # Recommend Data::Serializer for other serializers, rather than reinventing the wheel.
 #
 package CHI::Serializer::Storable;
+
 use Moo;
 use Storable;
 use strict;

@@ -1,4 +1,5 @@
 package CHI::CacheObject;
+
 use CHI::Constants qw(CHI_Max_Time);
 use Encode;
 use strict;

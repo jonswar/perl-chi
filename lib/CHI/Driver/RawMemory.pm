@@ -1,4 +1,5 @@
 package CHI::Driver::RawMemory;
+
 use Moo;
 use strict;
 use warnings;

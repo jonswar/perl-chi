@@ -1,4 +1,5 @@
 package CHI::Test::Driver::NonMoose;
+
 use Carp;
 use strict;
 use warnings;

@@ -1,4 +1,5 @@
 package CHI::t::Config;
+
 use CHI::Util qw(dump_one_line);
 use CHI::Test;
 use File::Temp qw(tempdir);
@@ -22,17 +23,20 @@ my %config = (
 
 {
     package My::CHI;
+
     use base qw(CHI);
     My::CHI->config( {%config} );
 }
 
 {
     package My::CHI::Subclass;
+
     use base qw(My::CHI);
 }
 
 {
     package My::CHI::Memo;
+
     use base qw(CHI);
     My::CHI::Memo->config( { %config, memoize_cache_objects => 1 } );
 }

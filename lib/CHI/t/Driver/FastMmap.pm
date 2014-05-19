@@ -1,4 +1,5 @@
 package CHI::t::Driver::FastMmap;
+
 use strict;
 use warnings;
 use CHI::Test;

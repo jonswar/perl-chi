@@ -1,4 +1,5 @@
 package CHI::t::Subcache;
+
 use CHI::Test;
 use CHI::Util qw(can_load);
 use base qw(CHI::Test::Class);

@@ -1,4 +1,5 @@
 package CHI::t::Initialize;
+
 use strict;
 use warnings;
 use CHI::Test;

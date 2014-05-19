@@ -1,4 +1,5 @@
 package CHI::t::Sanity;
+
 use strict;
 use warnings;
 use CHI::Test;

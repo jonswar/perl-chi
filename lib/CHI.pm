@@ -1,4 +1,5 @@
 package CHI;
+
 use 5.006;
 use Carp;
 use CHI::Stats;
@@ -1137,6 +1138,7 @@ subclasses.
 Start with a trivial subclass:
 
     package My::CHI;
+
     use base qw(CHI);
     1;
 
@@ -1151,6 +1153,7 @@ This obviously doesn't change any behavior by itself. Here's an example with
 actual config:
 
     package My::CHI;
+
     use base qw(CHI);
 
     __PACKAGE__->config({

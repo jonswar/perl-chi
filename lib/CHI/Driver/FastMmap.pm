@@ -1,4 +1,5 @@
 package CHI::Driver::FastMmap;
+
 use Carp;
 use Cache::FastMmap;
 use CHI::Util qw(read_dir);
