@@ -2,6 +2,11 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
+0.59
+
+* Fixes
+  - Fix DiscardPolicy type - RT #95291 (Josh Rosenbaum)
+
 0.58  May 18, 2014
 
 * Implementation
@@ -17,7 +22,6 @@ Revision history for CHI
 * Fixes
   - Fix busted packaging
   - Fix the loading of additional roles or traits (jrouzierinverse)
-  - Fix DiscardPolicy type - RT #95291 (Josh Rosenbaum)
 
 0.57  Jan 26, 2014
 
