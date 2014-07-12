@@ -4,23 +4,21 @@ Revision history for CHI
 
 0.58  May 18, 2014
 
+* Implementation
+  - Use Moo instead of Moose for object system.  This should be fully compatible
+    with existing code, including Moose drivers or other extensions.  This
+    reduces the startup time and memory overhead.
+
 * Improvements
   - The Memory and RawMemory drivers now support zero as a valid value for
     the global argument causing a new hashref datastore to be created. (Aran
     Deltac)
 
 * Fixes
-   - Fix busted packaging
-
-0.57  July 21, 2013
-
-* Implementation
-  - Use Moo instead of Moose for object system.  This should be fully compatible
-    with existing code, including Moose drivers or other extensions.  This
-    reduces the startup time and memory overhead.
-
-* Fixes
+  - Fix busted packaging
   - Fix the loading of additional roles or traits (jrouzierinverse)
+
+0.57  Jan 26, 2014
 
 * Improvements
   - Use nfreeze instead of freeze for network portability - RT #74188 (Jeffrey Fuller)
