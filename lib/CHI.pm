@@ -1397,7 +1397,7 @@ developing new drivers.
 =head1 LOGGING
 
 C<CHI> uses L<Log::Any|Log::Any> for logging events. For example, a debug log
-message is sent for every cache get and set.
+message is sent with category C<CHI::Driver> for every cache get and set.
 
 See L<Log::Any|Log::Any> documentation for how to control where logs get sent,
 if anywhere.
