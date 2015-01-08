@@ -9,6 +9,7 @@ Revision history for CHI
 
 * Fixes
   - Fix DiscardPolicy type - RT #95291 (Josh Rosenbaum)
+  - Don't mandate that get_namespaces returns in same order - RT #89892 (nhorne)
 
 0.58  May 18, 2014
 
