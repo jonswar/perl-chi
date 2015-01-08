@@ -42,7 +42,7 @@ MooX::Types::MooseLike::register_types(
         },
         {
             name    => 'DiscardPolicy',
-            test    => sub { !ref($_[0]) || ref($_[0]) eq 'CODE' },
+            test    => sub { !ref( $_[0] ) || ref( $_[0] ) eq 'CODE' },
             message => sub {
                 return exception_message( $_[0], 'a coderef or policy name' );
             },

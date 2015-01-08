@@ -479,10 +479,10 @@ I<$key> may be followed by one or more name/value parameters:
 =item expire_if [CODEREF]
 
 If I<$key> exists and has not expired, call code reference with the
-L<CHI::CacheObject|CHI::CacheObject> and L<CHI::Driver|CHI::Driver> as the parameters. If code returns a
-true value, C<get> returns undef as if the item were expired. For example, to
-treat the cache as expired if I<$file> has changed since the value was
-computed:
+L<CHI::CacheObject|CHI::CacheObject> and L<CHI::Driver|CHI::Driver> as the
+parameters. If code returns a true value, C<get> returns undef as if the item
+were expired. For example, to treat the cache as expired if I<$file> has
+changed since the value was computed:
 
     $cache->get('foo', expire_if => sub { $_[0]->created_at < (stat($file))[9] });
 
