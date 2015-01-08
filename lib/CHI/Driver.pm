@@ -285,7 +285,7 @@ sub get {
     # Check if expired
     #
     my $is_expired = $obj->is_expired()
-      || ( defined( $params{expire_if} ) && $params{expire_if}->($obj) );
+      || ( defined( $params{expire_if} ) && $params{expire_if}->($obj, $self) );
     if ($is_expired) {
         $self->_record_get_stats( 'expired_misses', $elapsed_time )
           if defined($ns_stats);
