@@ -692,7 +692,7 @@ sub test_namespaces : Tests {
         );
 
         foreach my $c ( $cache0, $cache1, $cache1a, $cache2, $cache3 ) {
-            cmp_deeply(
+            cmp_set(
                 [ $cache->get_namespaces() ],
                 [ $c->get_namespaces() ],
                 'get_namespaces the same regardless of which cache asks'
