@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.59
+0.59  Jan 7, 2015
 
 * Improvements
   - Pass driver to expire_if - https://github.com/jonswar/perl-chi/pull/19 (rouzier)
