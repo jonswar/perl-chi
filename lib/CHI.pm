@@ -330,8 +330,8 @@ Default is "MD5".
 =item key_serializer [STRING|HASHREF|OBJECT]
 
 An object to use for serializing keys that are references. See L</serializer>
-above for the different ways this can be passed in. The default is to use JSON
-in canonical mode (sorted hash keys).
+above for the different ways this can be passed in. The default is to use the
+JSON backend in canonical mode (sorted hash keys).
 
 =item label [STRING]
 

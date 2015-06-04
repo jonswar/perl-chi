@@ -6,7 +6,7 @@ use Data::Dumper;
 use Data::UUID;
 use Fcntl qw( :DEFAULT );
 use File::Spec::Functions qw(catdir catfile);
-use JSON;
+use JSON::MaybeXS;
 use Time::Duration::Parse;
 use Try::Tiny;
 use strict;
@@ -31,11 +31,6 @@ our @EXPORT_OK = qw(
 
 my $Fetch_Flags = O_RDONLY | O_BINARY;
 my $Store_Flags = O_WRONLY | O_CREAT | O_BINARY;
-
-# Map null, true and false to real Perl values
-if ( JSON->VERSION < 2 ) {
-    $JSON::UnMapping = 1;
-}
 
 sub can_load {
 
@@ -182,21 +177,14 @@ sub parse_memory_size {
     }
 }
 
-# Maintain compatibility with both JSON 1 and 2. Borrowed from Data::Serializer::JSON.
-#
-use constant _OLD_JSON => JSON->VERSION < 2;
-my $json = _OLD_JSON ? JSON->new : JSON->new->utf8->canonical;
+my $json = JSON::MaybeXS->new(utf8 => 1, canonical => 1);
 
 sub json_decode {
-    return _OLD_JSON
-      ? $json->jsonToObj( $_[0] )
-      : $json->decode( $_[0] );
+    $json->decode( $_[0] );
 }
 
 sub json_encode {
-    return _OLD_JSON
-      ? $json->objToJson( $_[0] )
-      : $json->encode( $_[0] );
+    $json->encode( $_[0] );
 }
 
 1;
