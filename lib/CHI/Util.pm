@@ -177,7 +177,7 @@ sub parse_memory_size {
     }
 }
 
-my $json = JSON::MaybeXS->new(utf8 => 1, canonical => 1);
+my $json = JSON::MaybeXS->new( utf8 => 1, canonical => 1 );
 
 sub json_decode {
     $json->decode( $_[0] );
