@@ -2,7 +2,7 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
-0.60  Jan 7, 2015
+0.60  Jun 7, 2015
 
 * Fixes
   - Switch JSON backends from JSON.pm to JSON::MaybeXS - https://github.com/jonswar/perl-chi/pull/20 (Karen Etheridge)
