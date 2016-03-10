@@ -6,6 +6,8 @@ use warnings;
 
 extends 'CHI::Driver';
 
+has 'serializer' => ( is => 'ro', init_arg => undef );
+
 sub fetch          { undef }
 sub store          { undef }
 sub remove         { undef }
