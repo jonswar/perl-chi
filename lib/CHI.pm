@@ -6,6 +6,7 @@ use CHI::Stats;
 use String::RewritePrefix;
 use Module::Runtime qw(require_module);
 use Moo::Role ();
+use Hash::MoreUtils qw(slice_grep);
 use strict;
 use warnings;
 
@@ -34,6 +35,81 @@ sub _set_config {
     no strict 'refs';
     no warnings 'redefine';
     *{"$class\::_get_config"} = sub { $config };
+}
+
+sub _defaults {
+    my ( $class, $params, $config ) = @_;
+
+    $params ||= {};
+    $config ||= $class->config || {};
+
+    my $no_defaults_for;
+    if ( my $reftype = ref( $no_defaults_for = $params->{no_defaults_for} ) ) {
+        croak "'no_defaults_for' must be an array reference or string"
+          unless $reftype eq 'ARRAY';
+    }
+    else {
+        $no_defaults_for = [ $no_defaults_for || () ];
+    }
+
+    # Create a hash that maps top-level constructor keys to '1' for each
+    # attribute that should not have a default value loaded from core,
+    # namespace, or storage defaults.
+    #
+    my %no_defaults_for_map = map { $_ => 1 } @$no_defaults_for;
+
+    # Returns a hash reference containing each key => value pair from the
+    # provided hash reference for which '$no_defaults_for{$key}' does not
+    # evaluate to '1'.
+    #
+    my $filter_default_values = sub {
+        return {} unless defined $_[0];
+        return { slice_grep { !$no_defaults_for_map{$_} } $_[0] };
+    };
+
+    # Takes a key into the '$params' hash reference and an optional default
+    # value in case '$params' does not contain the provided key.  Looks up the
+    # resolved key in the '$config' hash reference, returning a hash reference
+    # containing all key => value pairs for which '$no_defaults_for{$key}'
+    # does not evaluate to '1'.  If the provided key cannot be found in
+    # '$params' and the default value is undefined, returns an empty hash
+    # reference.
+    #
+    # For example:
+    #
+    #   $params = {namespace => 'Foo'};
+    #   $config = {namespace => {Foo => {storage => 'File'}
+    #   $no_defaults_for => ['label'];
+    #   $defaults = $extract_defaults->('namespace', 'Default');
+    #       # $defaults == {storage => 'File'}
+    #
+    my $extract_defaults = sub {
+        my ( $key, $fallback ) = @_;
+
+        my $found = $params->{$key};
+        $found ||= $fallback unless $no_defaults_for_map{$key};
+
+        return {} unless defined $found;
+
+        return $filter_default_values->( $config->{$key}{$found} );
+    };
+
+    my $core_defaults = $filter_default_values->( $config->{defaults} );
+
+    my $namespace_defaults = $extract_defaults->( 'namespace', 'Default' );
+
+    my $storage_defaults = $extract_defaults->(
+        'storage', $namespace_defaults->{storage} || $core_defaults->{storage},
+    );
+
+    return ( $core_defaults, $storage_defaults, $namespace_defaults );
+}
+
+# Merges the hash references returned by '_defaults', preferring namespace
+# defaults to storage defaults and storage defaults to core defaults.
+#
+sub defaults {
+    return { map { %$_ } &_defaults };
 }
 
 BEGIN { __PACKAGE__->config( {} ) }
@@ -80,25 +156,15 @@ sub new {
         }
     }
 
-    # Gather defaults
+    # Combine passed-in arguments with defaults
     #
-    my $core_defaults = $config->{defaults} || {};
-    my $namespace_defaults =
-      $config->{namespace}->{ $params{namespace} || 'Default' } || {};
-    my $storage =
-         $params{storage}
-      || $namespace_defaults->{storage}
-      || $core_defaults->{storage};
-    my $storage_defaults = {};
-    if ( defined($storage) ) {
-        $storage_defaults = $config->{storage}->{$storage}
-          or croak "no config for storage type '$storage'";
-    }
+    my $defaults = $chi_root_class->defaults( \%params, $config );
+    %params = ( %$defaults, %params );
 
-    # Combine passed params with defaults
-    #
-    %params =
-      ( %$core_defaults, %$storage_defaults, %$namespace_defaults, %params );
+    my $storage = $params{storage};
+    if ( defined $storage && !exists $config->{storage}{$storage} ) {
+        croak "no config for storage type '$storage'";
+    }
 
     # Get driver class from driver or driver_class parameters
     #
@@ -151,7 +217,7 @@ sub new {
     my $cache_object = $final_class->new(
         chi_root_class => $chi_root_class,
         driver_class   => $driver_class,
-        %params
+        %params,
     );
 
     # Memoize if appropriate
@@ -200,7 +266,7 @@ CHI - Unified cache handling interface
     );
 
     # Create your own driver
-    # 
+    #
     my $cache = CHI->new( driver => '+My::Special::Driver', ... );
 
     # Cache operations
@@ -455,7 +521,30 @@ C<CHI::Driver::Role::> unless preceded with a '+'. e.g.
 
     traits => ['StoresAccessedAt', '+My::CHI::Driver::Role']
 
-=back    
+=item no_defaults_for [LISTREF]
+
+List of one or more default settings (see L</SUBCLASSING AND CONFIGURING CHI>)
+to ignore when instantiating the object.
+
+    My::CHI->config({
+        storage => {
+            local_file => { driver => 'File', root_dir => '/my/root' },
+        },
+        defaults => {
+            storage => 'local_file',
+            label   => 'static-assets',
+        },
+    });
+
+    My::CHI->new->label;                                    # "static-assets"
+    My::CHI->new( no_defaults_for => ['label'] )->label;    # "File"
+
+Duplicate values are removed upon assignment:
+
+    my $cache = My::CHI->new(no_defaults_for => [qw(storage storage storage)])
+    $cache->no_defaults_for;    # ["storage"]
+
+=back
 
 =head1 INSTANCE METHODS
 
@@ -818,12 +907,13 @@ e.g.
     label
     on_get_error
     on_set_error
-    
+
 =item Standard read-only accessors
 
     namespace
     serializer
-    
+    no_defaults_for
+
 =back
 
 =head2 Deprecated methods
@@ -1418,8 +1508,8 @@ from the logs and report a summary. See L<CHI::Stats|CHI::Stats> for details.
 CHI is intended as an evolution of DeWitt Clinton's
 L<Cache::Cache|Cache::Cache> package. It starts with the same basic API (which
 has proven durable over time) but addresses some implementation shortcomings
-that cannot be fixed in Cache::Cache due to backward compatibility concerns. 
-In particular:
+that cannot be fixed in Cache::Cache due to backward compatibility concerns. In
+particular:
 
 =over
 

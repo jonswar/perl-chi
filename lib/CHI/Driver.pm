@@ -139,6 +139,11 @@ my @common_params;
         storage => {
             is => 'ro',
         },
+        no_defaults_for => {
+            is     => 'ro',
+            isa    => ArrayRef [Str],
+            coerce => \&to_UniqArrayRef,
+        },
     );
     push @common_params, keys %attr;
     for my $attr ( keys %attr ) {

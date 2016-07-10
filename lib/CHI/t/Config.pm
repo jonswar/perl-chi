@@ -15,8 +15,9 @@ my %config = (
         file   => { driver => 'File',   root_dir => $root_dir },
     },
     namespace => {
-        'Foo' => { storage => 'file' },
-        'Bar' => { storage => 'file', depth => 3 },
+        'Foo' => { label => 'FooCache', storage => 'file' },
+        'Bar' => { label => 'BarCache', storage => 'file', depth => 3 },
+        'Default' => { label => 'JohnnyCache' },
     },
     defaults => { storage => 'memory' },
 );
@@ -41,6 +42,23 @@ my %config = (
     My::CHI::Memo->config( { %config, memoize_cache_objects => 1 } );
 }
 
+{
+    package My::CHI::Subcaching;
+
+    use base qw(CHI);
+    My::CHI::Subcaching->config(
+        {
+            %config,
+            defaults => {
+                storage  => 'file',
+                l1_cache => {
+                    storage => 'memory',
+                },
+            },
+        }
+    );
+}
+
 sub _create {
     my ( $params, $checks ) = @_;
 
@@ -57,9 +75,19 @@ sub test_config : Tests {
     my $self = shift;
 
     _create(
+        {},
+        {
+            namespace         => 'Default',
+            label             => 'JohnnyCache',
+            storage           => 'memory',
+            short_driver_name => 'Memory',
+        }
+    );
+    _create(
         { namespace => 'Foo' },
         {
             namespace         => 'Foo',
+            label             => 'FooCache',
             storage           => 'file',
             short_driver_name => 'File',
             root_dir          => $root_dir,
@@ -70,6 +98,7 @@ sub test_config : Tests {
         { namespace => 'Bar' },
         {
             namespace         => 'Bar',
+            label             => 'BarCache',
             storage           => 'file',
             short_driver_name => 'File',
             root_dir          => $root_dir,
@@ -80,6 +109,7 @@ sub test_config : Tests {
         { namespace => 'Foo', depth => 4 },
         {
             namespace         => 'Foo',
+            label             => 'FooCache',
             storage           => 'file',
             short_driver_name => 'File',
             root_dir          => $root_dir,
@@ -90,10 +120,29 @@ sub test_config : Tests {
         { namespace => 'Bar', depth => 4 },
         {
             namespace         => 'Bar',
+            label             => 'BarCache',
             storage           => 'file',
             short_driver_name => 'File',
             root_dir          => $root_dir,
             depth             => 4
+        }
+    );
+    _create(
+        { no_defaults_for => [qw(namespace)] },
+        {
+            namespace         => 'Default',
+            label             => 'Memory',
+            storage           => 'memory',
+            short_driver_name => 'Memory',
+        }
+    );
+    _create(
+        { namespace => 'Foo', no_defaults_for => [qw(label)] },
+        {
+            namespace         => 'Foo',
+            label             => 'File',
+            storage           => 'file',
+            short_driver_name => 'File',
         }
     );
 
@@ -104,6 +153,7 @@ sub test_config : Tests {
         { namespace => 'Bar' },
         {
             namespace         => 'Bar',
+            label             => 'BarCache',
             storage           => 'file',
             short_driver_name => 'File',
             root_dir          => $root_dir,
@@ -130,6 +180,28 @@ sub test_memoize : Tests {
     my $cache7 = My::CHI->new( namespace => 'Foo' );
     my $cache8 = My::CHI->new( namespace => 'Foo' );
     isnt( $cache7, $cache8, "different - namespace Foo - no memoization" );
+}
+
+sub test_subcache_constructor_args : Tests {
+    my $subcaching1 = My::CHI::Subcaching->new;
+
+    is( $subcaching1->l1_cache->can('l1_cache'),
+        undef, 'l1_cache not automatically built with nested l1_cache' );
+
+    my $subcaching2 = My::CHI::Subcaching->new(
+        l1_cache => {
+            storage  => 'memory',
+            l1_cache => {
+                driver => '+CHI::Driver::Null',
+            },
+        },
+    );
+
+    is(
+        $subcaching2->l1_cache->l1_cache->driver_class,
+        'CHI::Driver::Null',
+        'driver of nested subcache not overriden by default settings',
+    );
 }
 
 1;

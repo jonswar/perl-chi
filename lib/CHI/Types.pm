@@ -2,6 +2,7 @@ package CHI::Types;
 
 use Carp;
 use CHI::Util qw(can_load parse_duration parse_memory_size);
+use List::MoreUtils qw(uniq);
 use MooX::Types::MooseLike qw(exception_message);
 use MooX::Types::MooseLike::Base qw(:all);
 use MooX::Types::MooseLike::Numeric qw(:all);
@@ -124,6 +125,25 @@ sub to_Digester {
     }
 }
 push @EXPORT_OK, 'to_Digester';
+
+# Strip duplicates from an array reference.  Also accepts a single string.
+# Passes through any values other than array references so that they can be
+# caught by 'isa' constraints.
+#
+sub to_UniqArrayRef {
+    my $from = shift;
+
+    if ( is_ArrayRef($from) ) {
+        [ uniq @$from ];
+    }
+    elsif ( is_Str($from) ) {
+        [$from];
+    }
+    else {
+        return $from;
+    }
+}
+push @EXPORT_OK, 'to_UniqArrayRef';
 
 my $data_serializer_loaded = can_load('Data::Serializer');
 
