@@ -49,7 +49,7 @@ sub _defaults {
           unless $reftype eq 'ARRAY';
     }
     else {
-        $no_defaults_for = [ $no_defaults_for // () ];
+        $no_defaults_for = [ $no_defaults_for || () ];
     }
 
     # Create a hash that maps top-level constructor keys to '1' for each
@@ -57,8 +57,6 @@ sub _defaults {
     # namespace, or storage defaults.
     #
     my %no_defaults_for_map = map { $_ => 1 } @$no_defaults_for;
-
-    #my %no_defaults_for_map = map { $_ => 1 } @{$params->{no_defaults_for} // []};
 
     # Returns a hash reference containing each key => value pair from the
     # provided hash reference for which '$no_defaults_for{$key}' does not
