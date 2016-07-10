@@ -222,6 +222,17 @@ sub test_driver_class : Tests {
     can_ok( $cache, 'get', 'set', 'remove', 'clear', 'expire' );
 }
 
+sub test_no_defaults_for : Tests {
+    my $self = shift;
+
+    my $cache1 = $self->new_cache( no_defaults_for => [ qw(storage) x (3) ] );
+    is_deeply( $cache1->no_defaults_for, [qw(storage)], 'duplicates removed' );
+
+    my $cache2 = $self->new_cache( no_defaults_for => 'label' );
+    is_deeply( $cache2->no_defaults_for, [qw(label)],
+        'coerces string to arrayref' );
+}
+
 sub test_key_types : Tests {
     my $self  = shift;
     my $cache = $self->{cache};

@@ -3,7 +3,6 @@ package CHI::Driver::Role::HasSubcaches;
 use Moo::Role;
 use CHI::Types qw(:all);
 use MooX::Types::MooseLike::Base qw(:all);
-use Hash::MoreUtils qw(slice_exists);
 use Log::Any qw($log);
 use Scalar::Util qw(weaken);
 use strict;
@@ -31,7 +30,10 @@ sub _non_overridable {
 my @subcache_inherited_params = (
     qw(expires_at expires_in expires_variance namespace on_get_error on_set_error serializer)
 );
-for my $type (qw(l1_cache mirror_cache)) {
+
+my @subcache_types = qw(l1_cache mirror_cache);
+
+for my $type (@subcache_types) {
     my $config_acc = "_${type}_config";
     has $config_acc => (
         is       => 'ro',
@@ -46,13 +48,21 @@ for my $type (qw(l1_cache mirror_cache)) {
 
         my %inherit = map { ( defined $self->$_ ) ? ( $_ => $self->$_ ) : () }
           @subcache_inherited_params;
+
+        # Don't instantiate the subcache with another subcache that's defined
+        # using the core, namespace or storage defaults.
+        #
+        my @no_defaults_for = @{ $self->no_defaults_for || [] };
+        push @no_defaults_for, @subcache_types;
+
         my $build_config = {
             %inherit,
             label => $self->label . ":$type",
             %$config,
-            is_subcache   => 1,
-            parent_cache  => $self,
-            subcache_type => $type,
+            is_subcache     => 1,
+            parent_cache    => $self,
+            subcache_type   => $type,
+            no_defaults_for => \@no_defaults_for,
         };
 
         return $self->chi_root_class->new(%$build_config);
