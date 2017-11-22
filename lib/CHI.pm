@@ -428,7 +428,7 @@ serialized; plain scalars will be placed in the cache as-is.
 If this is a string, a L<Data::Serializer|Data::Serializer> object will be
 created, with the string passed as the 'serializer' option and raw=1. Common
 options include 'Storable', 'Data::Dumper', and 'YAML'. If this is a hashref,
-L<Data::Serializer|Data::Serializer-E<gt>new> will be called with the hash. You
+L<Data::Serializer-E<gt>new|Data::Serializer/new> will be called with the hash. You
 will need to ensure Data::Serializer is installed to use these options.
 
 Otherwise, this must be a L<Data::Serializer|Data::Serializer> object or
@@ -818,12 +818,12 @@ e.g.
     label
     on_get_error
     on_set_error
-    
+
 =item Standard read-only accessors
 
     namespace
     serializer
-    
+
 =back
 
 =head2 Deprecated methods
