@@ -264,7 +264,7 @@ Optional logging and statistics collection of cache activity
 
 =head1 CONSTRUCTOR
 
-To create a new cache object, call C<<CHI-E<gt>new>. It takes the common
+To create a new cache object, call C<CHI-E<gt>new>. It takes the common
 options listed below. I<driver> is required; all others are optional.
 
 Some drivers will take additional constructor options. For example, the File
