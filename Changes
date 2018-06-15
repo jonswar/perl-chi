@@ -1,6 +1,7 @@
 Revision history for CHI
 
 ** denotes an incompatible change
+  - Fix "Unescaped left brace in regex" deprecation warnings in Perl >= 5.22
 
 0.60  Jun 7, 2015
 
