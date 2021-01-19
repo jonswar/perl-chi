@@ -39,7 +39,7 @@ sub BUILD {
 sub fetch {
     my ( $self, $key ) = @_;
 
-    if ( $self->{is_size_aware} ) {
+    if ( $self->{is_size_aware} && exists $self->{datastore}->{ $self->{namespace} }->{$key}) {
         $self->{datastore}->{ CHI_Meta_Namespace() }->{last_used_time}->{$key}
           = time;
     }
@@ -49,6 +49,11 @@ sub fetch {
 sub store {
     my ( $self, $key, $data ) = @_;
 
+    if ( $self->{is_size_aware}) {
+        $self->{datastore}->{ CHI_Meta_Namespace() }->{last_used_time}->{$key}
+          = time;
+    }
+    
     $self->{datastore}->{ $self->{namespace} }->{$key} = $data;
 }
 
