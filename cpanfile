@@ -1,0 +1,31 @@
+requires 'ExtUtils::MakeMaker', '6.64';
+requires 'Carp::Assert', '0.20';
+requires 'Class::Load';
+requires 'Data::UUID';
+requires 'Digest::JHash';
+requires 'Digest::MD5';
+requires 'File::Spec', '0.80';
+requires 'Hash::MoreUtils';
+requires 'JSON::MaybeXS', '1.003003';
+requires 'List::MoreUtils', '0.13';
+requires 'Log::Any', '0.08';
+requires 'Moo', '1.003';
+requires 'MooX::Types::MooseLike', '0.23';
+requires 'MooX::Types::MooseLike::Base';
+requires 'MooX::Types::MooseLike::Numeric';
+requires 'Storable';
+requires 'String::RewritePrefix';
+requires 'Task::Weaken';
+requires 'Time::Duration', '1.06';
+requires 'Time::Duration::Parse', '0.03';
+requires 'Time::HiRes', '1.30';
+requires 'Try::Tiny', '0.05';
+requires 'Perl::Tidy';
+requires 'Perl::Critic';
+requires 'Pod::Tidy';
+requires 'Cache::FastMmap';
+requires 'Cache::Memcached';
+
+on test => sub {
+    requires 'Test::More', '0.98';
+};
