@@ -22,6 +22,9 @@ jobs:
       - name: perl -V
         run: perl -V
       - name: Install Dependencies
-        run: curl -sL https://git.io/cpm | perl - install -g --show-build-log-on-failure
+        run: |
+          cpanm --notest --skip-satisfied Dist::Zilla Moose::Autobox
+          dzil authordeps --missing | cpanm --notest --skip-satisfied
+          dzil listdeps --missing | cpanm --notest --skip-satisfied
       - name: Run Tests
-        run: prove -l t
+        run: dzil smoke --release
