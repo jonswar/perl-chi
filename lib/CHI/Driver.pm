@@ -852,7 +852,7 @@ CHI::Driver - Base class for all CHI drivers
 This is the base class that all CHI drivers inherit from. It provides the
 methods that one calls on $cache handles, such as get() and set().
 
-See L<CHI/METHODS> for documentation on $cache methods, and
+See L<CHI/INSTANCE METHODS> for documentation on $cache methods, and
 L<CHI::Driver::Development|CHI::Driver::Development> for documentation on
 creating new subclasses of CHI::Driver.
 
