@@ -1277,13 +1277,13 @@ sub test_stats : Tests {
     $log->empty_ok();
     $stats->flush();
     $log->contains_ok(
-        qr/CHI stats: {"absent_misses":2,"end_time":\d+,"expired_misses":1,"get_time_ms":\d+,"hits":1,"label":"$label","namespace":"Foo","root_class":"CHI","set_key_size":6,"set_time_ms":\d+,"set_value_size":20,"sets":1,"start_time":\d+}/
+        qr/CHI stats: \{"absent_misses":2,"end_time":\d+,"expired_misses":1,"get_time_ms":\d+,"hits":1,"label":"$label","namespace":"Foo","root_class":"CHI","set_key_size":6,"set_time_ms":\d+,"set_value_size":20,"sets":1,"start_time":\d+\}/
     );
     $log->contains_ok(
-        qr/CHI stats: {"end_time":\d+,"label":"$label","namespace":"Bar","root_class":"CHI","set_key_size":12,"set_time_ms":\d+,"set_value_size":52,"sets":2,"start_time":\d+}/
+        qr/CHI stats: \{"end_time":\d+,"label":"$label","namespace":"Bar","root_class":"CHI","set_key_size":12,"set_time_ms":\d+,"set_value_size":52,"sets":2,"start_time":\d+\}/
     );
     $log->contains_ok(
-        qr/CHI stats: {"absent_misses":1,"compute_time_ms":\d+,"computes":1,"end_time":\d+,"get_time_ms":\d+,"hits":2,"label":"$label","namespace":"Baz","root_class":"CHI","set_key_size":6,"set_time_ms":\d+,"set_value_size":44,"sets":1,"start_time":\d+}/
+        qr/CHI stats: \{"absent_misses":1,"compute_time_ms":\d+,"computes":1,"end_time":\d+,"get_time_ms":\d+,"hits":2,"label":"$label","namespace":"Baz","root_class":"CHI","set_key_size":6,"set_time_ms":\d+,"set_value_size":44,"sets":1,"start_time":\d+\}/
     );
     $log->empty_ok();
 
