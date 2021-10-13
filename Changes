@@ -6,6 +6,7 @@ Revision history for CHI
 
 * Fixes
   - Unescaped left brace in regex is deprecated - RT #125596, #115022
+  - Missing dependency on Module::Mask - RT #114665
 
 * Tests
   - Added continuous integration (CI) via GitHub Actions
