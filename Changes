@@ -2,6 +2,17 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
+0.61  Oct 13, 2021
+
+* Fixes
+  - Unescaped left brace in regex is deprecated - RT #125596, #115022
+
+* Tests
+  - Added continuous integration (CI) via GitHub Actions
+
+* Docs
+  - improved POD
+
 0.60  Jun 7, 2015
 
 * Fixes
