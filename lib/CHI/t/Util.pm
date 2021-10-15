@@ -5,7 +5,7 @@ use warnings;
 use CHI::Test;
 use CHI::Util qw(unique_id parse_memory_size);
 use CHI::Test::Util qw(random_string);
-use List::MoreUtils qw(uniq);
+use List::Util qw(uniq);
 use base qw(CHI::Test::Class);
 
 # The inevitably lame unique_id test

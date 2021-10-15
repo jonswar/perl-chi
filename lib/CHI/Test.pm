@@ -3,7 +3,6 @@
 package CHI::Test;
 
 use Log::Any::Test;    # as early as possible
-use List::MoreUtils qw(uniq);
 use Module::Runtime qw(require_module);
 use CHI;
 use CHI::Driver::Memory;

@@ -1,7 +1,6 @@
 package CHI::Driver::Base::CacheContainer;
 
 use Moo;
-use List::MoreUtils qw( all );
 use strict;
 use warnings;
 
