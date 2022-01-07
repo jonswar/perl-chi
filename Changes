@@ -2,6 +2,11 @@ Revision history for CHI
 
 ** denotes an incompatible change
 
+0.62
+
+* Improvements
+  - Replace List::MoreUtils with List::Util to reduce dependencies - PR #34
+
 0.61  Oct 13, 2021
 
 * Fixes
